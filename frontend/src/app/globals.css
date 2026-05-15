@@ -42,6 +42,7 @@ textarea {
   font: inherit;
 }
 
+/* Print rules hide headers/buttons when exporting to PDF. */
 @media print {
   body {
     background: #ffffff;
