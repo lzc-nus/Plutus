@@ -52,7 +52,7 @@ export function TopNav({
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[#d9d0c1] pb-5">
       <button
-        className="font-display text-left text-2xl font-semibold"
+        className="brand-logo font-display text-left font-semibold"
         onClick={() => onNavigate("overview")}
         type="button"
       >
