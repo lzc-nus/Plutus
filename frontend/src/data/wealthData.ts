@@ -1,6 +1,7 @@
 export type User = {
   name: string;
   email: string;
+  position: string;
   avatarUrl: string;
 }
 
@@ -107,6 +108,13 @@ export const outflowBreakdown: CashflowBreakdownItem[] = [
   { id: "lifestyle", label: "Lifestyle", value: 1176, percentage: 10 },
   { id: "other", label: "Other outflow", value: 588, percentage: 5 },
 ];
+
+export const user: User = {
+  name: "Donald Trump",
+  email: "dt@whitehouse.gov",
+  position: "President",
+  avatarUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Donald_Trump_official_portrait.jpg/440px-Donald_Trump_official_portrait.jpg",
+}
 
 export const assets: Asset[] = [
   {
