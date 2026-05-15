@@ -68,10 +68,8 @@ function OverviewPage({ onNavigate }: { onNavigate: (page: PageKey) => void }) {
   return (
     <div className="grid gap-6">
       <section className="relative overflow-hidden rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 shadow-[0_24px_90px_rgba(43,34,24,0.08)] sm:p-8">
-        <div className="absolute right-6 top-6 hidden h-28 w-28 rounded-full border border-[#c3a35d] opacity-50 sm:block" />
-        <div className="absolute right-12 top-12 hidden h-16 w-16 rounded-full border border-[#c3a35d] opacity-50 sm:block" />
         <div className="relative max-w-4xl">
-          <p className="text-sm font-semibold uppercase text-[#8f6f2d]">
+          <p className="text-sm font-semibold uppercase text-[#7a6332]">
             Welcome back, dear {user.position} {user.name}.
           </p>
         </div>
@@ -334,7 +332,7 @@ function AIInsightPage() {
 function StrategyPage() {
   return (
     <div className="grid gap-6">
-      <section className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 sm:p-8">
+      <section className="rounded-lg border border-[#d9d0c1] bg-[#e1ded8] p-6 sm:p-8">
         <SectionHeader
           description="Goals are measured against liquidity, liabilities, and current portfolio risk before the system recommends new commitments."
           eyebrow="Strategy"
