@@ -70,7 +70,7 @@ function OverviewPage({ onNavigate }: { onNavigate: (page: PageKey) => void }) {
       <section className="relative overflow-hidden rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 shadow-[0_24px_90px_rgba(43,34,24,0.08)] sm:p-8">
         <div className="relative max-w-4xl">
           <p className="text-sm font-semibold uppercase text-[#7a6332]">
-            Welcome back, dear {user.position} {user.name}.
+            Welcome back, dear {user.name}.
           </p>
         </div>
       </section>
