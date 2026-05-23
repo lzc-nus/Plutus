@@ -1,7 +1,7 @@
 from fastapi import APIRouter
-from app.schemas.user import UserResponse
+from ..schemas.user import UserResponse
 
-router = APIRouter(prefix="api/user", tags=["User Profile"])
+router = APIRouter(prefix="/api/user", tags=["User Profile"])
 
 @router.get("/", response_model=UserResponse)
 async def get_user_profile():
