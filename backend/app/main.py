@@ -1,16 +1,37 @@
-from typing import Annotated
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.routers import (
+    user_router,
+    portfolio_router, 
+    goals_router, 
+    transactions_router, 
+    insights_router
+)
 
-from fastapi import FastAPI, Query, Path
+app = FastAPI(title="Wealth Management Analytics API")
 
-app = FastAPI()
+origins = [
+    'http://localhost:3000', # local nextjs development server
+    'http://127.0.0.1:3000',
+]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
 
-@app.get("/items/{item_id}")
-async def read_items(
-    item_id: Annotated[int, Path(title="The ID of the item to get", ge=1)],
-    q: str,
-):
-    results = {"item_id": item_id}
-    if q:
-        results.update({"q": q})
-    return results
+app.include_router(user_router)
+app.include_router(portfolio_router)
+app.include_router(goals_router)
+app.include_router(transactions_router)
+app.include_router(insights_router)
+
+@app.get("/")
+def read_root():
+    return {
+        "status": "healthy",
+        "message": "Wealth systems backend active."
+    }
