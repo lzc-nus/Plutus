@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from typing import List
-from app.schemas.transaction import TransactionResponse
+from ..schemas.transaction import TransactionResponse
 
 router = APIRouter(prefix="/api/transactions", tags=["Transactions Ledger"])
 
