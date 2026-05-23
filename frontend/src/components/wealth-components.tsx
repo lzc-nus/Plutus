@@ -56,7 +56,7 @@ export function TopNav({
         onClick={() => onNavigate("overview")}
         type="button"
       >
-        Two Sicilies
+        Plutus
       </button>
       <nav
         aria-label="Primary navigation"
