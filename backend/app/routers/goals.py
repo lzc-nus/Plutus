@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from typing import List
 from uuid import UUID
-from app.schemas.goal import GoalCreate, GoalUpdate, GoalResponse
+from ..schemas.goal import GoalCreate, GoalUpdate, GoalResponse
 
 router = APIRouter(prefix="/api/goals", tags=["Financial Goals"])
 
