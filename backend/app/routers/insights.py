@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.schemas.insights import DashboardInsightsResponse
+from ..schemas.insights import DashboardInsightsResponse
 
 router = APIRouter(prefix="/api/insights", tags=["Smart Insights & AI Analytics"])
 
