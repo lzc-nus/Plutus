@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.schemas.portfolio import DashboardPortfolioResponse
+from ..schemas.portfolio import DashboardPortfolioResponse
 
 router = APIRouter(prefix="/api/portfolio", tags=["Portfolio & Balance Sheet"])
 
