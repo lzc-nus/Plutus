@@ -12,6 +12,8 @@ dependencies = [
     "reportlab (>=4.5.1,<5.0.0)",
     "python-dotenv (>=1.2.2,<2.0.0)",
     "httpx (>=0.28.1,<0.29.0)",
+    "sqlmodel (>=0.0.38,<0.0.39)",
+    "psycopg2-binary (>=2.9.12,<3.0.0)",
 ]
 
 
