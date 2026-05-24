@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import AddTransactionForm from '@/components/AddTransactionForm';
 
 interface Transaction {
-    id: string;
+    id: string; // UUIDs are captured as strings in TS/JS
     date: string;
     time: string;
     description: string;
