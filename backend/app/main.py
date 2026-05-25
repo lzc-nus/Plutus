@@ -10,7 +10,8 @@ from app.routers import (
     portfolio_router, 
     goals_router, 
     transactions_router, 
-    insights_router
+    insights_router,
+    calendar_router
 )
 
 # Setup the modern lifespan lifecycle state manager
@@ -19,7 +20,7 @@ async def lifespan(app: FastAPI):
     # Everything here runs before the application starts up
     init_db()
     yield 
-    # Everything here uruns after the application shuts down
+    # Everything here runs after the application shuts down
     pass
 
 app = FastAPI(
@@ -45,3 +46,8 @@ app.include_router(portfolio_router)
 app.include_router(goals_router)
 app.include_router(transactions_router)
 app.include_router(insights_router)
+app.include_router(calendar_router)
+
+@app.get('/')
+def root():
+    return {'message': 'Welcome to Plutus.'}
