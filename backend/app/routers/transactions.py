@@ -7,7 +7,7 @@ from datetime import date, time
 
 # Import real database session generator and SQLModel Table class
 from ..core.database import get_db, Transaction
-from ..schemas.transaction import TransactionCreate, TransactionResponse
+from ..schemas.transaction import TransactionCreate, TransactionResponse, TransactionUpdate
 
 router = APIRouter(prefix="/api/transactions", tags=["Transactions Ledger"])
 
@@ -44,10 +44,10 @@ def get_transactions(db: Session = Depends(get_db)):
             detail=f"Failed to fetch transactions: {str(e)}"
         )
 
-@router.put('/{transaction_id}', response_model=TransactionResponse)
+@router.patch('/{transaction_id}', response_model=TransactionResponse)
 def update_transaction(
     transaction_id: uuid.UUID,
-    payload: TransactionCreate,
+    payload: TransactionUpdate,
     db: Session = Depends(get_db)
 ):
     transaction = db.get(Transaction, transaction_id)
