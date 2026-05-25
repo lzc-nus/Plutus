@@ -45,23 +45,3 @@ app.include_router(portfolio_router)
 app.include_router(goals_router)
 app.include_router(transactions_router)
 app.include_router(insights_router)
-
-@app.get('/api/transactions/', response_model=List[Transaction])
-def read_transactions(db: Session = Depends(get_db)):
-    statement = select(Transaction).order_by(Transaction.date.desc())
-    transactions = db.exec(statement).all()
-    return transactions
-
-@app.post('/api/transactions/', response_model=Transaction, status_code=status.HTTP_201_CREATED)
-def create_transaction(transaction: Transaction, db: Session = Depends(get_db)):
-    try:
-        db.add(transaction)
-        db.commit()
-        db.refresh(transaction)
-        return transaction
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Failed to record transaction: {str(e)}"
-        )
