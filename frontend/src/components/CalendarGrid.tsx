@@ -12,31 +12,35 @@ interface ProjectedEvent {
     date: string;
 }
 
-export default function CalendarGrid() {
-    const today = new Date();
-    const [currentYear, setCurrentYear] = useState(today.getFullYear());
-    const [currentMonth, setCurrentMonth] = useState(today.getMonth()); // 0 = Jan, 11 = Dec
+interface CalendarGridProps {
+    currentYear: number;
+    setCurrentYear: React.Dispatch<React.SetStateAction<number>>;
+    currentMonth: number;
+    setCurrentMonth: React.Dispatch<React.SetStateAction<number>>;
+    startView: string;
+    endView: string;
+    refreshKey: number;
+    triggerRefresh: () => void;
+}
+
+export default function CalendarGrid({
+    currentYear, setCurrentYear,
+    currentMonth, setCurrentMonth,
+    startView, endView,
+    refreshKey, triggerRefresh
+}: CalendarGridProps) {
 
     const [events, setEvents] = useState<ProjectedEvent[]>([]);
     const [loading, setLoading] = useState(true);
-    const [refreshKey, setRefreshKey] = useState(0);
-
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isManageOpen, setIsManageOpen] = useState(false);
-    const [selectedEvent, setSelectedEvent] = useState<{ id: string; title: string; amount: number; category: string } | null>(null);
-
-    const triggerRefresh = () => {
-        setRefreshKey(prev => prev + 1);
-    };
+    const [selectedEvent, setSelectedEvent] = useState<ProjectedEvent | null>(null);
 
     useEffect(() => {
         async function fetchProjections() {
             setLoading(true);
             try {
-                const firstDayStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
-                const lastDayStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${new Date(currentYear, currentMonth + 1, 0).getDate()}`;
-
-                const res = await fetch(`http://127.0.0.1:8000/api/calendar/?start_view=${firstDayStr}&end_view=${lastDayStr}`);
+                const res = await fetch(`http://127.0.0.1:8000/api/calendar/?start_view=${startView}&end_view=${endView}`);
                 if (!res.ok) {
                     throw new Error("Failed to fetch calendar stream");
                 }
@@ -49,7 +53,7 @@ export default function CalendarGrid() {
             }
         }
         fetchProjections();
-    }, [currentMonth, currentYear, refreshKey]);
+    }, [startView, endView, refreshKey]);
 
     const handlePrevMonth = () => {
         if (currentMonth == 0) {
