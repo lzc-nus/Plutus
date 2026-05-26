@@ -11,7 +11,9 @@ from app.routers import (
     goals_router, 
     transactions_router, 
     insights_router,
-    calendar_router
+    calendar_router,
+    predictions_router,
+    auth_router
 )
 
 # Setup the modern lifespan lifecycle state manager
@@ -47,6 +49,8 @@ app.include_router(goals_router)
 app.include_router(transactions_router)
 app.include_router(insights_router)
 app.include_router(calendar_router)
+app.include_router(predictions_router)
+app.include_router(auth_router)
 
 @app.get('/')
 def root():
