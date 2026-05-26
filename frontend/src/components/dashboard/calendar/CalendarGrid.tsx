@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import AddEventDrawer from './AddEventDrawer';
-import ManageEventModal from './ManageEventModal';
+// import AddEventDrawer from './AddEventDrawer';
+// import ManageEventModal from './ManageEventModal';
 
 interface ProjectedEvent {
     id: string;
@@ -163,7 +163,7 @@ export default function CalendarGrid({
                 })}
             </div>
 
-            <AddEventDrawer
+            {/* <AddEventDrawer
                 isOpen={isDrawerOpen}
                 onClose={() => setIsDrawerOpen(false)}
                 onSuccess={triggerRefresh}
@@ -178,7 +178,7 @@ export default function CalendarGrid({
                 onSuccess={triggerRefresh}
                 key={selectedEvent?.id || 'empty'}
                 eventData={selectedEvent}
-            />
+            /> */}
         </div>
     );
 }
