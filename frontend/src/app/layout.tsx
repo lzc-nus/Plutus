@@ -1,5 +1,5 @@
 import type { Metadata } from "next";   // This is only for TypeScript checking. It will not become real JavaScript code in the browser/server bundle.
-import "./globals.css";
+import "./(public)/globals.css";
 import { JSX } from "react/jsx-dev-runtime";
 
 export const metadata: Metadata = {

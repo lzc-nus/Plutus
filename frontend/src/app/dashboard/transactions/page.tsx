@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import AddTransactionForm from '@/components/AddTransactionForm';
+import AddTransactionForm from '@/components/dashboard/transactions/AddTransactionForm';
 
 interface Transaction {
     id: string; // UUIDs are captured as strings in TS/JS

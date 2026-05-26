@@ -16,6 +16,9 @@ export default function RegisterPage() {
 
         try {
             const res = await fetch('http://127.0.0.1:8000/api/auth/register')
+        } catch (err) {
+            console.error("Error during registration:", err);
+            setError('An error occurred. Please try again.');
         }
     }
 }
