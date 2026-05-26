@@ -3,22 +3,14 @@ import "./globals.css";
 import { JSX } from "react/jsx-dev-runtime";
 
 export const metadata: Metadata = {
-  title: "Two Sicilies",
-  description: "Private wealth intelligence guided by AI.",
-  keywords: ["wealth", "AI", "portfolio"],
+  title: "Plutus",
+  description: "Private wealth management analytics platform",
+  keywords: ["Net worth", "wealth", "wealth management", "AI", "portfolio", "analytics", "dashboard"],
   icons: {
     icon: [
       { url: "/favicon_io/favicon.ico" },
-      {
-        url: "/favicon_io/favicon-16x16.png",
-        sizes: "16x16",
-        type: "image/png",
-      },
-      {
-        url: "/favicon_io/favicon-32x32.png",
-        sizes: "32x32",
-        type: "image/png",
-      },
+      { url: "/favicon_io/favicon-16x16.png", sizes: "16x16", type: "image/png", },
+      { url: "/favicon_io/favicon-32x32.png", sizes: "32x32", type: "image/png", },
     ],
     apple: [{ url: "/favicon_io/apple-touch-icon.png" }],
   },
