@@ -6,7 +6,7 @@ import uuid
 from datetime import date, time
 
 # Import real database session generator and SQLModel Table class
-from ..core.database import get_db, Transaction
+from ..db.database import get_db, Transaction
 from ..schemas.transaction import TransactionCreate, TransactionResponse, TransactionUpdate
 
 router = APIRouter(prefix="/api/transactions", tags=["Transactions Ledger"])

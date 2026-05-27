@@ -1,10 +1,11 @@
+import os
+from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
 from typing import List
-from app.core.database import init_db, get_db, Transaction
-
+from backend.app.db.database import init_db, get_db, Transaction
 from app.routers import (
     user_router,
     portfolio_router, 
@@ -16,6 +17,9 @@ from app.routers import (
     auth_router
 )
 
+load_dotenv()
+allowed_origins = os.getenv("ALLOWED_ORIGINS").split(",")
+
 # Setup the modern lifespan lifecycle state manager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -26,14 +30,12 @@ async def lifespan(app: FastAPI):
     pass
 
 app = FastAPI(
-    title="Wealth Management Analytics API", 
-    lifespan=lifespan
+    title="Plutus API", 
+    lifespan=lifespan,
+    version="0.1.0"
 )
 
-origins = [
-    'http://localhost:3000', # local nextjs development server
-    'http://127.0.0.1:3000',
-]
+origins = allowed_origins
 
 app.add_middleware(
     CORSMiddleware,
@@ -54,4 +56,4 @@ app.include_router(auth_router)
 
 @app.get('/')
 def root():
-    return {'message': 'Welcome to Plutus.'}
+    return {'message': 'Welcome to Plutus API.'}

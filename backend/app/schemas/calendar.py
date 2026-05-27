@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import date
 import uuid
-from ..core.database import FrequencyEnum
+from ..db.database import FrequencyEnum
 
 class FinancialEventCreate(BaseModel):
     description: str

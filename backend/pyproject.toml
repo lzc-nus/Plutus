@@ -23,5 +23,14 @@ dependencies = [
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry]
+packages = [
+    { include = "app" }
+]
+
 [tool.poetry.scripts]
 dev = "uvicorn.main:main"
+[dependency-groups]
+dev = [
+    "pytest (>=9.0.3,<10.0.0)"
+]
