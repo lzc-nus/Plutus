@@ -1,37 +1,68 @@
 from __future__ import annotations
 
 import datetime
-import os
-import jwt
+import base64
+import hashlib
+import hmac
+import secrets
 import uuid
-from passlib.context import CryptContext
-from dotenv import load_dotenv
 
-load_dotenv()
+import jwt
 
-SECRET_KEY = os.getenv('SECRET_KEY')
-ALGORITHM = os.getenv('ALGORITHM')
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES'))
+from app.core.config import settings
 
-if not SECRET_KEY:
-    raise ValueError('SECRET_KEY environmental variable is missing from security config.')
+PBKDF2_ALGORITHM = "sha256"
+PBKDF2_ITERATIONS = 600_000
+PASSWORD_HASH_SCHEME = "pbkdf2_sha256"
 
-# Setup password hashing context using safe bcrypt algorithm
-pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        scheme, iterations, salt, expected_hash = hashed_password.split("$", 3)
+    except ValueError:
+        return False
 
-def get_password_hash(password: str):
-    return pwd_context.hash(password)
+    if scheme != PASSWORD_HASH_SCHEME:
+        return False
 
-def create_access_token(user_id: uuid.UUID):
-    '''Encode user identity payload into a signed, expiring JWT token.'''
-    expire = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
-        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+    password_hash = _hash_password(
+        plain_password=plain_password,
+        salt=salt,
+        iterations=int(iterations),
     )
-    to_encode = {
-        'exp': expire,
-        'sub': str(user_id)
+    return hmac.compare_digest(password_hash, expected_hash)
+
+
+def get_password_hash(password: str) -> str:
+    salt = secrets.token_urlsafe(24)
+    password_hash = _hash_password(
+        plain_password=password,
+        salt=salt,
+        iterations=PBKDF2_ITERATIONS,
+    )
+    return f"{PASSWORD_HASH_SCHEME}${PBKDF2_ITERATIONS}${salt}${password_hash}"
+
+
+def _hash_password(plain_password: str, salt: str, iterations: int) -> str:
+    digest = hashlib.pbkdf2_hmac(
+        PBKDF2_ALGORITHM,
+        plain_password.encode("utf-8"),
+        salt.encode("utf-8"),
+        iterations,
+    )
+    return base64.urlsafe_b64encode(digest).decode("ascii")
+
+
+def create_access_token(user_id: uuid.UUID) -> str:
+    expires_at = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        minutes=settings.access_token_expire_minutes
+    )
+    payload = {
+        "exp": expires_at,
+        "sub": str(user_id),
     }
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+
+
+def decode_access_token(token: str) -> dict[str, object]:
+    return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
