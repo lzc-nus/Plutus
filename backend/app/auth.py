@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from fastapi import HTTPException, status
 from sqlmodel import Session, select
-from ..core.database import User
-from ..schemas.user import UserCreate, UserLogin
-from ..core.security import get_password_hash, verify_password, create_access_token
+from .db.database import User
+from .schemas.user import UserCreate, UserLogin
+from .core.security import get_password_hash, verify_password, create_access_token
 
 class AuthService:
     @staticmethod

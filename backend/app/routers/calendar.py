@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 
-from ..core.database import get_db, FinancialEvent
+from ..db.database import get_db, FinancialEvent
 from ..schemas.calendar import FinancialEventCreate, FinancialEventResponse, FinancialEventUpdate
 
 router = APIRouter(prefix="/api/calendar", tags=['Calendar Engine'])

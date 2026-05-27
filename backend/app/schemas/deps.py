@@ -5,7 +5,7 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session, select
-from ..core.database import get_db, User
+from ..db.database import get_db, User
 from ..core.security import SECRET_KEY, ALGORITHM
 
 # Formulate an OAuth2 standard header interceptor
