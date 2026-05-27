@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, status
 from sqlmodel import Session
 
-from ..core.database import get_db
+from ..db.database import get_db
 from ..schemas.user import Token, UserCreate, UserLogin, UserResponse
-from ..services.auth import AuthService
+from ..auth import AuthService
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
