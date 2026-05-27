@@ -1,74 +1,92 @@
-'use client';
+type PasswordValidatorProps = {
+  value: string;
+};
 
-import React from 'react';
-
-interface PasswordValidatorProps {
-    value: string;
-}
+const checks = [
+  {
+    id: "length",
+    label: "At least 8 characters",
+    test: (value: string) => value.length >= 8,
+  },
+  {
+    id: "uppercase",
+    label: "One uppercase letter",
+    test: (value: string) => /[A-Z]/.test(value),
+  },
+  {
+    id: "lowercase",
+    label: "One lowercase letter",
+    test: (value: string) => /[a-z]/.test(value),
+  },
+  {
+    id: "number",
+    label: "One number",
+    test: (value: string) => /[0-9]/.test(value),
+  },
+  {
+    id: "symbol",
+    label: "One special symbol",
+    test: (value: string) => /[^A-Za-z0-9]/.test(value),
+  },
+];
 
 export default function PasswordValidator({ value }: PasswordValidatorProps) {
-    const checks = {
-        hasMinLength: value.length >= 8,
-        hasUpper: /[A-Z]/.test(value),
-        hasLower: /[a-z]/.test(value),
-        hasNumber: /[0-9]/.test(value),
-        hasSymbol: /[^A-Za-z0-9]/.test(value),
-    };
+  const passedCount = checks.filter((check) => check.test(value)).length;
+  const strengthPercent = value.length === 0 ? 0 : (passedCount / checks.length) * 100;
 
-    // Compute dynamic strength score index
-    const activeCount = Object.values(checks).filter(Boolean).length;
+  const strengthLabel =
+    value.length === 0
+      ? "Empty"
+      : passedCount <= 2
+        ? "Weak"
+        : passedCount === 3
+          ? "Fair"
+          : passedCount === 4
+            ? "Good"
+            : "Strong";
 
-    // Determine progress bar colour layouts dynamically
-    const getStrengthConfig = () => {
-        if (value.length === 0) {
-            return { width: 'w-0', color: 'bg-slate-800', label: 'Empty' };
-        }
-        if (activeCount <= 2) {
-            return { width: 'w-1/4', color: 'bg-rose-500', label: 'Weak' };
-        }
-        if (activeCount === 3) {
-            return { width: 'w-2/4', color: 'bg-amber-500', label: 'Fair' };
-        }
-        if (activeCount === 4) {
-            return { width: 'w-3/4', color: 'bg-blue-500', label: 'Good' };
-        }
-        return { width: 'w-full', color: 'bg-emerald-500', label: 'Strong' };
-    };
+  const strengthColor =
+    value.length === 0
+      ? "bg-[#3a3d37]"
+      : passedCount <= 2
+        ? "bg-[#b85b50]"
+        : passedCount === 3
+          ? "bg-[#d8bd75]"
+          : passedCount === 4
+            ? "bg-[#8ea56f]"
+            : "bg-[#4f9d69]";
 
-    const strength = getStrengthConfig();
+  return (
+    <div className="mt-3 rounded-md border border-[#d8bd75]/15 bg-[#151811]/45 p-4">
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#bdb4a4]">
+          Password strength
+        </p>
+        <p className="text-xs font-bold text-[#d8bd75]">{strengthLabel}</p>
+      </div>
 
-    return (
-        <div className="mt-2 space-y-3">
-            {/* Dynamic Strength Bar Wrapper */}
-            <div>
-                <div className="flex justify-between items-center text-[11px] mb-1 font-mono">
-                    <span className="text-slate-400">Password Strength:</span>
-                    <span className={`font-bold transition-colors duration-200`}>{strength.label}</span>
-                </div>
-                <div className="w-full h-1.5 bg-slate-950 border border-slate-800/80 rounded-full overflow-hidden">
-                    <div className={`h-full ${strength.width} ${strength.color} transition-all duration-300 ease-out`} />
-                </div>
-            </div>
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#2a2e27]">
+        <div
+          className={`h-full rounded-full transition-all duration-300 ${strengthColor}`}
+          style={{ width: `${strengthPercent}%` }}
+        />
+      </div>
 
-            {/* Reactive Feedback Checklist */}
-            <ul className="text-xs space-y-1 font-sans">
-                <li className={`flex items-center space-x-2 ${checks.hasMinLength ? 'text-emerald-400' : 'text-slate-500'}`}>
-                    <span>{checks.hasMinLength ? '✓' : '✕'}</span>
-                    <span>At least 8 characters long</span>
-                </li>
-                <li className={`flex items-center space-x-2 ${checks.hasUpper && checks.hasLower ? 'text-emerald-400' : 'text-slate-500'}`}>
-                    <span>{checks.hasUpper && checks.hasLower ? '✓' : '✕'}</span>
-                    <span>Contains uppercase & lowercase letters</span>
-                </li>
-                <li className={`flex items-center space-x-2 ${checks.hasNumber ? 'text-emerald-400' : 'text-slate-500'}`}>
-                    <span>{checks.hasNumber ? '✓' : '✕'}</span>
-                    <span>Contains at least one number (0-9)</span>
-                </li>
-                <li className={`flex items-center space-x-2 ${checks.hasSymbol ? 'text-emerald-400' : 'text-slate-500'}`}>
-                    <span>{checks.hasSymbol ? '✓' : '✕'}</span>
-                    <span>Contains a special symbol (e.g., @, #, $, %)</span>
-                </li>
-            </ul>
-        </div>
-    );
+      <ul className="mt-4 grid gap-2 text-sm">
+        {checks.map((check) => {
+          const passed = check.test(value);
+
+          return (
+            <li
+              key={check.id}
+              className={passed ? "text-[#9fcd9a]" : "text-[#8a8173]"}
+            >
+              <span className="mr-2 font-bold">{passed ? "✓" : "•"}</span>
+              {check.label}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
 }
