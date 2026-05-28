@@ -2,68 +2,51 @@
 
 FastAPI backend for Plutus, the AI financial intelligence product by Two Sicilies.
 
-## Architecture
+The backend is designed around feature ownership, explicit API contracts, database migrations, and defense-in-depth validation. The current implemented domain is authentication; the structure is prepared for assets, transactions, portfolio views, calendar events, and AI insights.
 
-The backend uses feature-based structure. Shared infrastructure lives in `core/`,
-database connection code lives in `db/`, API version wiring lives in `api/`, and
-business domains live in `features/`.
+## Responsibilities
 
-```text
-app/
-  main.py
-  core/
-    config.py
-    security.py
-  db/
-    session.py
-    init_db.py
-  api/
-    deps.py
-    v1/
-      router.py
-  features/
-    auth/
-      exceptions.py
-      router.py
-      schemas.py
-      service.py
-    users/
-      models.py
-      schemas.py
-      service.py
-```
+The backend owns:
 
-## Auth Boundaries
+- API routing and versioning
+- Request and response validation
+- Authentication and JWT issuing
+- Password hashing and verification
+- Database sessions and persistence
+- SQLModel table definitions
+- Alembic schema migrations
+- Protected-route dependencies for private user data
 
-`features/users/models.py` is the database world. It owns the `User` SQLModel
-table and stores internal fields such as `hashed_password`.
+## Architecture Principles
 
-`features/users/schemas.py` is the public user network world. `UserRead` is safe
-to return to clients and excludes password hashes.
+The backend uses a feature-based structure.
 
-`features/auth/schemas.py` contains auth request/response contracts:
+- `app/main.py` creates the FastAPI application, middleware, lifespan startup behavior, and top-level router registration.
+- `app/api/` contains shared API dependencies and versioned API router composition.
+- `app/core/` contains infrastructure concerns such as settings and security helpers.
+- `app/db/` contains runtime database session setup and SQLModel metadata registration.
+- `app/features/` contains product domains. Each feature owns its router, schemas, service logic, and models when needed.
+- `migrations/` contains Alembic migration history. It stays outside application runtime code.
 
-```text
-RegisterRequest  inbound account creation body
-LoginRequest     inbound login body
-TokenResponse    outbound bearer token body
-```
+## Authentication Boundary
 
-`features/auth/service.py` contains auth business logic: duplicate checks,
-password hashing, password verification, and token creation.
+The auth flow intentionally separates database models, network schemas, and business logic.
 
-`features/auth/exceptions.py` contains auth-domain failures. The service raises
-these exceptions, and the router translates them into HTTP status codes. This
-keeps the business layer independent from FastAPI's network layer.
+- `features/users/models.py` defines the `User` database table and internal fields such as `hashed_password`.
+- `features/users/schemas.py` defines safe outbound user shapes such as `UserRead`.
+- `features/auth/schemas.py` defines inbound auth request bodies and auth response contracts.
+- `features/auth/service.py` performs duplicate checks, password hashing, password verification, and token creation.
+- `features/auth/exceptions.py` defines auth-domain failures.
+- `features/auth/router.py` translates domain results and exceptions into HTTP responses.
 
-`features/auth/router.py` exposes HTTP endpoints:
+Implemented endpoints:
 
 ```text
 POST /api/v1/auth/register
 POST /api/v1/auth/login
 ```
 
-Common auth status codes:
+Common auth responses:
 
 ```text
 201 register success
@@ -74,45 +57,65 @@ Common auth status codes:
 422 invalid request body
 ```
 
-## Local Setup
+## Environment
 
-Install dependencies:
+Create `backend/.env` locally. Do not commit it.
+
+```env
+APP_NAME=Plutus API
+APP_VERSION=0.1.0
+ENVIRONMENT=development
+
+DATABASE_URL=postgresql+psycopg2://plutus:plutus@localhost:5432/plutus
+SECRET_KEY=replace_with_a_32_byte_or_longer_secret
+
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+ALLOWED_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000","http://localhost:3001","http://127.0.0.1:3001"]
+```
+
+Generate a local development secret:
+
+```bash
+openssl rand -hex 32
+```
+
+## Install
 
 ```bash
 poetry install
 ```
 
-Required environment variables:
+## Local Database
+
+The local backend expects PostgreSQL on `localhost:5432`.
+
+Create the local Docker database if it does not exist:
 
 ```bash
-DATABASE_URL=postgresql+psycopg2://orbital:orbital@localhost:5432/orbital
-SECRET_KEY=dev-secret-change-this
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+docker run --name plutus-postgres \
+  -e POSTGRES_USER=plutus \
+  -e POSTGRES_PASSWORD=plutus \
+  -e POSTGRES_DB=plutus \
+  -p 5432:5432 \
+  -v plutus_pgdata:/var/lib/postgresql/data \
+  -d postgres:16
 ```
 
-Run the API:
+Start the database on later development sessions:
 
 ```bash
-poetry run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+docker start plutus-postgres
 ```
 
-Open API docs:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-## Database Migrations
-
-This project uses SQLModel for table models and Alembic for migrations.
-
-Generate a migration after changing table models:
+Stop it when finished:
 
 ```bash
-poetry run alembic revision --autogenerate -m "describe change"
+docker stop plutus-postgres
 ```
+
+## Migrations
 
 Apply migrations:
 
@@ -120,17 +123,55 @@ Apply migrations:
 poetry run alembic upgrade head
 ```
 
-`app/db/init_db.py` imports SQLModel table classes so Alembic can discover
-metadata. Do not use `SQLModel.metadata.create_all()` as the production schema
-management path.
+Create a new migration after changing SQLModel table models:
+
+```bash
+poetry run alembic revision --autogenerate -m "describe schema change"
+poetry run alembic upgrade head
+```
+
+Review generated migration files before committing them. SQLModel migrations may require `import sqlmodel` when generated columns reference `sqlmodel.sql.sqltypes.AutoString`.
+
+`app/db/init_db.py` must import every SQLModel table class that Alembic should detect. Add new table models there when new feature tables are created.
+
+## Run
+
+```bash
+poetry run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+API docs:
+
+```text
+http://127.0.0.1:8000/docs
+```
 
 ## Tests
-
-Run tests:
 
 ```bash
 poetry run pytest
 ```
 
-The auth tests use an in-memory SQLite database and override FastAPI's database
-dependency, so they do not mutate your local PostgreSQL database.
+The auth tests use an in-memory SQLite database and override FastAPI's database dependency. They do not mutate the local PostgreSQL database.
+
+## Future Feature Pattern
+
+For each new backend feature, prefer this pattern:
+
+- `models.py` for database tables owned by the feature
+- `schemas.py` for request and response contracts
+- `service.py` for business logic
+- `exceptions.py` when the feature has domain-specific failure cases
+- `router.py` for HTTP endpoints and status-code translation
+- tests covering router behavior and service rules
+
+For financial data, prefer precise numeric types such as `Decimal` for money values. Avoid `float` for persisted monetary amounts.
+
+## Security Notes
+
+- Never store raw passwords.
+- Never return `hashed_password` in API responses.
+- Never commit `.env` files or production credentials.
+- Use `CurrentUser` from `app/api/deps.py` for protected user-owned resources.
+- Keep authentication, authorization, and data ownership checks on the backend.
+- Use separate databases for local development, staging, and production.
