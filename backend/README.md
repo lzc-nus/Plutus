@@ -16,6 +16,7 @@ The backend owns:
 - SQLModel table definitions
 - Alembic schema migrations
 - OpenAPI contract generation for frontend clients
+- Health checks for API and database availability
 - Protected-route dependencies for private user data
 
 ## Architecture Principles
@@ -167,6 +168,16 @@ http://127.0.0.1:8000/docs
 http://127.0.0.1:8000/redoc
 http://127.0.0.1:8000/openapi.json
 ```
+
+Health check:
+
+```text
+http://127.0.0.1:8000/health
+```
+
+The health endpoint runs a lightweight database query. It returns `200` when the API and PostgreSQL are reachable, and `503` when the database is unavailable.
+
+Database errors raised during normal request handling are converted to `503 Service Unavailable` responses by the global SQLAlchemy exception handler in `app/main.py`.
 
 ## Tests
 
