@@ -24,6 +24,7 @@ The product should treat user financial data as sensitive by default. Frontend v
 - Database: PostgreSQL
 - Local infrastructure: Docker for PostgreSQL
 - Database inspection: DBeaver or `psql`
+- API client generation: FastAPI OpenAPI schema and `@hey-api/openapi-ts`
 
 ## Local Development
 
@@ -83,6 +84,29 @@ poetry run alembic upgrade head
 
 Do not create migrations for frontend changes, service-only changes, validation-message changes, or README edits.
 
+## API Contract Workflow
+
+FastAPI exposes the backend contract at:
+
+```text
+http://127.0.0.1:8000/openapi.json
+```
+
+The frontend uses that OpenAPI contract to generate typed API functions and types under:
+
+```text
+frontend/src/lib/api/generated
+```
+
+Regenerate the frontend API client whenever backend endpoint paths, request bodies, response models, status codes, or `operation_id` values change:
+
+```bash
+cd frontend
+npm run api:generate
+```
+
+Application code should call hand-written API wrappers such as `frontend/src/lib/api/auth.ts`, not generated files directly. Generated files should be treated as build artifacts produced from the backend API contract.
+
 ## Quality Checks
 
 Backend tests:
@@ -97,6 +121,7 @@ Frontend checks:
 ```bash
 cd frontend
 npm run lint
+npm run typecheck
 npm run build
 ```
 
