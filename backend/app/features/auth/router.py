@@ -22,6 +22,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
     "/register",
     response_model=UserRead,
     status_code=status.HTTP_201_CREATED,
+    operation_id="auth_register",
 )
 def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> UserRead:
     try:
@@ -44,7 +45,10 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> UserRea
         ) from exc
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post(
+        "/login", 
+        response_model=TokenResponse,
+        operation_id="auth_login",)
 def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
     try:
         access_token = login_user(db, payload)

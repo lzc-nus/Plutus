@@ -4,10 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import RenaissanceAuthShell from "@/components/auth/RenaissanceAuthShell";
 import PasswordValidator from "@/components/auth/PasswordValidator";
+import { getApiErrorMessage, registerAccount } from "@/lib/api/auth";
 import { registerSchema } from "@/lib/validations/auth";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
-const AUTH_PATH = "/api/v1/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -33,16 +31,10 @@ export default function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}${AUTH_PATH}/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
-      });
+      const { error } = await registerAccount(parsed.data);
 
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(data.detail ?? "Unable to create account.");
+      if (error) {
+        throw new Error(getApiErrorMessage(error, "Unable to create account."));
       }
 
       router.push("/login");

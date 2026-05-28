@@ -3,10 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import RenaissanceAuthShell from "@/components/auth/RenaissanceAuthShell";
+import { getApiErrorMessage, loginWithEmailPassword } from "@/lib/api/auth";
 import { loginSchema } from "@/lib/validations/auth";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
-const AUTH_PATH = "/api/v1/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,23 +29,17 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}${AUTH_PATH}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
-      });
+      const { data, error } = await loginWithEmailPassword(parsed.data);
 
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(data.detail ?? "Unable to sign in.");
+      if (error) {
+        throw new Error(getApiErrorMessage(error, "Unable to sign in."));
       }
 
-      const token = data.access_token ?? data.accessToken;
-      if (token) {
-        localStorage.setItem("plutus_access_token", token);
+      if (!data?.access_token) {
+        throw new Error("Login response did not include an access token.");
       }
 
+      localStorage.setItem("plutus_access_token", data.access_token);
       router.push("/dashboard/overview");
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Unable to sign in.");
