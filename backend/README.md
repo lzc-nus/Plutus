@@ -15,6 +15,7 @@ The backend owns:
 - Database sessions and persistence
 - SQLModel table definitions
 - Alembic schema migrations
+- OpenAPI contract generation for frontend clients
 - Protected-route dependencies for private user data
 
 ## Architecture Principles
@@ -56,6 +57,25 @@ Common auth responses:
 409 duplicate email or username
 422 invalid request body
 ```
+
+Each public endpoint should use a stable `operation_id`. The frontend API client generator turns those operation IDs into TypeScript function names. For example, `auth_login` becomes `authLogin` in the generated frontend SDK.
+
+## API Contract
+
+FastAPI automatically publishes the API contract while the backend is running:
+
+```text
+http://127.0.0.1:8000/openapi.json
+```
+
+The frontend uses this contract to generate typed API functions and request/response types. Whenever an endpoint path, request schema, response model, status code, or `operation_id` changes, regenerate the frontend client:
+
+```bash
+cd ../frontend
+npm run api:generate
+```
+
+When adding routes, document expected error responses in the FastAPI route metadata where practical. That keeps the generated frontend error types closer to real backend behavior.
 
 ## Environment
 
@@ -144,6 +164,8 @@ API docs:
 
 ```text
 http://127.0.0.1:8000/docs
+http://127.0.0.1:8000/redoc
+http://127.0.0.1:8000/openapi.json
 ```
 
 ## Tests
