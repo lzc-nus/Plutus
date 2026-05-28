@@ -1,59 +1,40 @@
-import os
-from dotenv import load_dotenv
+from __future__ import annotations
+
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends, HTTPException, status
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import Session, select
-from typing import List
-from backend.app.db.database import init_db, get_db, Transaction
-from app.routers import (
-    user_router,
-    portfolio_router, 
-    goals_router, 
-    transactions_router, 
-    insights_router,
-    calendar_router,
-    predictions_router,
-    auth_router
-)
 
-load_dotenv()
-allowed_origins = os.getenv("ALLOWED_ORIGINS").split(",")
+from app.api.v1.router import api_router
+from app.core.config import settings
+from app.db.init_db import init_db_metadata
 
-# Setup the modern lifespan lifecycle state manager
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Everything here runs before the application starts up
-    init_db()
-    yield 
-    # Everything here runs after the application shuts down
-    pass
+    print("Starting app")
+    init_db_metadata()
+    yield
+    print("Stopping app")
+
 
 app = FastAPI(
-    title="Plutus API", 
+    title=settings.app_name,
+    version=settings.app_version,
     lifespan=lifespan,
-    version="0.1.0"
 )
-
-origins = allowed_origins
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*'],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-app.include_router(user_router)
-app.include_router(portfolio_router)
-app.include_router(goals_router)
-app.include_router(transactions_router)
-app.include_router(insights_router)
-app.include_router(calendar_router)
-app.include_router(predictions_router)
-app.include_router(auth_router)
+app.include_router(api_router)
 
-@app.get('/')
+
+@app.get("/")
 def root():
-    return {'message': 'Welcome to Plutus API.'}
+    return {"message": "Welcome to Plutus API."}
