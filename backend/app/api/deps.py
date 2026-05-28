@@ -1,38 +1,50 @@
-import os
-import secrets
+from __future__ import annotations
+
+import uuid
 from typing import Annotated
 
+import jwt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from backend.app.db.database import User
+from fastapi.security import OAuth2PasswordBearer
+from sqlmodel import Session
 
-security = HTTPBasic()
+from app.core.security import decode_access_token
+from app.db.session import get_db
+from app.features.users.models import User
+from app.features.users.service import get_user_by_id
 
-def get_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
-    correct_username = os.getenv("HTTP_BASIC_USERNAME", "admin").encode("utf8")
-    correct_password = os.getenv("HTTP_BASIC_PASSWORD", "password").encode("utf8")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
-    current_username_bytes = credentials.username.encode("utf8")
-    current_password_bytes = credentials.password.encode("utf8")
 
-    is_correct_username = secrets.compare_digits(current_username_bytes, correct_username)
-    is_correct_password = secrets.compare_digits(current_password_bytes, correct_password)
-
-    if not (is_correct_username and is_correct_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password",
-            headers={"WWW-Authenticate": "Basic"}
-        )
-    
-    return User(
-        id=...,
-        username=credentials.username,
-        email=...,
-        full_name=...,
-        base_currency=...,
-        is_active=...,
-        is_verified=...,
+def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: Annotated[Session, Depends(get_db)],
+) -> User:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials.",
+        headers={"WWW-Authenticate": "Bearer"},
     )
+
+    try:
+        payload = decode_access_token(token)
+        subject = payload.get("sub")
+        if not isinstance(subject, str):
+            raise credentials_exception
+        user_id = uuid.UUID(subject)
+    except (jwt.PyJWTError, ValueError):
+        raise credentials_exception
+
+    user = get_user_by_id(db, user_id)
+    if not user:
+        raise credentials_exception
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is inactive.",
+        )
+
+    return user
+
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
