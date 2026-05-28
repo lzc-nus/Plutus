@@ -286,7 +286,7 @@ export default function RenaissanceAuthShell({
           transition: opacity var(--transition);
           pointer-events: none;
         }
-
+          
         .container {
           display: flex;
           align-items: center;

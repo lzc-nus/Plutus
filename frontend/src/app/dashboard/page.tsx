@@ -74,24 +74,6 @@ function OverviewPage({ onNavigate }: { onNavigate: (page: PageKey) => void }) {
           </p>
         </div>
       </section>
-      
-      <section className="relative overflow-hidden rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 shadow-[0_24px_90px_rgba(43,34,24,0.08)] sm:p-8">
-        <div className="absolute right-6 top-6 hidden h-28 w-28 rounded-full border border-[#c3a35d] opacity-50 sm:block" />
-        <div className="absolute right-12 top-12 hidden h-16 w-16 rounded-full border border-[#c3a35d] opacity-50 sm:block" />
-        <div className="relative max-w-4xl">
-          <p className="text-sm font-semibold uppercase text-[#8f6f2d]">
-            Renaissance wealth intelligence
-          </p>
-          <h1 className="font-display mt-5 text-5xl font-semibold leading-none sm:text-6xl lg:text-7xl">
-            Private capital, reasoned with precision.
-          </h1>
-          <p className="mt-6 max-w-2xl text-base leading-7 text-[#696154]">
-            A private wealth office interface for monitoring assets,
-            liabilities, AI risk, and the next decisions that shape long-term
-            capital.
-          </p>
-        </div>
-      </section>
 
       <section className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard

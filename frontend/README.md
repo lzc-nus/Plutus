@@ -1,36 +1,136 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Plutus Frontend
 
-## Getting Started
+Next.js frontend for Plutus, the AI financial intelligence product by Two Sicilies.
 
-First, run the development server:
+The frontend provides the public landing experience, authentication screens, and the authenticated dashboard shell. It is prepared to grow around portfolio, assets, transactions, calendar, settings, AI insight, and strategy workflows.
+
+## Responsibilities
+
+The frontend owns:
+
+- Public landing and product narrative
+- Login and register screens
+- Client-side form validation with Zod
+- Auth token storage for the current local-development flow
+- Dashboard routing and route guarding
+- User-facing financial dashboard components
+- API calls to the FastAPI backend
+
+## Environment
+
+Create `frontend/.env` locally when you need to override the backend URL.
+
+```env
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+```
+
+If this variable is missing, the auth pages currently fall back to:
+
+```text
+http://127.0.0.1:8000
+```
+
+Because this value is exposed to browser code, only use `NEXT_PUBLIC_` variables for values that are safe to expose publicly.
+
+## Install
+
+```bash
+npm install
+```
+
+## Run
+
+Start the frontend dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The backend should be running separately at:
 
-## Learn More
+```text
+http://127.0.0.1:8000
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Use `npm run build` before opening a pull request or merging major frontend changes.
 
-## Deploy on Vercel
+## Routing Model
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The app uses the Next.js App Router.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `(public)` contains the landing page experience.
+- `(auth)` contains login and register pages.
+- `dashboard` contains authenticated product pages.
+
+Route groups such as `(auth)` and `(public)` organize files without adding those names to the URL.
+
+Examples:
+
+```text
+frontend/src/app/(public)/page.tsx   -> /
+frontend/src/app/(auth)/login/page.tsx -> /login
+frontend/src/app/dashboard/overview/page.tsx -> /dashboard/overview
+```
+
+## Authentication Flow
+
+Login and register pages validate form input with Zod before sending requests to the backend.
+
+Current auth endpoints:
+
+```text
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+```
+
+Login stores the returned access token in local storage under:
+
+```text
+plutus_access_token
+```
+
+The dashboard layout checks for this token and redirects unauthenticated users to `/login`.
+
+Important: frontend route guards are for user experience. Private financial data must still be protected by backend dependencies and authorization checks.
+
+## Validation Strategy
+
+The frontend uses Zod for immediate user feedback and cleaner form handling.
+
+The backend repeats validation with SQLModel and Pydantic schemas. This is intentional defense in depth:
+
+```text
+Zod: better browser UX
+Backend schemas: trusted API boundary
+Backend services: business rules
+Database constraints: final data integrity
+```
+
+Keep frontend Zod schemas aligned with backend request schemas whenever auth or feature inputs change.
+
+## Development Notes
+
+- Prefer reusable components for shared dashboard and auth UI.
+- Keep route pages focused on page composition and request orchestration.
+- Keep validation schemas in `src/lib/validations`.
+- Keep API helper code in `src/lib` as backend integration grows.
+- Avoid committing generated files such as `.next`, `node_modules`, `.DS_Store`, or local env files.
+
+## Credits
+
+The authentication page lamp interaction was inspired by an open-source UI concept from Ilmah Code Hub. The implementation has been adapted for Plutus by Two Sicilies with custom branding, layout, styling, and application logic.
