@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 
+from app.api.health import router as health_router
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.db.init_db import init_db_metadata
@@ -33,6 +36,18 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
+app.include_router(health_router)
+
+
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_exception_handler(
+    _request: Request,
+    _exc: SQLAlchemyError,
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        content={"detail": "Database is temporarily unavailable."},
+    )
 
 
 @app.get("/")

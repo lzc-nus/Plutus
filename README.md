@@ -60,6 +60,14 @@ Open the backend docs:
 http://127.0.0.1:8000/docs
 ```
 
+Check backend and database health:
+
+```text
+http://127.0.0.1:8000/health
+```
+
+`/health` returns `200` when the API can reach PostgreSQL and `503` when the database is unavailable.
+
 ## Database Workflow
 
 The local database is PostgreSQL running in Docker. The default local connection is:
