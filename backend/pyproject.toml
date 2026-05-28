@@ -1,5 +1,5 @@
 [project]
-name = "orbital-backend"
+name = "plutus-backend"
 version = "0.1.0"
 description = "backend"
 authors = [
