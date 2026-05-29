@@ -1,67 +1,24 @@
-// this file runs as a client component.
-"use client";
-
-import { useMemo, useState } from "react";
 import {
-  AIReportCard,
-  AllocationBar,
-  AssetCard,
   CashflowBreakdownChart,
-  GoalCard,
-  LiabilityCard,
   MetricCard,
   NextActionCard,
-  PageShell,
-  PdfExportButton,
   RiskItemCard,
   RiskScoreCard,
   SectionHeader,
-  TransactionList,
-  TransactionRangeToggle,
-  WealthEquation,
-  WhatIfPanel,
-  type PageKey,
 } from "@/components/wealth-components";
 import {
-  aiReportSections,
-  assets,
   financialSnapshot,
-  goals,
   inflowBreakdown,
   liabilities,
   nextActions,
   outflowBreakdown,
   riskItems,
-  strategyRecommendations,
   transactions,
   user,
-  type TransactionRange,
 } from "@/data/wealthData";
 import { formatCurrency, formatCurrencyWithCents } from "@/lib/format";
 
-export default function Home() {
-  const [activePage, setActivePage] = useState<PageKey>("overview");
-
-  const navigate = (page: PageKey) => {
-    setActivePage(page);
-    window.requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-  };
-
-  return (
-    <PageShell activePage={activePage} onNavigate={navigate}>
-      {activePage === "overview" ? (
-        <OverviewPage onNavigate={navigate} />
-      ) : null}
-      {activePage === "portfolio" ? <PortfolioPage /> : null}
-      {activePage === "ai-insight" ? <AIInsightPage /> : null}
-      {activePage === "strategy" ? <StrategyPage /> : null}
-    </PageShell>
-  );
-}
-
-function OverviewPage({ onNavigate }: { onNavigate: (page: PageKey) => void }) {
+export default function OverviewPage() {
   const liabilityBreakdown = liabilities.slice(0, 5);
   const recentMovements = transactions.slice(0, 5);
 
@@ -71,6 +28,12 @@ function OverviewPage({ onNavigate }: { onNavigate: (page: PageKey) => void }) {
         <div className="relative max-w-4xl">
           <p className="text-sm font-semibold uppercase text-[#7a6332]">
             Welcome back, dear {user.name}.
+          </p>
+          <h2 className="font-display mt-3 text-4xl font-semibold leading-tight text-[#1d211c] sm:text-5xl">
+            Your financial position at a glance.
+          </h2>
+          <p className="mt-4 max-w-3xl text-sm leading-6 text-[#696154]">
+            A concise command center for net worth, cashflow, obligations, risk signals, and next actions.
           </p>
         </div>
       </section>
@@ -86,6 +49,16 @@ function OverviewPage({ onNavigate }: { onNavigate: (page: PageKey) => void }) {
           label="Safe to Spend"
           sublabel="AI-guided, after obligations"
           value={formatCurrency(financialSnapshot.safeToSpend)}
+        />
+        <MetricCard
+          label="Monthly Inflow"
+          sublabel="Income before planned obligations"
+          value={formatCurrency(financialSnapshot.inflow)}
+        />
+        <MetricCard
+          label="Monthly Outflow"
+          sublabel="Commitments, reserves, and spending"
+          value={formatCurrency(financialSnapshot.outflow)}
         />
       </section>
 
@@ -160,11 +133,7 @@ function OverviewPage({ onNavigate }: { onNavigate: (page: PageKey) => void }) {
           />
           <div className="grid gap-4 sm:grid-cols-2">
             {riskItems.map((item) => (
-              <RiskItemCard
-                item={item}
-                key={item.id}
-                onViewInsight={() => onNavigate("ai-insight")}
-              />
+              <RiskItemCard item={item} key={item.id} />
             ))}
           </div>
         </section>
@@ -206,151 +175,6 @@ function OverviewPage({ onNavigate }: { onNavigate: (page: PageKey) => void }) {
             ))}
           </div>
         </article>
-      </section>
-    </div>
-  );
-}
-
-function PortfolioPage() {
-  return (
-    <div className="grid gap-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <SectionHeader
-          description="Net worth is counted as all marked assets less all outstanding liabilities, with liquidity and risk kept visible."
-          eyebrow="Portfolio"
-          title="Complete balance sheet"
-        />
-        <PdfExportButton />
-      </div>
-
-      <WealthEquation
-        assets={financialSnapshot.totalAssets}
-        liabilities={financialSnapshot.totalLiabilities}
-        netWorth={financialSnapshot.netWorth}
-      />
-
-      <section className="grid gap-5">
-        <SectionHeader
-          description="Each asset category is marked with current value, portfolio share, recent change, liquidity, and risk label."
-          eyebrow="Assets dashboard"
-          title="What you own"
-        />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {assets.map((asset) => (
-            <AssetCard asset={asset} key={asset.id} />
-          ))}
-        </div>
-      </section>
-
-      <section className="grid gap-5">
-        <SectionHeader
-          description="Liabilities are tracked by balance, monthly payment, rate, maturity, and risk characteristics."
-          eyebrow="Liabilities dashboard"
-          title="What you owe"
-        />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {liabilities.map((liability) => (
-            <LiabilityCard liability={liability} key={liability.id} />
-          ))}
-        </div>
-      </section>
-
-      <section className="grid gap-5">
-        <SectionHeader
-          description="A restrained allocation view for understanding exposure without visual noise."
-          eyebrow="Allocation view"
-          title="Capital distribution"
-        />
-        <AllocationBar assets={assets} />
-      </section>
-    </div>
-  );
-}
-
-function AIInsightPage() {
-  const [range, setRange] = useState<TransactionRange>("1M");
-  const visibleTransactions = useMemo(
-    () => transactions.filter((transaction) => transaction.range.includes(range)),
-    [range],
-  );
-
-  return (
-    <div className="grid gap-6">
-      <section className="rounded-lg bg-[#1d211c] p-6 text-[#fbf7ef] sm:p-8">
-        <p className="text-sm font-semibold uppercase text-[#c3a35d]">
-          AI Insight
-        </p>
-        <h1 className="font-display mt-3 text-5xl font-semibold leading-tight">
-          Private banking memo, generated from your financial record.
-        </h1>
-        <p className="mt-5 max-w-3xl text-base leading-7 text-[#d9d0c1]">
-          Mock report today, structured for a future backend AI response
-          tomorrow. The Overview risk score is sourced from this same report
-          model.
-        </p>
-      </section>
-
-      <section className="grid gap-5">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-          <SectionHeader
-            description="Switch between daily, monthly, and annual movements."
-            eyebrow="Transaction record"
-            title="Movements and risk tags"
-          />
-          <TransactionRangeToggle onChange={setRange} value={range} />
-        </div>
-        <TransactionList transactions={visibleTransactions} />
-      </section>
-
-      <AIReportCard
-        label={financialSnapshot.riskLabel}
-        score={financialSnapshot.riskScore}
-        sections={aiReportSections}
-      />
-    </div>
-  );
-}
-
-function StrategyPage() {
-  return (
-    <div className="grid gap-6">
-      <section className="rounded-lg border border-[#d9d0c1] bg-[#e1ded8] p-6 sm:p-8">
-        <SectionHeader
-          description="Goals are measured against liquidity, liabilities, and current portfolio risk before the system recommends new commitments."
-          eyebrow="Strategy"
-          title="Goals and what-if planning"
-        />
-      </section>
-
-      <section className="grid gap-5">
-        <SectionHeader eyebrow="Financial goals" title="Capital objectives" />
-        <div className="grid gap-4 md:grid-cols-2">
-          {goals.map((goal) => (
-            <GoalCard goal={goal} key={goal.id} />
-          ))}
-        </div>
-      </section>
-
-      <WhatIfPanel />
-
-      <section className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 sm:p-7">
-        <SectionHeader
-          description="Recommendations are mock outputs for now, ready to be replaced by strategy API results later."
-          eyebrow="Strategy recommendations"
-          title="Current priorities"
-        />
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {strategyRecommendations.map((recommendation) => (
-            <article
-              className="border-l border-[#c3a35d] pl-4"
-              key={recommendation}
-            >
-              <p className="text-sm leading-6 text-[#575044]">
-                {recommendation}
-              </p>
-            </article>
-          ))}
-        </div>
       </section>
     </div>
   );
