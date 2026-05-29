@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import type {
   AIReportSection,
@@ -17,104 +18,6 @@ import {
   formatCurrencyWithCents,
   formatPercent,
 } from "@/lib/format";
-
-export type PageKey = "overview" | "portfolio" | "ai-insight" | "strategy";
-
-const navItems: { key: PageKey; label: string }[] = [
-  { key: "overview", label: "Overview" },
-  { key: "portfolio", label: "Portfolio" },
-  { key: "ai-insight", label: "AI Insight" },
-  { key: "strategy", label: "Strategy" },
-];
-
-export function PageShell({ activePage, onNavigate, children, }: {
-  activePage: PageKey;
-  onNavigate: (page: PageKey) => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <main className="min-h-screen bg-[#f4efe6] text-[#1d211c]">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-5 py-5 sm:px-8 lg:px-10">
-        <TopNav activePage={activePage} onNavigate={onNavigate} />
-        {children}
-      </div>
-    </main>
-  );
-}
-
-export function TopNav({
-  activePage,
-  onNavigate,
-}: {
-  activePage: PageKey;
-  onNavigate: (page: PageKey) => void;
-}) {
-  return (
-    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[#d9d0c1] pb-5">
-      <button
-        className="brand-logo font-display text-left font-semibold"
-        onClick={() => onNavigate("overview")}
-        type="button"
-      >
-        Plutus
-      </button>
-      <nav
-        aria-label="Primary navigation"
-        className="order-3 flex w-full items-center gap-2 overflow-x-auto text-sm font-medium text-[#696154] md:order-2 md:w-auto md:gap-3"
-      >
-        {navItems.map((item) => (
-          <button
-            aria-current={activePage === item.key ? "page" : undefined}
-            className={`h-10 shrink-0 rounded-md px-3 transition ${
-              activePage === item.key
-                ? "bg-[#1d211c] text-[#fbf7ef]"
-                : "text-[#696154] hover:bg-[#e9e1d3] hover:text-[#1d211c]"
-            }`}
-            key={item.key}
-            onClick={() => onNavigate(item.key)}
-            type="button"
-          >
-            {item.label}
-          </button>
-        ))}
-      </nav>
-      <button
-        className="group order-2 inline-flex h-11 items-center gap-3 rounded-full border border-[#c8b58a] bg-[#fbf7ef] py-1 pl-1.5 pr-4 text-sm font-semibold text-[#2a241b] shadow-[0_10px_30px_rgba(43,34,24,0.08)] transition hover:border-[#8f6f2d] hover:bg-[#fffaf2] md:order-3"
-        onClick={() => onNavigate("ai-insight")}
-        type="button"
-      >
-        <span className="relative grid size-8 place-items-center rounded-full bg-[radial-gradient(circle_at_35%_25%,#f5e8ff_0%,#a78bfa_35%,#6d28d9_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_0_0_3px_rgba(124,58,237,0.12)] transition group-hover:scale-105">
-          <span className="absolute inset-0 rounded-full border border-white/35" />
-          <svg
-            aria-hidden="true"
-            className="relative size-4.5 text-white drop-shadow-sm"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="M13.4 4.5 15.2 10l5.3 2-5.3 2-1.8 5.5-1.9-5.5-5.2-2 5.2-2 1.9-5.5Z"
-              stroke="currentColor"
-              strokeLinejoin="round"
-              strokeWidth="2.4"
-            />
-            <path
-              d="m5.9 4 .8 2.3 2.4.9-2.4.9-.8 2.3L5 8.1l-2.3-.9L5 6.3 5.9 4Z"
-              stroke="currentColor"
-              strokeLinejoin="round"
-              strokeWidth="2.2"
-            />
-          </svg>
-        </span>
-        <span className="leading-none">
-          <span className="block text-[11px] font-semibold uppercase text-[#8f6f2d]">
-            AI
-          </span>
-          <span className="block">Open brief</span>
-        </span>
-      </button>
-    </header>
-  );
-}
 
 export function SectionHeader({
   eyebrow,
@@ -410,10 +313,10 @@ export function RiskScoreCard({
 
 export function RiskItemCard({
   item,
-  onViewInsight,
+  href = "/dashboard/ai",
 }: {
   item: RiskItem;
-  onViewInsight: () => void;
+  href?: string;
 }) {
   return (
     <article className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-5">
@@ -424,13 +327,12 @@ export function RiskItemCard({
         </span>
       </div>
       <p className="mt-3 text-sm leading-6 text-[#696154]">{item.reason}</p>
-      <button
+      <Link
         className="mt-4 text-sm font-semibold text-[#8f6f2d] underline-offset-4 hover:underline"
-        onClick={onViewInsight}
-        type="button"
+        href={href}
       >
         View in AI Insight
-      </button>
+      </Link>
     </article>
   );
 }
