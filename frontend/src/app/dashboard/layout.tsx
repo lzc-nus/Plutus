@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Header from "@/components/dashboard/Header";
+import { getCurrentUser } from "@/lib/api/users";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -11,27 +12,55 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [canRenderDashboard, setCanRenderDashboard] = useState(false);
 
   useEffect(() => {
-    function verifyAuth() {
+    let isMounted = true;
+
+    async function verifyAuth() {
       const token = localStorage.getItem("plutus_access_token");
 
       if (!token) {
+        if (isMounted) {
+          setCanRenderDashboard(false);
+        }
+        router.replace("/login");
+        return;
+      }
+
+      const { error, response } = await getCurrentUser();
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (response?.status === 401 || response?.status === 403) {
+        localStorage.removeItem("plutus_access_token");
         setCanRenderDashboard(false);
-        router.replace("/");
+        router.replace("/login");
+        return;
+      }
+
+      if (error || !response?.ok) {
+        setCanRenderDashboard(false);
+        router.replace("/login");
         return;
       }
 
       setCanRenderDashboard(true);
     }
 
-    verifyAuth();
-    window.addEventListener("pageshow", verifyAuth);
-    window.addEventListener("focus", verifyAuth);
-    window.addEventListener("storage", verifyAuth);
+    function handleAuthCheck() {
+      void verifyAuth();
+    }
+
+    handleAuthCheck();
+    window.addEventListener("pageshow", handleAuthCheck);
+    window.addEventListener("focus", handleAuthCheck);
+    window.addEventListener("storage", handleAuthCheck);
 
     return () => {
-      window.removeEventListener("pageshow", verifyAuth);
-      window.removeEventListener("focus", verifyAuth);
-      window.removeEventListener("storage", verifyAuth);
+      isMounted = false;
+      window.removeEventListener("pageshow", handleAuthCheck);
+      window.removeEventListener("focus", handleAuthCheck);
+      window.removeEventListener("storage", handleAuthCheck);
     };
   }, [pathname, router]);
 
