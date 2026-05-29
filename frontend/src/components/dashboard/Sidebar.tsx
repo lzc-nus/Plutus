@@ -13,7 +13,7 @@ const logoFont = Great_Vibes({
 });
 
 const STORAGE_KEY = "plutus_sidebar_collapsed";
-const TIP_ROTATION_INTERVAL_MS = 60_000;
+const TIP_ROTATION_INTERVAL_MS = 60000;
 
 type IconName =
   | "overview"
