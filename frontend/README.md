@@ -173,6 +173,26 @@ Generated TypeScript types catch developer mistakes at build time. Zod still mat
 - Call hand-written API wrappers from pages and components; avoid importing from `src/lib/api/generated` outside the API layer.
 - Avoid committing generated files such as `.next`, `node_modules`, `.DS_Store`, or local env files.
 
+## SVG Icon Workflow
+
+Dashboard sidebar icons are lightweight inline SVG shapes in `src/components/dashboard/Sidebar.tsx`. Prototype custom icons in a 24 by 24 SVG canvas, then copy only the inner SVG shapes into the sidebar `paths` map.
+
+Use this shared preview wrapper when designing icons in an SVG editor:
+
+```svg
+<svg viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Paste path, circle, line, or rect elements here -->
+</svg>
+```
+
+Example SVG editor draft:
+
+```text
+https://editsvgcode.com/gkr8mfuvfbkmpqvx4qo
+```
+
+When moving the icon into React, use JSX attribute names such as `strokeWidth`, `strokeLinecap`, and `className` if those attributes are needed directly in component code.
+
 ## Credits
 
 The authentication page lamp interaction was inspired by an open-source UI concept from Ilmah Code Hub. The implementation has been adapted for Plutus by Two Sicilies with custom branding, layout, styling, and application logic.

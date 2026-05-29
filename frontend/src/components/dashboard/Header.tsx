@@ -1,30 +1,195 @@
-'use client';
+"use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { user } from "@/data/wealthData";
 
+type HeaderMeta = {
+  title: string;
+  description: string;
+};
+
+const routeMeta: Array<{ path: string; meta: HeaderMeta }> = [
+  {
+    path: "/dashboard/portfolio/assets/new",
+    meta: {
+      title: "Add Asset",
+      description: "Record a new holding and keep the asset side of your balance sheet current.",
+    },
+  },
+  {
+    path: "/dashboard/portfolio/liabilities/new",
+    meta: {
+      title: "Add Liability",
+      description: "Capture debts, taxes, and obligations so net worth stays honest.",
+    },
+  },
+  {
+    path: "/dashboard/transactions/new",
+    meta: {
+      title: "New Transaction",
+      description: "Log movement across income, spending, transfers, and obligations.",
+    },
+  },
+  {
+    path: "/dashboard/overview",
+    meta: {
+      title: "Overview",
+      description: "A concise command center for net worth, cashflow, risk, and next actions.",
+    },
+  },
+  {
+    path: "/dashboard/portfolio",
+    meta: {
+      title: "Portfolio",
+      description: "Review assets, liabilities, allocation, and balance sheet exposure.",
+    },
+  },
+  {
+    path: "/dashboard/transactions",
+    meta: {
+      title: "Transactions",
+      description: "Trace the financial movements that explain how your position changes.",
+    },
+  },
+  {
+    path: "/dashboard/calendar",
+    meta: {
+      title: "Calendar",
+      description: "Track commitments, payments, reviews, and financial events before they arrive.",
+    },
+  },
+  {
+    path: "/dashboard/ai",
+    meta: {
+      title: "AI Insights",
+      description: "Surface patterns, risks, and explanations from your financial record.",
+    },
+  },
+  {
+    path: "/dashboard/strategy",
+    meta: {
+      title: "Strategy",
+      description: "Compare decisions, scenarios, and recommendations before acting.",
+    },
+  },
+  {
+    path: "/dashboard/settings",
+    meta: {
+      title: "Settings",
+      description: "Manage account details, security preferences, and product configuration.",
+    },
+  },
+  {
+    path: "/dashboard",
+    meta: {
+      title: "Dashboard",
+      description: "Your private Plutus workspace.",
+    },
+  },
+];
+
+function getHeaderMeta(pathname: string) {
+  return (
+    routeMeta.find((route) => pathname === route.path || pathname.startsWith(`${route.path}/`))?.meta ??
+    routeMeta[routeMeta.length - 1].meta
+  );
+}
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
+
+function HeaderIcon({ name }: { name: "logout" }) {
+  const paths = {
+    logout: (
+      <>
+        <path d="M10 6H6.5A1.5 1.5 0 0 0 5 7.5v9A1.5 1.5 0 0 0 6.5 18H10" />
+        <path d="M13 8l4 4-4 4" />
+        <path d="M9 12h8" />
+      </>
+    ),
+  };
+
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-4 w-4 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.9}
+    >
+      {paths[name]}
+    </svg>
+  );
+}
+
 export default function Header() {
-    const router = useRouter();
+  const router = useRouter();
+  const pathname = usePathname();
+  const meta = getHeaderMeta(pathname);
+  const dateLabel = new Intl.DateTimeFormat("en", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(new Date());
 
-    function handleLogout() {
-        localStorage.removeItem("plutus_access_token");
-        router.replace("/login");
-    }
+  function handleLogout() {
+    localStorage.removeItem("plutus_access_token");
+    router.replace("/login");
+  }
 
-    return (
-        <header className="bg-white shadow px-6 py-4">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800">Welcome to Plutus, {user.name}!</h1>
-                <div className="flex items-center gap-4">
-                    <button 
-                      type="button"
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      onClick={handleLogout}
-                    >
-                        Logout
-                    </button>
-                </div>
-            </div>
-        </header>
-    );
+  return (
+    <header className="sticky top-0 z-30 border-b border-[#d9d0c1] bg-[#f4efe6]/90 shadow-[0_18px_45px_rgba(43,34,24,0.06)] backdrop-blur-xl">
+      <div className="flex min-h-24 flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.22em] text-[#7a6332]">
+            <span>Private dashboard</span>
+            <span className="h-1 w-1 rounded-full bg-[#b99a52]" />
+            <span>{dateLabel}</span>
+          </div>
+
+          <h1 className="mt-2 truncate text-2xl font-bold text-[#1d211c] sm:text-3xl">
+            {meta.title}
+          </h1>
+
+          <p className="mt-1 max-w-3xl text-sm leading-6 text-[#6f675b]">
+            {meta.description}
+          </p>
+        </div>
+
+        <div className="flex items-center rounded-md border border-[#d9d0c1] bg-[#fbf7ef]/82 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
+          <div className="flex h-10 items-center gap-3 px-2.5 pr-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#d8bd75]/22 text-xs font-black text-[#5f4a1b]">
+              {getInitials(user.name)}
+            </span>
+            <span className="hidden min-w-0 sm:grid">
+              <span className="max-w-36 truncate text-sm font-bold text-[#1d211c]">{user.name}</span>
+              <span className="max-w-36 truncate text-[0.72rem] font-medium text-[#7c7468]">
+                {user.position}
+              </span>
+            </span>
+          </div>
+
+          <div className="h-7 w-px bg-[#d9d0c1]" />
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md px-3 text-sm font-bold text-[#5a241d] transition hover:bg-[#f3e3dc]"
+          >
+            <HeaderIcon name="logout" />
+            <span className="hidden sm:inline">Logout</span>
+          </button>
+        </div>
+      </div>
+    </header>
+  );
 }
