@@ -15,9 +15,12 @@ import {
 } from "@/data/wealthData";
 
 export default function AIPage() {
-  const [range, setRange] = useState<TransactionRange>("1M");
+  const [range, setRange] = useState<TransactionRange>("ALL");
   const visibleTransactions = useMemo(
-    () => transactions.filter((transaction) => transaction.range.includes(range)),
+    () =>
+      range === "ALL"
+        ? transactions
+        : transactions.filter((transaction) => transaction.range.includes(range)),
     [range],
   );
 
@@ -40,7 +43,7 @@ export default function AIPage() {
       <section className="grid gap-5">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <SectionHeader
-            description="Switch between daily, monthly, and annual movements."
+            description="Switch between daily, monthly, annual, and all-time movements."
             eyebrow="Transaction record"
             title="Movements and risk tags"
           />

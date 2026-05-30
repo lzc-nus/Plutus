@@ -71,6 +71,78 @@ export type TokenResponse = {
 };
 
 /**
+ * TransactionCreate
+ *
+ * Inbound payload for recording a user transaction.
+ */
+export type TransactionCreate = {
+    /**
+     * Occurred At
+     */
+    occurred_at: string;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Category
+     */
+    category: string;
+    /**
+     * Account
+     */
+    account: string;
+    /**
+     * Amount
+     */
+    amount: number | string;
+    /**
+     * Impact
+     */
+    impact?: string;
+};
+
+/**
+ * TransactionRead
+ *
+ * Outbound transaction shape returned to clients.
+ */
+export type TransactionRead = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Occurred At
+     */
+    occurred_at: string;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Category
+     */
+    category: string;
+    /**
+     * Account
+     */
+    account: string;
+    /**
+     * Amount
+     */
+    amount: string;
+    /**
+     * Impact
+     */
+    impact: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
  * UserRead
  *
  * Public user shape returned to clients.
@@ -197,6 +269,65 @@ export type UsersMeResponses = {
 };
 
 export type UsersMeResponse = UsersMeResponses[keyof UsersMeResponses];
+
+export type TransactionsListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Range
+         *
+         * Optional transaction window. Omit it or use ALL to include the full ledger.
+         */
+        range?: '1D' | '1M' | '1Y' | 'ALL' | null;
+    };
+    url: '/api/v1/transactions';
+};
+
+export type TransactionsListErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TransactionsListError = TransactionsListErrors[keyof TransactionsListErrors];
+
+export type TransactionsListResponses = {
+    /**
+     * Response Transactions List
+     *
+     * Successful Response
+     */
+    200: Array<TransactionRead>;
+};
+
+export type TransactionsListResponse = TransactionsListResponses[keyof TransactionsListResponses];
+
+export type TransactionsCreateData = {
+    body: TransactionCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/transactions';
+};
+
+export type TransactionsCreateErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TransactionsCreateError = TransactionsCreateErrors[keyof TransactionsCreateErrors];
+
+export type TransactionsCreateResponses = {
+    /**
+     * Successful Response
+     */
+    201: TransactionRead;
+};
+
+export type TransactionsCreateResponse = TransactionsCreateResponses[keyof TransactionsCreateResponses];
 
 export type HealthCheckHealthGetData = {
     body?: never;
