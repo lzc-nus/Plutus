@@ -1,158 +1,216 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useRouter } from "next/navigation";
+import { useMemo, useState, type FormEvent } from "react";
+import { createTransaction } from "@/lib/api/transactions";
+import { getApiErrorMessage } from "@/lib/api/auth";
+import { transactionFormSchema } from "@/lib/validations/transactions";
+import type { TransactionCreate } from "@/lib/api/generated";
 
-interface AddTransactionFormProps {
-    onTransactionAdded: () => void; // A trigger to refresh the main table data
+type AddTransactionFormProps = {
+  onTransactionAdded?: () => void;
+};
+
+type FieldErrors = Record<string, string[] | undefined>;
+
+function generateTimeOptions() {
+  const intervals: string[] = [];
+  for (let hour = 0; hour < 24; hour += 1) {
+    for (let minute = 0; minute < 60; minute += 15) {
+      intervals.push(`${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`);
+    }
+  }
+  return intervals;
+}
+
+function toIsoDateTime(date: string, time: string) {
+  return new Date(`${date}T${time}:00`).toISOString();
 }
 
 export default function AddTransactionForm({ onTransactionAdded }: AddTransactionFormProps) {
-    const [date, setDate] = useState<string>('');
-    const [time, setTime] = useState<string>('');
-    const [description, setDescription] = useState<string>('');
-    const [category, setCategory] = useState<string>('');
-    const [account, setAccount] = useState<string>('');
-    const [amount, setAmount] = useState<string>('');
-    const [impact, setImpact] = useState<string>('');
-    const [range, setRange] = useState<string>('1D'); // Default to one value
-    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-    const [formError, setFormError] = useState<string | null>(null);
+  const router = useRouter();
+  const timeOptions = useMemo(() => generateTimeOptions(), []);
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [account, setAccount] = useState("");
+  const [category, setCategory] = useState("");
+  const [impact, setImpact] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Generates: ["00:00", "00:15", ..., "13:30", ..., "23:45"]
-    const generateTimeIntervals = (): string[] => {
-        const intervals: string[] = [];
-        for (let hour = 0; hour < 24; hour++) {
-            for (let minute = 0; minute < 60; minute += 15) {
-                const HH = String(hour).padStart(2, '0');
-                const MM = String(minute).padStart(2, '0');
-                intervals.push(`${HH}:${MM}`);
-            }
-        }
-        return intervals;
-    };
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setFormError("");
 
-    const TIME_OPTIONS = generateTimeIntervals();
+    const parsed = transactionFormSchema.safeParse({
+      description,
+      amount,
+      date,
+      time,
+      account,
+      category,
+      impact,
+    });
 
-    async function handleSubmit(e: React.BaseSyntheticEvent) {
-        e.preventDefault();
-        setIsSubmitting(true);
-        setFormError(null);
-
-        const payload = {
-            date,
-            time,
-            description,
-            category,
-            account,
-            amount: parseFloat(amount), // Convert the string input into a real number
-            impact,
-            range: [range],
-        };
-
-        try {
-            const response = await fetch('http://localhost:8000/api/transactions/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (!response.ok) {
-                throw new Error(`Server returned ${response.status}: Failed to record transaction.`);
-            }
-
-            // Reset form states on success
-            setDate('');
-            setTime('');
-            setDescription('');
-            setCategory('');
-            setAccount('');
-            setAmount('');
-            setImpact('');
-
-            // Notify parent component to reload the ledger array
-            onTransactionAdded();
-        } catch (err) {
-            if (err instanceof Error) {
-                setFormError(err.message);
-            } else {
-                setFormError('An unexpected network anomaly occurred.');
-            }
-        } finally {
-            setIsSubmitting(false);
-        }
+    if (!parsed.success) {
+      setFieldErrors(parsed.error.flatten().fieldErrors);
+      return;
     }
 
-    return (
-        <div className="bg-[#fbf7ef] p-6 rounded-lg mb-8 border border-[#d9d0c1]">
-            <h2 className="text-lg font-bold mb-4 text-gray-800">Record New Transaction</h2>
+    setFieldErrors({});
+    setIsSubmitting(true);
 
-            {formError && (
-                <p className="text-red-600 text-sm mb-4">
-                    <strong>Error:</strong> {formError}
-                </p>
-            )}
+    try {
+      const { error } = await createTransaction({
+        occurred_at: toIsoDateTime(parsed.data.date, parsed.data.time),
+        description: parsed.data.description,
+        category: parsed.data.category,
+        account: parsed.data.account,
+        amount: parsed.data.amount,
+        impact: parsed.data.impact ?? "",
+      } satisfies TransactionCreate);
 
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className='flex flex-col gap-1.5'>
-                    <label className="block text-xs font-semibold mb-1 text-gray-700">Description</label>
-                    <input type="text" required value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g., Target grocery run" className="w-full p-2 rounded-md shadow-sm border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#8f6f2d] focus:ring-offset-2 text-gray-900" />
-                </div>
+      if (error) {
+        throw new Error(getApiErrorMessage(error, "Unable to record transaction."));
+      }
 
-                <div className='flex flex-col gap-1.5'>
-                    <label className="block text-xs font-semibold mb-1 text-gray-700">Amount ($) <span className='text-[#8f3f32]' aria-hidden='true'>*</span></label>
-                    <input type="number" step="0.01" required value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Negative for expenses (e.g. -50)" className="w-full p-2 rounded-md shadow-sm border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#8f6f2d] text-gray-900" />
-                </div>
+      setDescription("");
+      setAmount("");
+      setDate("");
+      setTime("");
+      setAccount("");
+      setCategory("");
+      setImpact("");
 
-                <div className='flex flex-col gap-1.5'>
-                    <label className="block text-xs font-semibold mb-1 text-gray-700">Date</label>
-                    <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="w-full p-2 rounded-md shadow-sm border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#8f6f2d] text-gray-900" />
-                </div>
+      onTransactionAdded?.();
+      router.push("/dashboard/transactions");
+      router.refresh();
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Unable to record transaction.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
-                <div className='flex flex-col gap-1.5'>
-                    <label htmlFor='time' className="block text-xs font-semibold mb-1 text-gray-700">
-                        Time <span className='text-[#8f3f32]' aria-hidden='true'>*</span>
-                        <span className="sr-only">Required, 24-hour format</span>
-                    </label>
-                    <select id="time" required value={time} onChange={(e) => setTime(e.target.value)} aria-required='true' className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#8f6f2d] focus:border-blue-500 text-sm">
-                        <option value="" disabled>Select time</option>
-                        {TIME_OPTIONS.map((timeOption) => (
-                            <option key={timeOption} value={timeOption}>
-                                {timeOption}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+  return (
+    <section className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 shadow-[0_18px_70px_rgba(43,34,24,0.06)] sm:p-7">
+      <div className="mb-6">
+        <p className="text-sm font-semibold uppercase text-[#8f6f2d]">Ledger entry</p>
+        <h2 className="font-display mt-2 text-4xl font-semibold leading-tight text-[#1d211c]">
+          Record new transaction
+        </h2>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#696154]">
+          Use positive amounts for income and negative amounts for expenses, investments, repayments, or transfers out.
+        </p>
+      </div>
 
-                <div className='flex flex-col gap-1.5'>
-                    <label className="block text-xs font-semibold mb-1 text-gray-700">Account</label>
-                    <input type="text" required value={account} onChange={(e) => setAccount(e.target.value)} placeholder="Checking Account" className="w-full p-2 rounded border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#8f6f2d] text-gray-900" />
-                </div>
+      {formError ? (
+        <p className="mb-4 rounded-md border border-[#d5a58b] bg-[#f2e0d8] px-3 py-2 text-sm font-semibold text-[#8f3f32]">
+          {formError}
+        </p>
+      ) : null}
 
-                <div>
-                    <label className="block text-xs font-semibold mb-1 text-gray-700">Category</label>
-                    <input type="text" required value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Food, Utilities" className="w-full p-2 rounded border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#8f6f2d] text-gray-900" />
-                </div>
+      <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
+        <label className="grid gap-1.5">
+          <span className="text-sm font-semibold text-[#353026]">Description</span>
+          <input
+            className="h-11 rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-none transition focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20"
+            onChange={(event) => setDescription(event.target.value)}
+            placeholder="ETF purchase"
+            type="text"
+            value={description}
+          />
+          {fieldErrors.description ? <span className="text-sm text-[#8f3f32]">{fieldErrors.description[0]}</span> : null}
+        </label>
 
-                <div>
-                    <label className="block text-xs font-semibold mb-1 text-gray-700">Analytical Range Horizon</label>
-                    <select value={range} onChange={(e) => setRange(e.target.value)} className="w-full p-2 rounded border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#8f6f2d] text-gray-900">
-                        <option value="1D">1 Day</option>
-                        <option value="1M">1 Month</option>
-                        <option value="1Y">1 Year</option>
-                    </select>
-                </div>
+        <label className="grid gap-1.5">
+          <span className="text-sm font-semibold text-[#353026]">Amount</span>
+          <input
+            className="h-11 rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-none transition focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20"
+            inputMode="decimal"
+            onChange={(event) => setAmount(event.target.value)}
+            placeholder="-2400.50"
+            type="text"
+            value={amount}
+          />
+          {fieldErrors.amount ? <span className="text-sm text-[#8f3f32]">{fieldErrors.amount[0]}</span> : null}
+        </label>
 
-                <div className="md:grid-column-span-2">
-                    <label className="block text-xs font-semibold mb-1 text-gray-700">Analytical Impact Note</label>
-                    <input type="text" required value={impact} onChange={(e) => setImpact(e.target.value)} placeholder="e.g., Decreased discretionary cash" className="w-full p-2 rounded border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#8f6f2d] text-gray-900" />
-                </div>
+        <label className="grid gap-1.5">
+          <span className="text-sm font-semibold text-[#353026]">Date</span>
+          <input
+            className="h-11 rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-none transition focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20"
+            onChange={(event) => setDate(event.target.value)}
+            type="date"
+            value={date}
+          />
+          {fieldErrors.date ? <span className="text-sm text-[#8f3f32]">{fieldErrors.date[0]}</span> : null}
+        </label>
 
-                <button type="submit" disabled={isSubmitting} className="md:col-span-2 bg-[#1d211c] hover:bg-[#343b32] text-[#fbf7ef] p-3 rounded font-bold transition disabled:bg-gray-400 disabled:cursor-not-allowed">
-                    {isSubmitting ? 'Recording Entry...' : 'Add Transaction Entry'}
-                </button>
-            </form>
-        </div>
-    );
+        <label className="grid gap-1.5">
+          <span className="text-sm font-semibold text-[#353026]">Time</span>
+          <select
+            className="h-11 rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-none transition focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20"
+            onChange={(event) => setTime(event.target.value)}
+            value={time}
+          >
+            <option value="">Select time</option>
+            {timeOptions.map((timeOption) => (
+              <option key={timeOption} value={timeOption}>
+                {timeOption}
+              </option>
+            ))}
+          </select>
+          {fieldErrors.time ? <span className="text-sm text-[#8f3f32]">{fieldErrors.time[0]}</span> : null}
+        </label>
+
+        <label className="grid gap-1.5">
+          <span className="text-sm font-semibold text-[#353026]">Account</span>
+          <input
+            className="h-11 rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-none transition focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20"
+            onChange={(event) => setAccount(event.target.value)}
+            placeholder="Brokerage"
+            type="text"
+            value={account}
+          />
+          {fieldErrors.account ? <span className="text-sm text-[#8f3f32]">{fieldErrors.account[0]}</span> : null}
+        </label>
+
+        <label className="grid gap-1.5">
+          <span className="text-sm font-semibold text-[#353026]">Category</span>
+          <input
+            className="h-11 rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-none transition focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20"
+            onChange={(event) => setCategory(event.target.value)}
+            placeholder="Investment"
+            type="text"
+            value={category}
+          />
+          {fieldErrors.category ? <span className="text-sm text-[#8f3f32]">{fieldErrors.category[0]}</span> : null}
+        </label>
+
+        <label className="grid gap-1.5 md:col-span-2">
+          <span className="text-sm font-semibold text-[#353026]">Impact note</span>
+          <input
+            className="h-11 rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-none transition focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20"
+            onChange={(event) => setImpact(event.target.value)}
+            placeholder="Diversification"
+            type="text"
+            value={impact}
+          />
+          {fieldErrors.impact ? <span className="text-sm text-[#8f3f32]">{fieldErrors.impact[0]}</span> : null}
+        </label>
+
+        <button
+          className="h-12 rounded-md bg-[#1d211c] px-5 text-sm font-bold text-[#fbf7ef] transition hover:bg-[#343b32] disabled:cursor-not-allowed disabled:opacity-60 md:col-span-2"
+          disabled={isSubmitting}
+          type="submit"
+        >
+          {isSubmitting ? "Recording..." : "Add transaction"}
+        </button>
+      </form>
+    </section>
+  );
 }

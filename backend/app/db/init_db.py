@@ -11,6 +11,7 @@ def import_models() -> None:
     feature folders.
     """
 
+    from app.features.transactions.models import Transaction  # noqa: F401
     from app.features.users.models import User  # noqa: F401
 
 
