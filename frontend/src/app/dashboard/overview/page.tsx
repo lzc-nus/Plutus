@@ -46,19 +46,10 @@ export default function OverviewPage() {
           value={formatCurrency(financialSnapshot.netWorth)}
         />
         <MetricCard
+          dominant
           label="Safe to Spend"
           sublabel="AI-guided, after obligations"
           value={formatCurrency(financialSnapshot.safeToSpend)}
-        />
-        <MetricCard
-          label="Monthly Inflow"
-          sublabel="Income before planned obligations"
-          value={formatCurrency(financialSnapshot.inflow)}
-        />
-        <MetricCard
-          label="Monthly Outflow"
-          sublabel="Commitments, reserves, and spending"
-          value={formatCurrency(financialSnapshot.outflow)}
         />
       </section>
 

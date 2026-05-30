@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Great_Vibes } from "next/font/google";
@@ -260,7 +261,14 @@ export default function Sidebar() {
               </span>
             ) : (
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[#d8bd75]/35 bg-[#d8bd75]/12 text-sm font-bold text-[#e8cf84]">
-                P
+                <Image 
+                  src="/favicon_io/favicon.ico" 
+                  alt="Plutus logo" 
+                  width={20}
+                  height={20}
+                  className="h-5 w-5" 
+                  priority
+                />
               </span>
             )}
           </Link>
