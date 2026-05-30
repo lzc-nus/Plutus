@@ -361,7 +361,7 @@ export function TransactionRangeToggle({
   value: TransactionRange;
   onChange: (value: TransactionRange) => void;
 }) {
-  const ranges: TransactionRange[] = ["1D", "1M", "1Y"];
+  const ranges: TransactionRange[] = ["1D", "1M", "1Y", "ALL"];
   return (
     <div className="inline-flex rounded-md border border-[#d0c5b3] bg-[#f4efe6] p-1">
       {ranges.map((range) => (
@@ -375,7 +375,7 @@ export function TransactionRangeToggle({
           onClick={() => onChange(range)}
           type="button"
         >
-          {range}
+          {range === "ALL" ? "All" : range}
         </button>
       ))}
     </div>
