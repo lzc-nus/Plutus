@@ -5,6 +5,147 @@ export type ClientOptions = {
 };
 
 /**
+ * CalendarEventCreate
+ *
+ * Inbound payload for creating a calendar event.
+ */
+export type CalendarEventCreate = {
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Start At
+     */
+    start_at: string;
+    /**
+     * End At
+     */
+    end_at: string;
+    /**
+     * Is All Day
+     */
+    is_all_day?: boolean;
+    /**
+     * Recurrence Option
+     */
+    recurrence_option?: 'NONE' | 'DAILY_WEEKDAY' | 'WEEKLY_SAME_DAY' | 'MONTHLY_LAST_SUNDAY' | 'MONTHLY_SAME_DAY' | 'ANNUALLY_SAME_DAY' | 'CUSTOM';
+    custom_recurrence?: CustomRecurrence | null;
+};
+
+/**
+ * CalendarEventRead
+ *
+ * Outbound representation of an individual event instance on the user's calendar view.
+ */
+export type CalendarEventRead = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Parent Series Id
+     */
+    parent_series_id?: string | null;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Description
+     */
+    description: string | null;
+    /**
+     * Start At
+     */
+    start_at: string;
+    /**
+     * End At
+     */
+    end_at: string;
+    /**
+     * Is All Day
+     */
+    is_all_day: boolean;
+    /**
+     * Is Recurring Instance
+     */
+    is_recurring_instance?: boolean;
+};
+
+/**
+ * CalendarEventUpdate
+ *
+ * Payload to modify an event.
+ */
+export type CalendarEventUpdate = {
+    /**
+     * Title
+     */
+    title?: string | null;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Start At
+     */
+    start_at?: string | null;
+    /**
+     * End At
+     */
+    end_at?: string | null;
+    /**
+     * Is All Day
+     */
+    is_all_day?: boolean | null;
+    /**
+     * Update Scope
+     */
+    update_scope?: 'THIS_INSTANCE' | 'ALL_SESSIONS';
+    /**
+     * Instance Original Date
+     */
+    instance_original_date?: string | null;
+};
+
+/**
+ * CustomRecurrence
+ *
+ * Schema representing the 'Custom...' recurrence dialog options.
+ */
+export type CustomRecurrence = {
+    /**
+     * Frequency
+     */
+    frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+    /**
+     * Interval
+     */
+    interval?: number;
+    /**
+     * By Days
+     */
+    by_days?: Array<'MO' | 'TU' | 'WE' | 'TH' | 'FR' | 'SA' | 'SU'> | null;
+    /**
+     * Ends Type
+     */
+    ends_type?: 'NEVER' | 'ON_DATE' | 'AFTER_COUNT';
+    /**
+     * Until Date
+     */
+    until_date?: string | null;
+    /**
+     * Count
+     */
+    count?: number | null;
+};
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -328,6 +469,144 @@ export type TransactionsCreateResponses = {
 };
 
 export type TransactionsCreateResponse = TransactionsCreateResponses[keyof TransactionsCreateResponses];
+
+export type CalendarEventsListData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Start Window
+         *
+         * Start boundary window (ISO format)
+         */
+        start_window: string;
+        /**
+         * End Window
+         *
+         * End boundary window (ISO format)
+         */
+        end_window: string;
+    };
+    url: '/api/v1/calendar/events';
+};
+
+export type CalendarEventsListErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CalendarEventsListError = CalendarEventsListErrors[keyof CalendarEventsListErrors];
+
+export type CalendarEventsListResponses = {
+    /**
+     * Response Calendar Events List
+     *
+     * Successful Response
+     */
+    200: Array<CalendarEventRead>;
+};
+
+export type CalendarEventsListResponse = CalendarEventsListResponses[keyof CalendarEventsListResponses];
+
+export type CalendarEventsCreateData = {
+    body: CalendarEventCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/calendar/events';
+};
+
+export type CalendarEventsCreateErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CalendarEventsCreateError = CalendarEventsCreateErrors[keyof CalendarEventsCreateErrors];
+
+export type CalendarEventsCreateResponses = {
+    /**
+     * Successful Response
+     */
+    201: CalendarEventRead;
+};
+
+export type CalendarEventsCreateResponse = CalendarEventsCreateResponses[keyof CalendarEventsCreateResponses];
+
+export type CalendarEventsDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Event Id
+         */
+        event_id: string;
+    };
+    query?: {
+        /**
+         * Scope
+         *
+         * Scope of recursive delete timeline rules.
+         */
+        scope?: 'THIS_INSTANCE' | 'ALL_SESSIONS';
+        /**
+         * Instance Date
+         *
+         * Target isolated instance exclusion date context.
+         */
+        instance_date?: string | null;
+    };
+    url: '/api/v1/calendar/events/{event_id}';
+};
+
+export type CalendarEventsDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CalendarEventsDeleteError = CalendarEventsDeleteErrors[keyof CalendarEventsDeleteErrors];
+
+export type CalendarEventsDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type CalendarEventsDeleteResponse = CalendarEventsDeleteResponses[keyof CalendarEventsDeleteResponses];
+
+export type CalendarEventsUpdateData = {
+    body: CalendarEventUpdate;
+    path: {
+        /**
+         * Event Id
+         */
+        event_id: string;
+    };
+    query?: never;
+    url: '/api/v1/calendar/events/{event_id}';
+};
+
+export type CalendarEventsUpdateErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CalendarEventsUpdateError = CalendarEventsUpdateErrors[keyof CalendarEventsUpdateErrors];
+
+export type CalendarEventsUpdateResponses = {
+    /**
+     * Successful Response
+     */
+    200: CalendarEventRead;
+};
+
+export type CalendarEventsUpdateResponse = CalendarEventsUpdateResponses[keyof CalendarEventsUpdateResponses];
 
 export type HealthCheckHealthGetData = {
     body?: never;
