@@ -1,0 +1,247 @@
+[33mcommit 3dc4078740b7dfe9b521e22ccbcb4f18d4c5c6de[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Sat May 30 23:00:08 2026 +0800
+
+    style(dashboard): refine overview layout and sidebar icon
+
+[33mcommit fd6d0acf300ae998bc104a952a18095f6a96a7d4[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Sat May 30 16:53:44 2026 +0800
+
+    feat(transactions): add authenticated transaction ledger flow
+    
+    - Add transaction model, schemas, service, router, and migration
+    - Protect transaction endpoints with current-user ownership
+    - Add create/list transaction tests with range filtering
+    - Connect transaction form and ledger page to generated OpenAPI client
+    - Add frontend Zod validation and all-time transaction view
+
+[33mcommit 05f2dff6f24f6a3b0cc6ef91ee98bcb5bfdc06de[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Sat May 30 04:09:34 2026 +0800
+
+    test(auth): cover current user session endpoint
+
+[33mcommit 37cc97f032b5f234d7cc79ecce228f68eb1bb5c0[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Sat May 30 04:07:09 2026 +0800
+
+    feat(auth): add current user session verification
+
+[33mcommit 49421f11caacf568d3a77c04bfd40fa6256113b8[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Sat May 30 01:32:59 2026 +0800
+
+    refactor(frontend): split dashboard views into route pages
+
+[33mcommit 365e21bd9353808af8da4f459a0611d21ed108e9[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Fri May 29 21:20:47 2026 +0800
+
+    Redesign dashboard header
+
+[33mcommit 380ae4fc38b6ddcc74c6cb3d942c5cc4efcad2c1[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Fri May 29 19:55:45 2026 +0800
+
+    Redesign dashboard sidebar
+
+[33mcommit b97b9359b4d0359b582a0998bf0c518eb791732f[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Fri May 29 04:05:49 2026 +0800
+
+    Add backend health check and database unavailable handling
+
+[33mcommit f75bf3e1831e50639fa07f1738269d384d29362a[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Fri May 29 03:34:53 2026 +0800
+
+    Add OpenAPI-generated frontend API client
+    
+    -Install and configure @hey-api/openapi-ts for generating typed frontend API clients from the FastAPI OpenAPI contract.
+    -Add stable backend auth operation IDs for generated SDK function names.
+    -Generate typed auth client files and add frontend API wrapper functions for login and register.
+    -Update login and register pages to call the API wrapper layer instead of manual fetch requests.
+    -Document the OpenAPI contract workflow, regeneration rules, and frontend API ownership in root, backend, and frontend READMEs.
+
+[33mcommit 66ab9564c435c8e9f51ac2787286e8ae777e9061[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Fri May 29 00:51:20 2026 +0800
+
+    Set up Plutus auth foundation and local development docs
+    
+    - Rename remaining backend project references from Orbital to Plutus
+    - Add backend auth structure for register and login
+    - Add SQLModel user table and initial Alembic users migration
+    - Add frontend auth integration, dashboard guard, and logout handling
+    - Rewrite root, backend, and frontend README files
+
+[33mcommit 9bde83da33b8f15cc96a8223046d8db6cc95fe94[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Thu May 28 18:25:55 2026 +0800
+
+    Add auth register/login flow
+
+[33mcommit dcacfddeda683c5f0074895a9d7baf8b7b62c5c3[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Thu May 28 18:24:33 2026 +0800
+
+     Add initial auth tests
+
+[33mcommit 037602487e0db27d7ef46427ea815d005ebd8b31[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Thu May 28 14:52:20 2026 +0800
+
+    Add database session and SQLModel metadata setup
+
+[33mcommit 2a3f827f61d7fad417f669073d4aab5c11ce8f5f[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Thu May 28 14:48:52 2026 +0800
+
+    Stop tracking generated backend files
+
+[33mcommit 10e44874231cc2527d0be7ee82ea6574ed80cdda[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Thu May 28 02:22:47 2026 +0800
+
+    Add JWT and password hashing helpers
+
+[33mcommit c20250f708f20bd172d6d56d48272a674f079403[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Thu May 28 02:21:54 2026 +0800
+
+    Add centralized settings management
+
+[33mcommit dba4cec33933e73d086f82321a6b353d325e591f[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Wed May 27 20:19:00 2026 +0800
+
+    Design authentication pages
+
+[33mcommit 68c87752a5026d3b811eddc0e8abd3f4461f20d0[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Wed May 27 17:08:16 2026 +0800
+
+    Build a proper Landing Page
+
+[33mcommit d1bba41e62d96b89f908e98f57b6e8aa5781d381[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Wed May 27 12:45:37 2026 +0800
+
+    Added Alembic for backend database migrations
+
+[33mcommit 8e9eca3cd650c9b361bab047db9d00da47ff3685[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Wed May 27 12:38:58 2026 +0800
+
+    Added Zod for frontend TypeScript validation
+
+[33mcommit 29eb768009b3054f9499cef8ca54b8de0ec062c5[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Wed May 27 12:34:01 2026 +0800
+
+    Refactor the whole backend structure
+
+[33mcommit d7d647ad82f190e1ac2c3e37508cd309ac00cf98[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Wed May 27 03:53:08 2026 +0800
+
+    Resolve building issues
+
+[33mcommit ab3765e2273baf5ab1b3d42f2939777ed2c9f50b[m
+Author: lzc-nus <e1528600@u.nus.edu>
+Date:   Wed May 27 03:14:17 2026 +0800
+
+    Refactor the whole frontend structure
+
+[33mcommit b96e60c378783d03482252b6409346b52b4e03c3[m
+Author: Ming Hong <tangmh17@gmail.com>
+Date:   Tue May 26 20:57:00 2026 +0800
+
+    Add frontend/src/components/RegisterForm.tsx
+
+[33mcommit 45d2a909d3909ea6b897706a67daa7fe2aae4aac[m
+Author: Ming Hong <tangmh17@gmail.com>
+Date:   Tue May 26 20:56:31 2026 +0800
+
+    Add frontend/src/components/PasswordValidator.tsx
+
+[33mcommit db2de6d7e81b846a4f92e16c4c96234479efc2b7[m
+Author: Ming Hong <tangmh17@gmail.com>
+Date:   Tue May 26 20:55:42 2026 +0800
+
+    Update frontend/src/components/CalendarGrid.tsx
+
+[33mcommit 7a576cb14d9ecff76c0d839999343a6945a41970[m
+Author: Ming Hong <tangmh17@gmail.com>
+Date:   Tue May 26 20:54:36 2026 +0800
+
+    Add frontend/src/app/register/page.tsx
+
+[33mcommit a2a46aae2c255158f9c4fe7437015df4964dbc29[m
+Author: Ming Hong <tangmh17@gmail.com>
+Date:   Tue May 26 20:53:26 2026 +0800
+
+    Add backend/app/services/auth.py
+
+[33mcommit 67bfb8fa3cf4706fb05f968734db53dfda0ca13c[m
+Author: Ming Hong <tangmh17@gmail.com>
+Date:   Tue May 26 20:52:47 2026 +0800
+
+    feat: add UserCreate UserLogin Token to backend/app/schemas/user.py
+
+[33mcommit 33e99ba5a878b5f7eb0b27a082228caaf4bbdc80[m
+Author: Ming Hong <tangmh17@gmail.com>
+Date:   Tue May 26 20:50:45 2026 +0800
+
+    Add backend/app/schemas/deps.py
+
+[33mcommit 4975290108b08efb130b5548aca332a37e2fd935[m
+Author: Ming Hong <tangmh17@gmail.com>
+Date:   Tue May 26 20:49:59 2026 +0800
+
+    Add backend/app/routers/auth.py
+
+[33mcommit 4183b62d65cf735d5c112c4b412ae66d26db6087[m
+Author: Ming Hong <tangmh17@gmail.com>
+Date:   Tue May 26 20:49:36 2026 +0800
+
+    refactor(routers): expose predictions and auth routers in __init__.py
+
+[33mcommit 2b0b87052490b08c60cecb9f13efc78dd08b198b[m
+Author: Ming Hong <tangmh17@gmail.com>
+Date:   Tue May 26 20:48:11 2026 +0800
+
+    Add backend/app/core/security.py
+
+[33mcommit 8ccc1db4fbc2e1de8266707d6f615716d6f5aaab[m
+Author: Ming Hong <tangmh17@gmail.com>
+Date:   Tue May 26 20:47:38 2026 +0800
+
+    feat: add User to database.py
+
+[33mcommit eece1ee99ff935b97d1f6e4ff2aec0dc1e64ce43[m
+Author: Ming Hong <tangmh17@gmail.com>
+Date:   Tue May 26 20:46:05 2026 +0800
+
+    feat(main) register predictions_router and auth_router
+
+[33mcommit c0302a1e7d324d2521d7619c743b0ac8b8efe4b6[m
+Author: Ming Hong <tangmh17@gmail.com>
+Date:   Tue May 26 20:44:22 2026 +0800
+
+    Install pyjwt[crypto] passlib[bcrypt]
+
+[33mcommit 4adfa609346d8a952654474202b2ac42244fb847[m
+Author: Ming Hong <tangmh17@gmail.com>
+Date:   Tue May 26 16:19:14 2026 +0800
+
+    feat: add calendar feature
+
+[33mcommit e00c1a24587f4b279d7decbbb05294edfd54f8ff[m
+Author: Ming Hong <tangmh17@gmail.com>
+Date:   Tue May 26 16:17:08 2026 +0800
+
+    Add backend/app/core/database.py
+
+[33mcommi
