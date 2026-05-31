@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthLoginData, AuthLoginErrors, AuthLoginResponses, AuthRegisterData, AuthRegisterErrors, AuthRegisterResponses, HealthCheckHealthGetData, HealthCheckHealthGetResponses, RootGetData, RootGetResponses, TransactionsCreateData, TransactionsCreateErrors, TransactionsCreateResponses, TransactionsListData, TransactionsListErrors, TransactionsListResponses, UsersMeData, UsersMeResponses } from './types.gen';
+import type { AuthLoginData, AuthLoginErrors, AuthLoginResponses, AuthRegisterData, AuthRegisterErrors, AuthRegisterResponses, CalendarEventsCreateData, CalendarEventsCreateErrors, CalendarEventsCreateResponses, CalendarEventsDeleteData, CalendarEventsDeleteErrors, CalendarEventsDeleteResponses, CalendarEventsListData, CalendarEventsListErrors, CalendarEventsListResponses, CalendarEventsUpdateData, CalendarEventsUpdateErrors, CalendarEventsUpdateResponses, HealthCheckHealthGetData, HealthCheckHealthGetResponses, RootGetData, RootGetResponses, TransactionsCreateData, TransactionsCreateErrors, TransactionsCreateResponses, TransactionsListData, TransactionsListErrors, TransactionsListResponses, UsersMeData, UsersMeResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -72,6 +72,52 @@ export const transactionsList = <ThrowOnError extends boolean = false>(options?:
 export const transactionsCreate = <ThrowOnError extends boolean = false>(options: Options<TransactionsCreateData, ThrowOnError>) => (options.client ?? client).post<TransactionsCreateResponses, TransactionsCreateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/transactions',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get Calendar View
+ *
+ * Retrieves all event entries/repetitions bounded within your UI screen limits.
+ */
+export const calendarEventsList = <ThrowOnError extends boolean = false>(options: Options<CalendarEventsListData, ThrowOnError>) => (options.client ?? client).get<CalendarEventsListResponses, CalendarEventsListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/calendar/events',
+    ...options
+});
+
+/**
+ * Create Event
+ */
+export const calendarEventsCreate = <ThrowOnError extends boolean = false>(options: Options<CalendarEventsCreateData, ThrowOnError>) => (options.client ?? client).post<CalendarEventsCreateResponses, CalendarEventsCreateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/calendar/events',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete Event
+ */
+export const calendarEventsDelete = <ThrowOnError extends boolean = false>(options: Options<CalendarEventsDeleteData, ThrowOnError>) => (options.client ?? client).delete<CalendarEventsDeleteResponses, CalendarEventsDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/calendar/events/{event_id}',
+    ...options
+});
+
+/**
+ * Update Event
+ */
+export const calendarEventsUpdate = <ThrowOnError extends boolean = false>(options: Options<CalendarEventsUpdateData, ThrowOnError>) => (options.client ?? client).patch<CalendarEventsUpdateResponses, CalendarEventsUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/calendar/events/{event_id}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
