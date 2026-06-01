@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useMemo } from "react";
+import { useMemo } from "react";
+import { getCalendarEventColor } from "@/data/calendarEventColors";
 import type { CalendarEventRead } from "@/lib/api/generated";
 
 interface CalendarDayBoxProps {
@@ -8,6 +9,7 @@ interface CalendarDayBoxProps {
     dateObj: Date;
     dateKey: string;
     dailyEvents: CalendarEventRead[];
+    onSelectDate: (activeDateStr: string) => void;
     onSelectEvent: (event: CalendarEventRead, activeDateStr: string) => void;
 }
 
@@ -16,6 +18,7 @@ export function CalendarDayBox({
     dateObj,
     dateKey,
     dailyEvents,
+    onSelectDate,
     onSelectEvent,
 }: CalendarDayBoxProps) {
     const isToday = useMemo(() => {
@@ -23,23 +26,26 @@ export function CalendarDayBox({
     }, [dateObj]);
 
     return (
-        <div className="bg-[#fbf7ef] p-2 flex flex-col justify-between group hover:bg-[#fcfbf7] transition min-h-0 min-w-0">
-            <div className="flex items-center justify-between mb-1">
-                <span
-                    className={`text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full transition-colors ${isToday ? "bg-[#1d211c] text-[#fbf7ef]" : "text-[#1d211c] group-hover:bg-[#f5efe4]"
+        <div className="group flex min-h-0 min-w-0 flex-col bg-[#fbf7ef] p-2.5 transition hover:bg-[#fcfbf7]">
+            <div className="mb-2 flex items-center justify-between gap-2">
+                <button
+                    className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${isToday ? "bg-[#1d211c] text-[#fbf7ef]" : "text-[#1d211c] group-hover:bg-[#f5efe4]"
                         }`}
+                    onClick={() => onSelectDate(dateKey)}
+                    type="button"
                 >
                     {day}
-                </span>
+                </button>
                 {dailyEvents.length > 2 && (
-                    <span className="text-[10px] font-medium text-[#696154] bg-[#f5efe4] px-1.5 py-0.5 rounded-sm">
+                    <span className="rounded-sm bg-[#f5efe4] px-1.5 py-0.5 text-[10px] font-semibold text-[#696154]">
                         {dailyEvents.length} items
                     </span>
                 )}
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-1 pr-0.5 custom-scrollbar max-h-[72px]">
+            <div className="custom-scrollbar flex-1 space-y-1 overflow-y-auto pr-0.5">
                 {dailyEvents.map((evt) => {
+                    const color = getCalendarEventColor(evt.color);
                     const formattedTime = evt.is_all_day
                         ? ""
                         : new Intl.DateTimeFormat("en", {
@@ -56,9 +62,14 @@ export function CalendarDayBox({
                                 e.stopPropagation();
                                 onSelectEvent(evt, dateKey);
                             }}
-                            className="w-full text-left truncate text-[11px] font-medium px-2 py-0.5 rounded border border-[#d9d0c1] bg-[#f5efe4] text-[#1d211c] hover:bg-[#1d211c] hover:text-[#fbf7ef] transition-colors focus:outline-none"
+                            className="block w-full min-w-0 truncate rounded border px-2 py-1 text-left text-[11px] font-medium transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-[#8f6f2d]/25"
+                            style={{
+                                backgroundColor: color.background,
+                                borderColor: color.border,
+                                color: color.text,
+                            }}
                         >
-                            {formattedTime && <span className="font-semibold opacity-75 mr-0.5">{formattedTime}</span>}
+                            {formattedTime && <span className="mr-0.5 font-semibold opacity-75">{formattedTime}</span>}
                             {evt.title}
                         </button>
                     );

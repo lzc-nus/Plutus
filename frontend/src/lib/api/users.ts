@@ -1,5 +1,5 @@
 import { usersMe } from "@/lib/api/generated";
-import { configureApiClient } from "./configure-client";
+import { configureApiClient } from "./configureClient";
 
 export async function getCurrentUser() {
   configureApiClient();

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import Annotated, Literal, Optional
+from typing import Annotated
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -10,6 +10,7 @@ from sqlmodel import Session
 from app.api.deps import CurrentUser
 from app.db.session import get_db
 from app.features.calendar.schemas import (
+    CalendarEventScope,
     CalendarEventCreate,
     CalendarEventRead,
     CalendarEventUpdate,
@@ -40,12 +41,19 @@ def get_calendar_view(
     ],
 ) -> list[CalendarEventRead]:
     """Retrieves all event entries/repetitions bounded within your UI screen limits."""
-    events = list_calendar_events(
-        db,
-        user_id=current_user.id,
-        view_start=start_window,
-        view_end=end_window,
-    )
+    try:
+        events = list_calendar_events(
+            db,
+            user_id=current_user.id,
+            view_start=start_window,
+            view_end=end_window,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+
     return [
         CalendarEventRead.model_validate(event, from_attributes=True)
         for event in events
@@ -63,7 +71,14 @@ def create_event(
     current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> CalendarEventRead:
-    event = create_calendar_event(db, user_id=current_user.id, payload=payload)
+    try:
+        event = create_calendar_event(db, user_id=current_user.id, payload=payload)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+
     return CalendarEventRead.model_validate(event, from_attributes=True)
 
 
@@ -78,9 +93,16 @@ def update_event(
     current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> CalendarEventRead:
-    updated = update_calendar_event(
-        db, event_id=event_id, user_id=current_user.id, payload=payload
-    )
+    try:
+        updated = update_calendar_event(
+            db, event_id=event_id, user_id=current_user.id, payload=payload
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+
     if not updated:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -99,21 +121,28 @@ def delete_event(
     current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
     scope: Annotated[
-        Literal["THIS_INSTANCE", "ALL_SESSIONS"],
+        CalendarEventScope,
         Query(description="Scope of recursive delete timeline rules."),
     ] = "ALL_SESSIONS",
     instance_date: Annotated[
-        Optional[datetime.date],
+        datetime.date | None,
         Query(description="Target isolated instance exclusion date context."),
     ] = None,
 ) -> None:
-    success = delete_calendar_event(
-        db,
-        event_id=event_id,
-        user_id=current_user.id,
-        scope=scope,
-        instance_date=instance_date,
-    )
+    try:
+        success = delete_calendar_event(
+            db,
+            event_id=event_id,
+            user_id=current_user.id,
+            scope=scope,
+            instance_date=instance_date,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -5,7 +5,7 @@ import {
   RiskItemCard,
   RiskScoreCard,
   SectionHeader,
-} from "@/components/wealth-components";
+} from "@/components/WealthComponents";
 import {
   financialSnapshot,
   inflowBreakdown,
