@@ -19,6 +19,10 @@ export type CalendarEventCreate = {
      */
     description?: string | null;
     /**
+     * Color
+     */
+    color?: 'GOLD' | 'OLIVE' | 'SAGE' | 'TERRACOTTA' | 'WINE' | 'INK';
+    /**
      * Start At
      */
     start_at: string;
@@ -60,6 +64,10 @@ export type CalendarEventRead = {
      */
     description: string | null;
     /**
+     * Color
+     */
+    color: 'GOLD' | 'OLIVE' | 'SAGE' | 'TERRACOTTA' | 'WINE' | 'INK';
+    /**
      * Start At
      */
     start_at: string;
@@ -91,6 +99,10 @@ export type CalendarEventUpdate = {
      * Description
      */
     description?: string | null;
+    /**
+     * Color
+     */
+    color?: 'GOLD' | 'OLIVE' | 'SAGE' | 'TERRACOTTA' | 'WINE' | 'INK' | null;
     /**
      * Start At
      */

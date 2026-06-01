@@ -1,6 +1,6 @@
 import { authLogin, authRegister } from "@/lib/api/generated";
 import type { LoginRequest, RegisterRequest } from "@/lib/api/generated";
-import { configureApiClient } from "./configure-client";
+import { configureApiClient } from "./configureClient";
 
 export async function loginWithEmailPassword(body: LoginRequest) {
   configureApiClient();

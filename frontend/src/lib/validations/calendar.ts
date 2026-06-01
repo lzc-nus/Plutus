@@ -1,44 +1,95 @@
 import { z } from "zod";
+import { calendarEventColorValues } from "@/data/calendarEventColors";
 
-export const recurrenceEndSchema = z.object({
-  mode: z.enum(["never", "until", "count"]),
-  until: z.string().nullable().optional(),
-  count: z.number().nullable().optional(),
-});
+export const calendarEventFormSchema = z
+  .object({
+    title: z
+      .string()
+      .trim()
+      .min(1, "Title is required.")
+      .max(160, "Title must be at most 160 characters."),
+    description: z
+      .string()
+      .trim()
+      .max(500, "Description must be at most 500 characters.")
+      .optional(),
+    color: z.enum(calendarEventColorValues),
+    startDate: z.string().min(1, "Start date is required."),
+    startTime: z.string().optional(),
+    endDate: z.string().min(1, "End date is required."),
+    endTime: z.string().optional(),
+    isAllDay: z.boolean(),
+    recurrenceOption: z.enum([
+      "NONE",
+      "DAILY_WEEKDAY",
+      "WEEKLY_SAME_DAY",
+      "MONTHLY_SAME_DAY",
+      "MONTHLY_LAST_SUNDAY",
+      "ANNUALLY_SAME_DAY",
+    ]),
+    scope: z.enum(["THIS_INSTANCE", "ALL_SESSIONS"]),
+  })
+  .superRefine((value, context) => {
+    if (!value.isAllDay && !value.startTime) {
+      context.addIssue({
+        code: "custom",
+        message: "Start time is required.",
+        path: ["startTime"],
+      });
+    }
 
-export const customRecurrenceSchema = z.object({
-  interval: z.number().min(1),
-  frequency: z.enum(["DAILY", "WEEKLY", "MONTHLY", "YEARLY"]),
-  weekdays: z.array(
-    z.enum(["MO", "TU", "WE", "TH", "FR", "SA", "SU"])
-  ).default([]),
-  end: recurrenceEndSchema,
-});
+    if (!value.isAllDay && !value.endTime) {
+      context.addIssue({
+        code: "custom",
+        message: "End time is required.",
+        path: ["endTime"],
+      });
+    }
 
-export const calendarEventSchema = z.object({
-  description: z.string().min(1, 'Description is required.'),
-  category: z.enum([
-    "Income",
-    "Bills",
-    "Subscriptions",
-  ]),
-  amount: z.number().positive('Amount must be greater than 0.'),
+    if (value.recurrenceOption !== "NONE" && value.startDate !== value.endDate) {
+      context.addIssue({
+        code: "custom",
+        message: "Repeating schedules must stay on one calendar date.",
+        path: ["endDate"],
+      });
+    }
 
-  start_date: z.string(),
+    const start = value.isAllDay
+      ? new Date(`${value.startDate}T00:00:00`)
+      : new Date(`${value.startDate}T${value.startTime}:00`);
+    const end = value.isAllDay
+      ? addDays(new Date(`${value.endDate}T00:00:00`), 1)
+      : new Date(`${value.endDate}T${value.endTime}:00`);
 
-  recurrence_type: z.enum([
-    "NONE",
-    "WEEKLY_SUNDAY",
-    "MONTHLY_LAST_SUNDAY",
-    "ANNUALLY",
-    "WEEKDAY",
-    "CUSTOM",
-  ]),
+    if (Number.isNaN(start.getTime())) {
+      context.addIssue({
+        code: "custom",
+        message: "Start date is invalid.",
+        path: ["startDate"],
+      });
+    }
 
-  custom_recurrence: customRecurrenceSchema.nullable(),
+    if (Number.isNaN(end.getTime())) {
+      context.addIssue({
+        code: "custom",
+        message: "End date is invalid.",
+        path: ["endDate"],
+      });
+    }
 
-  rrule: z.string().nullable(),
-});
+    if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime()) && end <= start) {
+      context.addIssue({
+        code: "custom",
+        message: "End must be after start.",
+        path: ["endDate"],
+      });
+    }
+  });
 
-export type CalendarEventFormValues =
-  z.infer<typeof calendarEventSchema>;
+export type CalendarEventFormInput = z.infer<typeof calendarEventFormSchema>;
+
+function addDays(value: Date, days: number) {
+  const next = new Date(value);
+  next.setDate(next.getDate() + days);
+  return next;
+}

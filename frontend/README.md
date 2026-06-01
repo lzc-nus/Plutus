@@ -139,11 +139,11 @@ npm run api:generate
 Hand-written API code lives beside the generated client:
 
 ```text
-src/lib/api/configure-client.ts
+src/lib/api/configureClient.ts
 src/lib/api/auth.ts
 ```
 
-`configure-client.ts` sets the backend base URL and attaches the bearer token when one exists. Feature-specific wrapper files, such as `auth.ts`, expose stable functions for pages and components.
+`configureClient.ts` sets the backend base URL and attaches the bearer token when one exists. Feature-specific wrapper files, such as `auth.ts`, expose stable functions for pages and components.
 
 Regenerate the API client whenever backend routes, request bodies, response models, status codes, or operation IDs change. If only backend internals change, such as service logic or database queries, regeneration is not needed.
 

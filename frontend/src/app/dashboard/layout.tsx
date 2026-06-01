@@ -5,11 +5,13 @@ import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Header from "@/components/dashboard/Header";
 import { getCurrentUser } from "@/lib/api/users";
+import type { UserRead } from "@/lib/api/generated";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [canRenderDashboard, setCanRenderDashboard] = useState(false);
+  const [currentUser, setCurrentUser] = useState<UserRead | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -20,12 +22,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       if (!token) {
         if (isMounted) {
           setCanRenderDashboard(false);
+          setCurrentUser(null);
         }
         router.replace("/login");
         return;
       }
 
-      const { error, response } = await getCurrentUser();
+      const { data, error, response } = await getCurrentUser();
 
       if (!isMounted) {
         return;
@@ -34,16 +37,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       if (response?.status === 401 || response?.status === 403) {
         localStorage.removeItem("plutus_access_token");
         setCanRenderDashboard(false);
+        setCurrentUser(null);
         router.replace("/login");
         return;
       }
 
-      if (error || !response?.ok) {
+      if (error || !response?.ok || !data) {
         setCanRenderDashboard(false);
+        setCurrentUser(null);
         router.replace("/login");
         return;
       }
 
+      setCurrentUser(data);
       setCanRenderDashboard(true);
     }
 
@@ -64,7 +70,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     };
   }, [pathname, router]);
 
-  if (!canRenderDashboard) {
+  if (!canRenderDashboard || !currentUser) {
     return null;
   }
 
@@ -72,7 +78,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     <div className="flex h-screen bg-[#f4efe6]">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
-        <Header />
+        <Header currentUser={currentUser} />
         <main className="flex-1 overflow-auto p-8">{children}</main>
       </div>
     </div>

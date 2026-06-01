@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Great_Vibes } from "next/font/google";
@@ -244,13 +243,13 @@ export default function Sidebar() {
     >
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(216,189,117,0.09),transparent_38%),radial-gradient(circle_at_20%_0%,rgba(216,189,117,0.18),transparent_30%)]" />
       <div className="relative flex min-w-0 flex-1 flex-col px-3 py-4 group-data-[collapsed=true]:px-2">
-        <div className="flex h-16 items-center justify-between gap-3 rounded-md border border-[#d7c6a3]/14 bg-[#10140f]/68 px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-[height,padding] duration-300 group-data-[collapsed=true]:h-24 group-data-[collapsed=true]:flex-col group-data-[collapsed=true]:justify-center group-data-[collapsed=true]:gap-2 group-data-[collapsed=true]:px-2">
-          <Link
-            href="/dashboard/overview"
-            aria-label="Plutus dashboard overview"
-            className="flex min-w-0 flex-1 items-center group-data-[collapsed=true]:flex-none group-data-[collapsed=true]:justify-center"
-          >
-            {expanded ? (
+        <div className="flex h-16 items-center justify-between gap-3 rounded-md border border-[#d7c6a3]/14 bg-[#10140f]/68 px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-[height,padding] duration-300 group-data-[collapsed=true]:h-14 group-data-[collapsed=true]:justify-center group-data-[collapsed=true]:px-2">
+          {expanded ? (
+            <Link
+              href="/dashboard/overview"
+              aria-label="Plutus dashboard overview"
+              className="flex min-w-0 flex-1 items-center"
+            >
               <span className="grid min-w-0 leading-none">
                 <span className={`${logoFont.className} truncate text-4xl text-[#f2d88a]`}>
                   Plutus
@@ -259,25 +258,15 @@ export default function Sidebar() {
                   Private ledger
                 </span>
               </span>
-            ) : (
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[#d8bd75]/35 bg-[#d8bd75]/12 text-sm font-bold text-[#e8cf84]">
-                <Image 
-                  src="/favicon_io/favicon.ico" 
-                  alt="Plutus logo" 
-                  width={20}
-                  height={20}
-                  className="h-5 w-5" 
-                  priority
-                />
-              </span>
-            )}
-          </Link>
+            </Link>
+          ) : null}
 
           <button
             type="button"
             aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
             aria-expanded={expanded}
             onClick={toggleSidebar}
+            title={expanded ? "Collapse sidebar" : "Expand sidebar"}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[#d8bd75]/20 bg-[#20251d] text-[#d8bd75] transition hover:border-[#d8bd75]/50 hover:bg-[#2b3127] group-data-[collapsed=true]:h-8 group-data-[collapsed=true]:w-8"
           >
             <span className={expanded ? "rotate-180 transition-transform" : "transition-transform"}>

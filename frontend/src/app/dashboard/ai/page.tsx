@@ -6,7 +6,7 @@ import {
   SectionHeader,
   TransactionList,
   TransactionRangeToggle,
-} from "@/components/wealth-components";
+} from "@/components/WealthComponents";
 import {
   aiReportSections,
   financialSnapshot,

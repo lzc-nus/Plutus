@@ -7,7 +7,7 @@ import {
   SectionHeader,
   TransactionList,
   TransactionRangeToggle,
-} from "@/components/wealth-components";
+} from "@/components/WealthComponents";
 import { listTransactions, type TransactionRange } from "@/lib/api/transactions";
 import type { TransactionRead } from "@/lib/api/generated";
 import type { Transaction } from "@/data/wealthData";
