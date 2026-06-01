@@ -1,4 +1,4 @@
-import { GoalCard, SectionHeader, WhatIfPanel } from "@/components/wealth-components";
+import { GoalCard, SectionHeader, WhatIfPanel } from "@/components/WealthComponents";
 import { goals, strategyRecommendations } from "@/data/wealthData";
 
 export default function StrategyPage() {

@@ -5,7 +5,7 @@ import {
   PdfExportButton,
   SectionHeader,
   WealthEquation,
-} from "@/components/wealth-components";
+} from "@/components/WealthComponents";
 import { assets, financialSnapshot, liabilities } from "@/data/wealthData";
 
 export default function PortfolioPage() {

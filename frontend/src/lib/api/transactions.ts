@@ -1,6 +1,6 @@
 import { transactionsCreate, transactionsList } from "@/lib/api/generated";
 import type { TransactionCreate, TransactionsListData } from "@/lib/api/generated";
-import { configureApiClient } from "./configure-client";
+import { configureApiClient } from "./configureClient";
 
 export type TransactionRange = Exclude<
   NonNullable<NonNullable<TransactionsListData["query"]>["range"]>,

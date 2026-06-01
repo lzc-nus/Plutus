@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { user } from "@/data/wealthData";
+import type { UserRead } from "@/lib/api/generated";
 
 type HeaderMeta = {
   title: string;
@@ -95,13 +95,26 @@ function getHeaderMeta(pathname: string) {
   );
 }
 
+type HeaderProps = {
+  currentUser: UserRead;
+};
+
 function getInitials(name: string) {
-  return name
-    .split(" ")
+  const parts = name
+    .trim()
+    .split(/[\s._-]+/)
     .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
+    .slice(0, 2);
+
+  if (parts.length === 0) {
+    return "U";
+  }
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  return parts.map((part) => part[0]?.toUpperCase()).join("");
 }
 
 function HeaderIcon({ name }: { name: "logout" }) {
@@ -131,10 +144,11 @@ function HeaderIcon({ name }: { name: "logout" }) {
   );
 }
 
-export default function Header() {
+export default function Header({ currentUser }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const meta = getHeaderMeta(pathname);
+  const displayName = currentUser.username || currentUser.email;
   const dateLabel = new Intl.DateTimeFormat("en", {
     weekday: "short",
     month: "short",
@@ -168,12 +182,12 @@ export default function Header() {
         <div className="flex items-center rounded-md border border-[#d9d0c1] bg-[#fbf7ef]/82 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
           <div className="flex h-10 items-center gap-3 px-2.5 pr-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#d8bd75]/22 text-xs font-black text-[#5f4a1b]">
-              {getInitials(user.name)}
+              {getInitials(displayName)}
             </span>
             <span className="hidden min-w-0 sm:grid">
-              <span className="max-w-36 truncate text-sm font-bold text-[#1d211c]">{user.name}</span>
+              <span className="max-w-36 truncate text-sm font-bold text-[#1d211c]">{displayName}</span>
               <span className="max-w-36 truncate text-[0.72rem] font-medium text-[#7c7468]">
-                {user.position}
+                {currentUser.email}
               </span>
             </span>
           </div>
