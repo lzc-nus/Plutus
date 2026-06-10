@@ -28,7 +28,19 @@ The product should treat user financial data as sensitive by default. Frontend v
 
 ## Local Development
 
-Start the local PostgreSQL container:
+Create the local PostgreSQL container the first time you set up the project:
+
+```bash
+docker run --name plutus-postgres \
+  -e POSTGRES_USER=plutus \
+  -e POSTGRES_PASSWORD=plutus \
+  -e POSTGRES_DB=plutus \
+  -p 5432:5432 \
+  -v plutus_pgdata:/var/lib/postgresql/data \
+  -d postgres:16
+```
+
+Start the local PostgreSQL container on later development sessions:
 
 ```bash
 docker start plutus-postgres
