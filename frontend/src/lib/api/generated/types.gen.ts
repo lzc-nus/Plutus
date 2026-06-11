@@ -5,6 +5,150 @@ export type ClientOptions = {
 };
 
 /**
+ * AssetCreate
+ *
+ * Inbound payload for creating an asset.
+ */
+export type AssetCreate = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Category
+     */
+    category: 'stocks' | 'bonds' | 'real_estate' | 'cash' | 'crypto' | 'commodities' | 'private_equity' | 'other';
+    /**
+     * Custom Category
+     */
+    custom_category?: string | null;
+    /**
+     * Value
+     */
+    value: number;
+    /**
+     * Cost Basis
+     */
+    cost_basis?: number | null;
+    /**
+     * Liquidity
+     */
+    liquidity?: 'high' | 'medium' | 'low';
+    /**
+     * Risk
+     */
+    risk?: 'low' | 'moderate' | 'high' | 'very_high';
+    /**
+     * Notes
+     */
+    notes?: string | null;
+    /**
+     * Acquired At
+     */
+    acquired_at?: string | null;
+};
+
+/**
+ * AssetRead
+ *
+ * Outbound representation of a portfolio asset.
+ */
+export type AssetRead = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Category
+     */
+    category: string;
+    /**
+     * Custom Category
+     */
+    custom_category: string | null;
+    /**
+     * Value
+     */
+    value: number;
+    /**
+     * Cost Basis
+     */
+    cost_basis: number | null;
+    /**
+     * Liquidity
+     */
+    liquidity: string;
+    /**
+     * Risk
+     */
+    risk: string;
+    /**
+     * Notes
+     */
+    notes: string | null;
+    /**
+     * Acquired At
+     */
+    acquired_at: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * AssetUpdate
+ *
+ * Partial update payload for an asset.
+ */
+export type AssetUpdate = {
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Category
+     */
+    category?: 'stocks' | 'bonds' | 'real_estate' | 'cash' | 'crypto' | 'commodities' | 'private_equity' | 'other' | null;
+    /**
+     * Custom Category
+     */
+    custom_category?: string | null;
+    /**
+     * Value
+     */
+    value?: number | null;
+    /**
+     * Cost Basis
+     */
+    cost_basis?: number | null;
+    /**
+     * Liquidity
+     */
+    liquidity?: 'high' | 'medium' | 'low' | null;
+    /**
+     * Risk
+     */
+    risk?: 'low' | 'moderate' | 'high' | 'very_high' | null;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+    /**
+     * Acquired At
+     */
+    acquired_at?: string | null;
+};
+
+/**
  * CalendarEventCreate
  *
  * Inbound payload for creating a calendar event.
@@ -165,6 +309,150 @@ export type HttpValidationError = {
      * Detail
      */
     detail?: Array<ValidationError>;
+};
+
+/**
+ * LiabilityCreate
+ *
+ * Inbound payload for creating a liability.
+ */
+export type LiabilityCreate = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Category
+     */
+    category: 'mortgage' | 'auto_loan' | 'student_loan' | 'credit_card' | 'personal_loan' | 'tax_payable' | 'other';
+    /**
+     * Custom Category
+     */
+    custom_category?: string | null;
+    /**
+     * Balance
+     */
+    balance: number;
+    /**
+     * Original Amount
+     */
+    original_amount?: number | null;
+    /**
+     * Interest Rate
+     */
+    interest_rate?: number | null;
+    /**
+     * Monthly Payment
+     */
+    monthly_payment?: number | null;
+    /**
+     * Maturity Date
+     */
+    maturity_date?: string | null;
+    /**
+     * Notes
+     */
+    notes?: string | null;
+};
+
+/**
+ * LiabilityRead
+ *
+ * Outbound representation of a portfolio liability.
+ */
+export type LiabilityRead = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Category
+     */
+    category: string;
+    /**
+     * Custom Category
+     */
+    custom_category: string | null;
+    /**
+     * Balance
+     */
+    balance: number;
+    /**
+     * Original Amount
+     */
+    original_amount: number | null;
+    /**
+     * Interest Rate
+     */
+    interest_rate: number | null;
+    /**
+     * Monthly Payment
+     */
+    monthly_payment: number | null;
+    /**
+     * Maturity Date
+     */
+    maturity_date: string | null;
+    /**
+     * Notes
+     */
+    notes: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * LiabilityUpdate
+ *
+ * Partial update payload for a liability.
+ */
+export type LiabilityUpdate = {
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Category
+     */
+    category?: 'mortgage' | 'auto_loan' | 'student_loan' | 'credit_card' | 'personal_loan' | 'tax_payable' | 'other' | null;
+    /**
+     * Custom Category
+     */
+    custom_category?: string | null;
+    /**
+     * Balance
+     */
+    balance?: number | null;
+    /**
+     * Original Amount
+     */
+    original_amount?: number | null;
+    /**
+     * Interest Rate
+     */
+    interest_rate?: number | null;
+    /**
+     * Monthly Payment
+     */
+    monthly_payment?: number | null;
+    /**
+     * Maturity Date
+     */
+    maturity_date?: string | null;
+    /**
+     * Notes
+     */
+    notes?: string | null;
 };
 
 /**
@@ -619,6 +907,212 @@ export type CalendarEventsUpdateResponses = {
 };
 
 export type CalendarEventsUpdateResponse = CalendarEventsUpdateResponses[keyof CalendarEventsUpdateResponses];
+
+export type PortfolioAssetsListData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/portfolio/assets';
+};
+
+export type PortfolioAssetsListResponses = {
+    /**
+     * Response Portfolio Assets List
+     *
+     * Successful Response
+     */
+    200: Array<AssetRead>;
+};
+
+export type PortfolioAssetsListResponse = PortfolioAssetsListResponses[keyof PortfolioAssetsListResponses];
+
+export type PortfolioAssetsCreateData = {
+    body: AssetCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/portfolio/assets';
+};
+
+export type PortfolioAssetsCreateErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PortfolioAssetsCreateError = PortfolioAssetsCreateErrors[keyof PortfolioAssetsCreateErrors];
+
+export type PortfolioAssetsCreateResponses = {
+    /**
+     * Successful Response
+     */
+    201: AssetRead;
+};
+
+export type PortfolioAssetsCreateResponse = PortfolioAssetsCreateResponses[keyof PortfolioAssetsCreateResponses];
+
+export type PortfolioAssetsDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Asset Id
+         */
+        asset_id: string;
+    };
+    query?: never;
+    url: '/api/v1/portfolio/assets/{asset_id}';
+};
+
+export type PortfolioAssetsDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PortfolioAssetsDeleteError = PortfolioAssetsDeleteErrors[keyof PortfolioAssetsDeleteErrors];
+
+export type PortfolioAssetsDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type PortfolioAssetsDeleteResponse = PortfolioAssetsDeleteResponses[keyof PortfolioAssetsDeleteResponses];
+
+export type PortfolioAssetsUpdateData = {
+    body: AssetUpdate;
+    path: {
+        /**
+         * Asset Id
+         */
+        asset_id: string;
+    };
+    query?: never;
+    url: '/api/v1/portfolio/assets/{asset_id}';
+};
+
+export type PortfolioAssetsUpdateErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PortfolioAssetsUpdateError = PortfolioAssetsUpdateErrors[keyof PortfolioAssetsUpdateErrors];
+
+export type PortfolioAssetsUpdateResponses = {
+    /**
+     * Successful Response
+     */
+    200: AssetRead;
+};
+
+export type PortfolioAssetsUpdateResponse = PortfolioAssetsUpdateResponses[keyof PortfolioAssetsUpdateResponses];
+
+export type PortfolioLiabilitiesListData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/portfolio/liabilities';
+};
+
+export type PortfolioLiabilitiesListResponses = {
+    /**
+     * Response Portfolio Liabilities List
+     *
+     * Successful Response
+     */
+    200: Array<LiabilityRead>;
+};
+
+export type PortfolioLiabilitiesListResponse = PortfolioLiabilitiesListResponses[keyof PortfolioLiabilitiesListResponses];
+
+export type PortfolioLiabilitiesCreateData = {
+    body: LiabilityCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/portfolio/liabilities';
+};
+
+export type PortfolioLiabilitiesCreateErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PortfolioLiabilitiesCreateError = PortfolioLiabilitiesCreateErrors[keyof PortfolioLiabilitiesCreateErrors];
+
+export type PortfolioLiabilitiesCreateResponses = {
+    /**
+     * Successful Response
+     */
+    201: LiabilityRead;
+};
+
+export type PortfolioLiabilitiesCreateResponse = PortfolioLiabilitiesCreateResponses[keyof PortfolioLiabilitiesCreateResponses];
+
+export type PortfolioLiabilitiesDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Liability Id
+         */
+        liability_id: string;
+    };
+    query?: never;
+    url: '/api/v1/portfolio/liabilities/{liability_id}';
+};
+
+export type PortfolioLiabilitiesDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PortfolioLiabilitiesDeleteError = PortfolioLiabilitiesDeleteErrors[keyof PortfolioLiabilitiesDeleteErrors];
+
+export type PortfolioLiabilitiesDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type PortfolioLiabilitiesDeleteResponse = PortfolioLiabilitiesDeleteResponses[keyof PortfolioLiabilitiesDeleteResponses];
+
+export type PortfolioLiabilitiesUpdateData = {
+    body: LiabilityUpdate;
+    path: {
+        /**
+         * Liability Id
+         */
+        liability_id: string;
+    };
+    query?: never;
+    url: '/api/v1/portfolio/liabilities/{liability_id}';
+};
+
+export type PortfolioLiabilitiesUpdateErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PortfolioLiabilitiesUpdateError = PortfolioLiabilitiesUpdateErrors[keyof PortfolioLiabilitiesUpdateErrors];
+
+export type PortfolioLiabilitiesUpdateResponses = {
+    /**
+     * Successful Response
+     */
+    200: LiabilityRead;
+};
+
+export type PortfolioLiabilitiesUpdateResponse = PortfolioLiabilitiesUpdateResponses[keyof PortfolioLiabilitiesUpdateResponses];
 
 export type HealthCheckHealthGetData = {
     body?: never;

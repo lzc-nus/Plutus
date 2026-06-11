@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthLoginData, AuthLoginErrors, AuthLoginResponses, AuthRegisterData, AuthRegisterErrors, AuthRegisterResponses, CalendarEventsCreateData, CalendarEventsCreateErrors, CalendarEventsCreateResponses, CalendarEventsDeleteData, CalendarEventsDeleteErrors, CalendarEventsDeleteResponses, CalendarEventsListData, CalendarEventsListErrors, CalendarEventsListResponses, CalendarEventsUpdateData, CalendarEventsUpdateErrors, CalendarEventsUpdateResponses, HealthCheckHealthGetData, HealthCheckHealthGetResponses, RootGetData, RootGetResponses, TransactionsCreateData, TransactionsCreateErrors, TransactionsCreateResponses, TransactionsListData, TransactionsListErrors, TransactionsListResponses, UsersMeData, UsersMeResponses } from './types.gen';
+import type { AuthLoginData, AuthLoginErrors, AuthLoginResponses, AuthRegisterData, AuthRegisterErrors, AuthRegisterResponses, CalendarEventsCreateData, CalendarEventsCreateErrors, CalendarEventsCreateResponses, CalendarEventsDeleteData, CalendarEventsDeleteErrors, CalendarEventsDeleteResponses, CalendarEventsListData, CalendarEventsListErrors, CalendarEventsListResponses, CalendarEventsUpdateData, CalendarEventsUpdateErrors, CalendarEventsUpdateResponses, HealthCheckHealthGetData, HealthCheckHealthGetResponses, PortfolioAssetsCreateData, PortfolioAssetsCreateErrors, PortfolioAssetsCreateResponses, PortfolioAssetsDeleteData, PortfolioAssetsDeleteErrors, PortfolioAssetsDeleteResponses, PortfolioAssetsListData, PortfolioAssetsListResponses, PortfolioAssetsUpdateData, PortfolioAssetsUpdateErrors, PortfolioAssetsUpdateResponses, PortfolioLiabilitiesCreateData, PortfolioLiabilitiesCreateErrors, PortfolioLiabilitiesCreateResponses, PortfolioLiabilitiesDeleteData, PortfolioLiabilitiesDeleteErrors, PortfolioLiabilitiesDeleteResponses, PortfolioLiabilitiesListData, PortfolioLiabilitiesListResponses, PortfolioLiabilitiesUpdateData, PortfolioLiabilitiesUpdateErrors, PortfolioLiabilitiesUpdateResponses, RootGetData, RootGetResponses, TransactionsCreateData, TransactionsCreateErrors, TransactionsCreateResponses, TransactionsListData, TransactionsListErrors, TransactionsListResponses, UsersMeData, UsersMeResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -118,6 +118,98 @@ export const calendarEventsDelete = <ThrowOnError extends boolean = false>(optio
 export const calendarEventsUpdate = <ThrowOnError extends boolean = false>(options: Options<CalendarEventsUpdateData, ThrowOnError>) => (options.client ?? client).patch<CalendarEventsUpdateResponses, CalendarEventsUpdateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/calendar/events/{event_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get Assets
+ *
+ * Return all assets for the authenticated user.
+ */
+export const portfolioAssetsList = <ThrowOnError extends boolean = false>(options?: Options<PortfolioAssetsListData, ThrowOnError>) => (options?.client ?? client).get<PortfolioAssetsListResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/portfolio/assets',
+    ...options
+});
+
+/**
+ * Create Asset Endpoint
+ */
+export const portfolioAssetsCreate = <ThrowOnError extends boolean = false>(options: Options<PortfolioAssetsCreateData, ThrowOnError>) => (options.client ?? client).post<PortfolioAssetsCreateResponses, PortfolioAssetsCreateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/portfolio/assets',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete Asset Endpoint
+ */
+export const portfolioAssetsDelete = <ThrowOnError extends boolean = false>(options: Options<PortfolioAssetsDeleteData, ThrowOnError>) => (options.client ?? client).delete<PortfolioAssetsDeleteResponses, PortfolioAssetsDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/portfolio/assets/{asset_id}',
+    ...options
+});
+
+/**
+ * Update Asset Endpoint
+ */
+export const portfolioAssetsUpdate = <ThrowOnError extends boolean = false>(options: Options<PortfolioAssetsUpdateData, ThrowOnError>) => (options.client ?? client).patch<PortfolioAssetsUpdateResponses, PortfolioAssetsUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/portfolio/assets/{asset_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get Liabilities
+ *
+ * Return all liabilities for the authenticated user.
+ */
+export const portfolioLiabilitiesList = <ThrowOnError extends boolean = false>(options?: Options<PortfolioLiabilitiesListData, ThrowOnError>) => (options?.client ?? client).get<PortfolioLiabilitiesListResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/portfolio/liabilities',
+    ...options
+});
+
+/**
+ * Create Liability Endpoint
+ */
+export const portfolioLiabilitiesCreate = <ThrowOnError extends boolean = false>(options: Options<PortfolioLiabilitiesCreateData, ThrowOnError>) => (options.client ?? client).post<PortfolioLiabilitiesCreateResponses, PortfolioLiabilitiesCreateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/portfolio/liabilities',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete Liability Endpoint
+ */
+export const portfolioLiabilitiesDelete = <ThrowOnError extends boolean = false>(options: Options<PortfolioLiabilitiesDeleteData, ThrowOnError>) => (options.client ?? client).delete<PortfolioLiabilitiesDeleteResponses, PortfolioLiabilitiesDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/portfolio/liabilities/{liability_id}',
+    ...options
+});
+
+/**
+ * Update Liability Endpoint
+ */
+export const portfolioLiabilitiesUpdate = <ThrowOnError extends boolean = false>(options: Options<PortfolioLiabilitiesUpdateData, ThrowOnError>) => (options.client ?? client).patch<PortfolioLiabilitiesUpdateResponses, PortfolioLiabilitiesUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/portfolio/liabilities/{liability_id}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
