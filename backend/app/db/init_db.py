@@ -14,7 +14,7 @@ def import_models() -> None:
     from app.features.calendar.models import CalendarEvent, CalendarEventException  # noqa: F401
     from app.features.transactions.models import Transaction  # noqa: F401
     from app.features.users.models import User  # noqa: F401
-
+    from app.features.portfolio.models import PortfolioAsset, PortfolioLiability
 
 def init_db_metadata() -> None:
     import_models()
