@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthLoginData, AuthLoginErrors, AuthLoginResponses, AuthRegisterData, AuthRegisterErrors, AuthRegisterResponses, CalendarEventsCreateData, CalendarEventsCreateErrors, CalendarEventsCreateResponses, CalendarEventsDeleteData, CalendarEventsDeleteErrors, CalendarEventsDeleteResponses, CalendarEventsListData, CalendarEventsListErrors, CalendarEventsListResponses, CalendarEventsUpdateData, CalendarEventsUpdateErrors, CalendarEventsUpdateResponses, HealthCheckHealthGetData, HealthCheckHealthGetResponses, PortfolioAssetsCreateData, PortfolioAssetsCreateErrors, PortfolioAssetsCreateResponses, PortfolioAssetsDeleteData, PortfolioAssetsDeleteErrors, PortfolioAssetsDeleteResponses, PortfolioAssetsListData, PortfolioAssetsListResponses, PortfolioAssetsUpdateData, PortfolioAssetsUpdateErrors, PortfolioAssetsUpdateResponses, PortfolioLiabilitiesCreateData, PortfolioLiabilitiesCreateErrors, PortfolioLiabilitiesCreateResponses, PortfolioLiabilitiesDeleteData, PortfolioLiabilitiesDeleteErrors, PortfolioLiabilitiesDeleteResponses, PortfolioLiabilitiesListData, PortfolioLiabilitiesListResponses, PortfolioLiabilitiesUpdateData, PortfolioLiabilitiesUpdateErrors, PortfolioLiabilitiesUpdateResponses, RootGetData, RootGetResponses, TransactionsCreateData, TransactionsCreateErrors, TransactionsCreateResponses, TransactionsListData, TransactionsListErrors, TransactionsListResponses, UsersMeData, UsersMeResponses } from './types.gen';
+import type { AuthLoginData, AuthLoginErrors, AuthLoginResponses, AuthRegisterData, AuthRegisterErrors, AuthRegisterResponses, CalendarEventsCreateData, CalendarEventsCreateErrors, CalendarEventsCreateResponses, CalendarEventsDeleteData, CalendarEventsDeleteErrors, CalendarEventsDeleteResponses, CalendarEventsListData, CalendarEventsListErrors, CalendarEventsListResponses, CalendarEventsUpdateData, CalendarEventsUpdateErrors, CalendarEventsUpdateResponses, CommunityCommentsCreateData, CommunityCommentsCreateErrors, CommunityCommentsCreateResponses, CommunityCommentsDeleteData, CommunityCommentsDeleteErrors, CommunityCommentsDeleteResponses, CommunityCommentsLikeData, CommunityCommentsLikeErrors, CommunityCommentsLikeResponses, CommunityCommentsListData, CommunityCommentsListErrors, CommunityCommentsListResponses, CommunityCommentsShareData, CommunityCommentsShareErrors, CommunityCommentsShareResponses, CommunityCommentsUnlikeData, CommunityCommentsUnlikeErrors, CommunityCommentsUnlikeResponses, CommunityCommentsUpdateData, CommunityCommentsUpdateErrors, CommunityCommentsUpdateResponses, CommunityFeedData, CommunityFeedErrors, CommunityFeedGlobalData, CommunityFeedGlobalErrors, CommunityFeedGlobalResponses, CommunityFeedResponses, CommunityFollowData, CommunityFollowErrors, CommunityFollowersListData, CommunityFollowersListErrors, CommunityFollowersListResponses, CommunityFollowingListData, CommunityFollowingListErrors, CommunityFollowingListResponses, CommunityFollowResponses, CommunityPostsCreateData, CommunityPostsCreateErrors, CommunityPostsCreateResponses, CommunityPostsDeleteData, CommunityPostsDeleteErrors, CommunityPostsDeleteResponses, CommunityPostsGetData, CommunityPostsGetErrors, CommunityPostsGetResponses, CommunityPostsLikeData, CommunityPostsLikeErrors, CommunityPostsLikeResponses, CommunityPostsRepostData, CommunityPostsRepostErrors, CommunityPostsRepostResponses, CommunityPostsSaveData, CommunityPostsSavedListData, CommunityPostsSavedListResponses, CommunityPostsSaveErrors, CommunityPostsSaveResponses, CommunityPostsShareData, CommunityPostsShareErrors, CommunityPostsShareResponses, CommunityPostsUnlikeData, CommunityPostsUnlikeErrors, CommunityPostsUnlikeResponses, CommunityPostsUnsaveData, CommunityPostsUnsaveErrors, CommunityPostsUnsaveResponses, CommunityPostsUpdateData, CommunityPostsUpdateErrors, CommunityPostsUpdateResponses, CommunityRepostsDeleteData, CommunityRepostsDeleteErrors, CommunityRepostsDeleteResponses, CommunityUnfollowData, CommunityUnfollowErrors, CommunityUnfollowResponses, HealthCheckHealthGetData, HealthCheckHealthGetResponses, PortfolioAssetsCreateData, PortfolioAssetsCreateErrors, PortfolioAssetsCreateResponses, PortfolioAssetsDeleteData, PortfolioAssetsDeleteErrors, PortfolioAssetsDeleteResponses, PortfolioAssetsListData, PortfolioAssetsListResponses, PortfolioAssetsUpdateData, PortfolioAssetsUpdateErrors, PortfolioAssetsUpdateResponses, PortfolioLiabilitiesCreateData, PortfolioLiabilitiesCreateErrors, PortfolioLiabilitiesCreateResponses, PortfolioLiabilitiesDeleteData, PortfolioLiabilitiesDeleteErrors, PortfolioLiabilitiesDeleteResponses, PortfolioLiabilitiesListData, PortfolioLiabilitiesListResponses, PortfolioLiabilitiesUpdateData, PortfolioLiabilitiesUpdateErrors, PortfolioLiabilitiesUpdateResponses, RootGetData, RootGetResponses, TransactionsCreateData, TransactionsCreateErrors, TransactionsCreateResponses, TransactionsListData, TransactionsListErrors, TransactionsListResponses, UsersMeData, UsersMeResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -215,6 +215,263 @@ export const portfolioLiabilitiesUpdate = <ThrowOnError extends boolean = false>
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Get Feed
+ *
+ * Chronological feed of posts from followed users.
+ * Falls back to global feed if the current user follows nobody.
+ * Paginate by passing `before` = the `created_at` of the oldest post
+ * in the current page.
+ */
+export const communityFeed = <ThrowOnError extends boolean = false>(options?: Options<CommunityFeedData, ThrowOnError>) => (options?.client ?? client).get<CommunityFeedResponses, CommunityFeedErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/feed',
+    ...options
+});
+
+/**
+ * Get Global Feed
+ *
+ * Chronological feed of all posts regardless of follows.
+ */
+export const communityFeedGlobal = <ThrowOnError extends boolean = false>(options?: Options<CommunityFeedGlobalData, ThrowOnError>) => (options?.client ?? client).get<CommunityFeedGlobalResponses, CommunityFeedGlobalErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/feed/global',
+    ...options
+});
+
+/**
+ * Delete Post Endpoint
+ */
+export const communityPostsDelete = <ThrowOnError extends boolean = false>(options: Options<CommunityPostsDeleteData, ThrowOnError>) => (options.client ?? client).delete<CommunityPostsDeleteResponses, CommunityPostsDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/{post_id}',
+    ...options
+});
+
+/**
+ * Get Post Endpoint
+ */
+export const communityPostsGet = <ThrowOnError extends boolean = false>(options: Options<CommunityPostsGetData, ThrowOnError>) => (options.client ?? client).get<CommunityPostsGetResponses, CommunityPostsGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/{post_id}',
+    ...options
+});
+
+/**
+ * Update Post Endpoint
+ */
+export const communityPostsUpdate = <ThrowOnError extends boolean = false>(options: Options<CommunityPostsUpdateData, ThrowOnError>) => (options.client ?? client).patch<CommunityPostsUpdateResponses, CommunityPostsUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/{post_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Create Post Endpoint
+ */
+export const communityPostsCreate = <ThrowOnError extends boolean = false>(options: Options<CommunityPostsCreateData, ThrowOnError>) => (options.client ?? client).post<CommunityPostsCreateResponses, CommunityPostsCreateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Unlike Post Endpoint
+ */
+export const communityPostsUnlike = <ThrowOnError extends boolean = false>(options: Options<CommunityPostsUnlikeData, ThrowOnError>) => (options.client ?? client).delete<CommunityPostsUnlikeResponses, CommunityPostsUnlikeErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/{post_id}/like',
+    ...options
+});
+
+/**
+ * Like Post Endpoint
+ */
+export const communityPostsLike = <ThrowOnError extends boolean = false>(options: Options<CommunityPostsLikeData, ThrowOnError>) => (options.client ?? client).post<CommunityPostsLikeResponses, CommunityPostsLikeErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/{post_id}/like',
+    ...options
+});
+
+/**
+ * Unsave Post Endpoint
+ */
+export const communityPostsUnsave = <ThrowOnError extends boolean = false>(options: Options<CommunityPostsUnsaveData, ThrowOnError>) => (options.client ?? client).delete<CommunityPostsUnsaveResponses, CommunityPostsUnsaveErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/{post_id}/save',
+    ...options
+});
+
+/**
+ * Save Post Endpoint
+ */
+export const communityPostsSave = <ThrowOnError extends boolean = false>(options: Options<CommunityPostsSaveData, ThrowOnError>) => (options.client ?? client).post<CommunityPostsSaveResponses, CommunityPostsSaveErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/{post_id}/save',
+    ...options
+});
+
+/**
+ * Get Saved Posts
+ *
+ * Returns all posts saved by the current user, newest save first.
+ */
+export const communityPostsSavedList = <ThrowOnError extends boolean = false>(options?: Options<CommunityPostsSavedListData, ThrowOnError>) => (options?.client ?? client).get<CommunityPostsSavedListResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/saved',
+    ...options
+});
+
+/**
+ * Share Post Endpoint
+ */
+export const communityPostsShare = <ThrowOnError extends boolean = false>(options: Options<CommunityPostsShareData, ThrowOnError>) => (options.client ?? client).post<CommunityPostsShareResponses, CommunityPostsShareErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/{post_id}/share',
+    ...options
+});
+
+/**
+ * Repost Endpoint
+ *
+ * Simple repost: send an empty `content_blocks` list.
+ * Quote repost: populate `content_blocks` with your added commentary.
+ */
+export const communityPostsRepost = <ThrowOnError extends boolean = false>(options: Options<CommunityPostsRepostData, ThrowOnError>) => (options.client ?? client).post<CommunityPostsRepostResponses, CommunityPostsRepostErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/{post_id}/repost',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete Repost Endpoint
+ */
+export const communityRepostsDelete = <ThrowOnError extends boolean = false>(options: Options<CommunityRepostsDeleteData, ThrowOnError>) => (options.client ?? client).delete<CommunityRepostsDeleteResponses, CommunityRepostsDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/reposts/{repost_id}',
+    ...options
+});
+
+/**
+ * Get Comments
+ */
+export const communityCommentsList = <ThrowOnError extends boolean = false>(options: Options<CommunityCommentsListData, ThrowOnError>) => (options.client ?? client).get<CommunityCommentsListResponses, CommunityCommentsListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/{post_id}/comments',
+    ...options
+});
+
+/**
+ * Create Comment Endpoint
+ */
+export const communityCommentsCreate = <ThrowOnError extends boolean = false>(options: Options<CommunityCommentsCreateData, ThrowOnError>) => (options.client ?? client).post<CommunityCommentsCreateResponses, CommunityCommentsCreateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/{post_id}/comments',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete Comment Endpoint
+ */
+export const communityCommentsDelete = <ThrowOnError extends boolean = false>(options: Options<CommunityCommentsDeleteData, ThrowOnError>) => (options.client ?? client).delete<CommunityCommentsDeleteResponses, CommunityCommentsDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/{post_id}/comments/{comment_id}',
+    ...options
+});
+
+/**
+ * Update Comment Endpoint
+ */
+export const communityCommentsUpdate = <ThrowOnError extends boolean = false>(options: Options<CommunityCommentsUpdateData, ThrowOnError>) => (options.client ?? client).patch<CommunityCommentsUpdateResponses, CommunityCommentsUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/{post_id}/comments/{comment_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Unlike Comment Endpoint
+ */
+export const communityCommentsUnlike = <ThrowOnError extends boolean = false>(options: Options<CommunityCommentsUnlikeData, ThrowOnError>) => (options.client ?? client).delete<CommunityCommentsUnlikeResponses, CommunityCommentsUnlikeErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/{post_id}/comments/{comment_id}/like',
+    ...options
+});
+
+/**
+ * Like Comment Endpoint
+ */
+export const communityCommentsLike = <ThrowOnError extends boolean = false>(options: Options<CommunityCommentsLikeData, ThrowOnError>) => (options.client ?? client).post<CommunityCommentsLikeResponses, CommunityCommentsLikeErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/{post_id}/comments/{comment_id}/like',
+    ...options
+});
+
+/**
+ * Share Comment Endpoint
+ */
+export const communityCommentsShare = <ThrowOnError extends boolean = false>(options: Options<CommunityCommentsShareData, ThrowOnError>) => (options.client ?? client).post<CommunityCommentsShareResponses, CommunityCommentsShareErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/posts/{post_id}/comments/{comment_id}/share',
+    ...options
+});
+
+/**
+ * Unfollow User Endpoint
+ */
+export const communityUnfollow = <ThrowOnError extends boolean = false>(options: Options<CommunityUnfollowData, ThrowOnError>) => (options.client ?? client).delete<CommunityUnfollowResponses, CommunityUnfollowErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/users/{user_id}/follow',
+    ...options
+});
+
+/**
+ * Follow User Endpoint
+ */
+export const communityFollow = <ThrowOnError extends boolean = false>(options: Options<CommunityFollowData, ThrowOnError>) => (options.client ?? client).post<CommunityFollowResponses, CommunityFollowErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/users/{user_id}/follow',
+    ...options
+});
+
+/**
+ * Get Following
+ */
+export const communityFollowingList = <ThrowOnError extends boolean = false>(options: Options<CommunityFollowingListData, ThrowOnError>) => (options.client ?? client).get<CommunityFollowingListResponses, CommunityFollowingListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/users/{user_id}/following',
+    ...options
+});
+
+/**
+ * Get Followers
+ */
+export const communityFollowersList = <ThrowOnError extends boolean = false>(options: Options<CommunityFollowersListData, ThrowOnError>) => (options.client ?? client).get<CommunityFollowersListResponses, CommunityFollowersListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/community/users/{user_id}/followers',
+    ...options
 });
 
 /**
