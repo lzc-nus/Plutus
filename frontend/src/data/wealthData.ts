@@ -26,7 +26,7 @@ export type Liability = {
   riskLabel: string;
 };
 
-export type TransactionRange = "1D" | "1M" | "1Y";
+export type TransactionRange = "1D" | "1M" | "1Y" | "ALL";
 
 export type Transaction = {
   id: string;

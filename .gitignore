@@ -1,0 +1,14 @@
+.DS_Store
+.env
+*.env
+*.log
+*.tsbuildinfo
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+node_modules/
+.next/
+dist/
+build/
