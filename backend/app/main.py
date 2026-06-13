@@ -1,16 +1,55 @@
-from typing import Annotated
+from __future__ import annotations
 
-from fastapi import FastAPI, Query, Path
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+from fastapi import FastAPI, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
+
+from app.api.health import router as health_router
+from app.api.v1.router import api_router
+from app.core.config import settings
+from app.db.init_db import init_db_metadata
 
 
-@app.get("/items/{item_id}")
-async def read_items(
-    item_id: Annotated[int, Path(title="The ID of the item to get", ge=1)],
-    q: str,
-):
-    results = {"item_id": item_id}
-    if q:
-        results.update({"q": q})
-    return results
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Starting app")
+    init_db_metadata()
+    yield
+    print("Stopping app")
+
+
+app = FastAPI(
+    title=settings.app_name,
+    version=settings.app_version,
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(api_router)
+app.include_router(health_router)
+
+
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_exception_handler(
+    _request: Request,
+    _exc: SQLAlchemyError,
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        content={"detail": "Database is temporarily unavailable."},
+    )
+
+
+@app.get("/")
+def root():
+    return {"message": "Welcome to Plutus API."}
