@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Great_Vibes } from "next/font/google";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
-import { dashboardTips } from "@/data/dashboardTips";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 const logoFont = Great_Vibes({
   subsets: ["latin"],
@@ -13,7 +13,6 @@ const logoFont = Great_Vibes({
 });
 
 const STORAGE_KEY = "plutus_sidebar_collapsed";
-const TIP_ROTATION_INTERVAL_MS = 60000;
 
 type IconName =
   | "overview"
@@ -25,7 +24,9 @@ type IconName =
   | "settings"
   | "asset"
   | "liability"
-  | "chevron";
+  | "chevron"
+  | "community"
+  | "profile";
 
 type NavItem = {
   label: string;
@@ -34,32 +35,9 @@ type NavItem = {
   exact?: boolean;
 };
 
-const navGroups: Array<{ label: string; items: NavItem[] }> = [
-  {
-    label: "Command",
-    items: [
-      { label: "Overview", href: "/dashboard/overview", icon: "overview" },
-      { label: "Portfolio", href: "/dashboard/portfolio", icon: "portfolio" },
-      { label: "Transactions", href: "/dashboard/transactions", icon: "transactions" },
-      { label: "Calendar", href: "/dashboard/calendar", icon: "calendar" },
-    ],
-  },
-  {
-    label: "Intelligence",
-    items: [
-      { label: "AI Insights", href: "/dashboard/ai", icon: "insights" },
-      { label: "Strategy", href: "/dashboard/strategy", icon: "strategy" },
-    ],
-  },
-  {
-    label: "Account",
-    items: [{ label: "Settings", href: "/dashboard/settings", icon: "settings" }],
-  },
-];
-
 const quickActions: NavItem[] = [
-  { label: "Add asset", href: "/dashboard/portfolio/assets/new", icon: "asset", exact: true },
-  { label: "Add liability", href: "/dashboard/portfolio/liabilities/new", icon: "liability", exact: true },
+  { label: "Add asset", href: "/dashboard/portfolio/assets?add=true", icon: "asset", exact: true },
+  { label: "Add liability", href: "/dashboard/portfolio/liabilities?add=true", icon: "liability", exact: true },
   { label: "New transaction", href: "/dashboard/transactions/new", icon: "transactions", exact: true },
 ];
 
@@ -91,20 +69,6 @@ function subscribeSidebarPreference(onStoreChange: () => void) {
     window.removeEventListener("storage", onStoreChange);
     window.removeEventListener("plutus-sidebar-change", onStoreChange);
   };
-}
-
-function getNextTipIndex(currentIndex: number) {
-  if (dashboardTips.length <= 1) {
-    return currentIndex;
-  }
-
-  const nextIndex = Math.floor(Math.random() * dashboardTips.length);
-
-  if (nextIndex === currentIndex) {
-    return (nextIndex + 1) % dashboardTips.length;
-  }
-
-  return nextIndex;
 }
 
 function Icon({ name }: { name: IconName }) {
@@ -193,6 +157,20 @@ function Icon({ name }: { name: IconName }) {
       </>
     ),
     chevron: <path d="m9 6 6 6-6 6" />,
+    community: (
+      <>
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </>
+    ),
+    profile: (
+      <>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+      </>
+    ),
   };
 
   return (
@@ -203,30 +181,45 @@ function Icon({ name }: { name: IconName }) {
 }
 
 export default function Sidebar() {
+  const { user } = useAuth();
   const pathname = usePathname();
-  const [tipIndex, setTipIndex] = useState(0);
+
+  const navGroups = [
+    {
+      label: "Command",
+      items: [
+        { label: "Overview", href: "/dashboard/overview", icon: "overview" },
+        { label: "Portfolio", href: "/dashboard/portfolio", icon: "portfolio" },
+        { label: "Transactions", href: "/dashboard/transactions", icon: "transactions" },
+        { label: "Calendar", href: "/dashboard/calendar", icon: "calendar" },
+      ],
+    },
+    {
+      label: "Intelligence",
+      items: [
+        { label: "AI Insights", href: "/dashboard/ai", icon: "insights" },
+        { label: "Strategy", href: "/dashboard/strategy", icon: "strategy" },
+      ],
+    },
+    {
+      label: "Social",
+      items: [
+        { label: "Community", href: "/dashboard/community", icon: "community" },
+        { label: "Profile", href: user ? `/profile/${user.id}` : "#", icon: "profile" },
+      ],
+    },
+    {
+      label: "Account",
+      items: [{ label: "Settings", href: "/dashboard/settings", icon: "settings" }],
+    },
+  ] satisfies Array<{ label: string; items: NavItem[] }>;
+
   const storedPreference = useSyncExternalStore(
     subscribeSidebarPreference,
     getSidebarSnapshot,
     () => "false",
   );
   const isCollapsed = storedPreference === "true";
-  const activeTip = dashboardTips[tipIndex] ?? dashboardTips[0];
-
-  useEffect(() => {
-    const initialTimerId = window.setTimeout(() => {
-      setTipIndex((currentIndex) => getNextTipIndex(currentIndex));
-    }, 500);
-
-    const rotationTimerId = window.setInterval(() => {
-      setTipIndex((currentIndex) => getNextTipIndex(currentIndex));
-    }, TIP_ROTATION_INTERVAL_MS);
-
-    return () => {
-      window.clearTimeout(initialTimerId);
-      window.clearInterval(rotationTimerId);
-    };
-  }, []);
 
   function toggleSidebar() {
     const nextValue = !isCollapsed;
@@ -342,20 +335,8 @@ export default function Sidebar() {
             })}
           </div>
         </div>
-
-        {expanded ? (
-          <div className="mt-4 rounded-md border border-[#d7c6a3]/14 bg-[#10140f]/55 p-3" aria-live="polite">
-            <div className="grid gap-1">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#d8bd75]">
-                {activeTip.title}
-              </p>
-              <p className="text-xs leading-5 text-[#a99b82]">
-                {activeTip.body}
-              </p>
-            </div>
-          </div>
-        ) : null}
       </div>
     </aside>
   );
 }
+
