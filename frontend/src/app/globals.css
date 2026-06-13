@@ -26,6 +26,11 @@ body {
   letter-spacing: 0.01em;
 }
 
+.brand-logo {
+  font-size: clamp(2.25rem, 4vw, 1.5rem);
+  line-height: 0.95;
+}
+
 ::selection {
   background: #c3a35d;
   color: #1d211c;
