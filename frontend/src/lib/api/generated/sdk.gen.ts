@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthLoginData, AuthLoginErrors, AuthLoginResponses, AuthRegisterData, AuthRegisterErrors, AuthRegisterResponses, CalendarEventsCreateData, CalendarEventsCreateErrors, CalendarEventsCreateResponses, CalendarEventsDeleteData, CalendarEventsDeleteErrors, CalendarEventsDeleteResponses, CalendarEventsListData, CalendarEventsListErrors, CalendarEventsListResponses, CalendarEventsUpdateData, CalendarEventsUpdateErrors, CalendarEventsUpdateResponses, CommunityCommentsCreateData, CommunityCommentsCreateErrors, CommunityCommentsCreateResponses, CommunityCommentsDeleteData, CommunityCommentsDeleteErrors, CommunityCommentsDeleteResponses, CommunityCommentsLikeData, CommunityCommentsLikeErrors, CommunityCommentsLikeResponses, CommunityCommentsListData, CommunityCommentsListErrors, CommunityCommentsListResponses, CommunityCommentsShareData, CommunityCommentsShareErrors, CommunityCommentsShareResponses, CommunityCommentsUnlikeData, CommunityCommentsUnlikeErrors, CommunityCommentsUnlikeResponses, CommunityCommentsUpdateData, CommunityCommentsUpdateErrors, CommunityCommentsUpdateResponses, CommunityFeedData, CommunityFeedErrors, CommunityFeedGlobalData, CommunityFeedGlobalErrors, CommunityFeedGlobalResponses, CommunityFeedResponses, CommunityFollowData, CommunityFollowErrors, CommunityFollowersListData, CommunityFollowersListErrors, CommunityFollowersListResponses, CommunityFollowingListData, CommunityFollowingListErrors, CommunityFollowingListResponses, CommunityFollowResponses, CommunityPostsCreateData, CommunityPostsCreateErrors, CommunityPostsCreateResponses, CommunityPostsDeleteData, CommunityPostsDeleteErrors, CommunityPostsDeleteResponses, CommunityPostsGetData, CommunityPostsGetErrors, CommunityPostsGetResponses, CommunityPostsLikeData, CommunityPostsLikeErrors, CommunityPostsLikeResponses, CommunityPostsRepostData, CommunityPostsRepostErrors, CommunityPostsRepostResponses, CommunityPostsSaveData, CommunityPostsSavedListData, CommunityPostsSavedListResponses, CommunityPostsSaveErrors, CommunityPostsSaveResponses, CommunityPostsShareData, CommunityPostsShareErrors, CommunityPostsShareResponses, CommunityPostsUnlikeData, CommunityPostsUnlikeErrors, CommunityPostsUnlikeResponses, CommunityPostsUnsaveData, CommunityPostsUnsaveErrors, CommunityPostsUnsaveResponses, CommunityPostsUpdateData, CommunityPostsUpdateErrors, CommunityPostsUpdateResponses, CommunityRepostsDeleteData, CommunityRepostsDeleteErrors, CommunityRepostsDeleteResponses, CommunityUnfollowData, CommunityUnfollowErrors, CommunityUnfollowResponses, HealthCheckHealthGetData, HealthCheckHealthGetResponses, PortfolioAssetsCreateData, PortfolioAssetsCreateErrors, PortfolioAssetsCreateResponses, PortfolioAssetsDeleteData, PortfolioAssetsDeleteErrors, PortfolioAssetsDeleteResponses, PortfolioAssetsListData, PortfolioAssetsListResponses, PortfolioAssetsUpdateData, PortfolioAssetsUpdateErrors, PortfolioAssetsUpdateResponses, PortfolioLiabilitiesCreateData, PortfolioLiabilitiesCreateErrors, PortfolioLiabilitiesCreateResponses, PortfolioLiabilitiesDeleteData, PortfolioLiabilitiesDeleteErrors, PortfolioLiabilitiesDeleteResponses, PortfolioLiabilitiesListData, PortfolioLiabilitiesListResponses, PortfolioLiabilitiesUpdateData, PortfolioLiabilitiesUpdateErrors, PortfolioLiabilitiesUpdateResponses, RootGetData, RootGetResponses, TransactionsCreateData, TransactionsCreateErrors, TransactionsCreateResponses, TransactionsListData, TransactionsListErrors, TransactionsListResponses, UsersGetByIdData, UsersGetByIdErrors, UsersGetByIdResponses, UsersMeData, UsersMeResponses, UsersMeUpdateData, UsersMeUpdateErrors, UsersMeUpdateResponses } from './types.gen';
+import type { AuthLoginData, AuthLoginErrors, AuthLoginResponses, AuthLogoutData, AuthLogoutResponses, AuthRegisterData, AuthRegisterErrors, AuthRegisterResponses, CalendarEventsCreateData, CalendarEventsCreateErrors, CalendarEventsCreateResponses, CalendarEventsDeleteData, CalendarEventsDeleteErrors, CalendarEventsDeleteResponses, CalendarEventsListData, CalendarEventsListErrors, CalendarEventsListResponses, CalendarEventsUpdateData, CalendarEventsUpdateErrors, CalendarEventsUpdateResponses, CommunityCommentsCreateData, CommunityCommentsCreateErrors, CommunityCommentsCreateResponses, CommunityCommentsDeleteData, CommunityCommentsDeleteErrors, CommunityCommentsDeleteResponses, CommunityCommentsLikeData, CommunityCommentsLikeErrors, CommunityCommentsLikeResponses, CommunityCommentsListData, CommunityCommentsListErrors, CommunityCommentsListResponses, CommunityCommentsShareData, CommunityCommentsShareErrors, CommunityCommentsShareResponses, CommunityCommentsUnlikeData, CommunityCommentsUnlikeErrors, CommunityCommentsUnlikeResponses, CommunityCommentsUpdateData, CommunityCommentsUpdateErrors, CommunityCommentsUpdateResponses, CommunityFeedData, CommunityFeedErrors, CommunityFeedGlobalData, CommunityFeedGlobalErrors, CommunityFeedGlobalResponses, CommunityFeedResponses, CommunityFollowData, CommunityFollowErrors, CommunityFollowersListData, CommunityFollowersListErrors, CommunityFollowersListResponses, CommunityFollowingListData, CommunityFollowingListErrors, CommunityFollowingListResponses, CommunityFollowResponses, CommunityPostsCreateData, CommunityPostsCreateErrors, CommunityPostsCreateResponses, CommunityPostsDeleteData, CommunityPostsDeleteErrors, CommunityPostsDeleteResponses, CommunityPostsGetData, CommunityPostsGetErrors, CommunityPostsGetResponses, CommunityPostsLikeData, CommunityPostsLikeErrors, CommunityPostsLikeResponses, CommunityPostsRepostData, CommunityPostsRepostErrors, CommunityPostsRepostResponses, CommunityPostsSaveData, CommunityPostsSavedListData, CommunityPostsSavedListErrors, CommunityPostsSavedListResponses, CommunityPostsSaveErrors, CommunityPostsSaveResponses, CommunityPostsShareData, CommunityPostsShareErrors, CommunityPostsShareResponses, CommunityPostsUnlikeData, CommunityPostsUnlikeErrors, CommunityPostsUnlikeResponses, CommunityPostsUnsaveData, CommunityPostsUnsaveErrors, CommunityPostsUnsaveResponses, CommunityPostsUpdateData, CommunityPostsUpdateErrors, CommunityPostsUpdateResponses, CommunityRepostsDeleteData, CommunityRepostsDeleteErrors, CommunityRepostsDeleteResponses, CommunityUnfollowData, CommunityUnfollowErrors, CommunityUnfollowResponses, HealthCheckHealthGetData, HealthCheckHealthGetResponses, PortfolioAssetsCreateData, PortfolioAssetsCreateErrors, PortfolioAssetsCreateResponses, PortfolioAssetsDeleteData, PortfolioAssetsDeleteErrors, PortfolioAssetsDeleteResponses, PortfolioAssetsListData, PortfolioAssetsListErrors, PortfolioAssetsListResponses, PortfolioAssetsUpdateData, PortfolioAssetsUpdateErrors, PortfolioAssetsUpdateResponses, PortfolioLiabilitiesCreateData, PortfolioLiabilitiesCreateErrors, PortfolioLiabilitiesCreateResponses, PortfolioLiabilitiesDeleteData, PortfolioLiabilitiesDeleteErrors, PortfolioLiabilitiesDeleteResponses, PortfolioLiabilitiesListData, PortfolioLiabilitiesListErrors, PortfolioLiabilitiesListResponses, PortfolioLiabilitiesUpdateData, PortfolioLiabilitiesUpdateErrors, PortfolioLiabilitiesUpdateResponses, RootGetData, RootGetResponses, TransactionsCreateData, TransactionsCreateErrors, TransactionsCreateResponses, TransactionsListData, TransactionsListErrors, TransactionsListResponses, UsersGetByIdData, UsersGetByIdErrors, UsersGetByIdResponses, UsersMeData, UsersMeErrors, UsersMeResponses, UsersMeUpdateData, UsersMeUpdateErrors, UsersMeUpdateResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -43,6 +43,11 @@ export const authLogin = <ThrowOnError extends boolean = false>(options: Options
 });
 
 /**
+ * Logout
+ */
+export const authLogout = <ThrowOnError extends boolean = false>(options?: Options<AuthLogoutData, ThrowOnError>) => (options?.client ?? client).post<AuthLogoutResponses, unknown, ThrowOnError>({ url: '/api/v1/auth/logout', ...options });
+
+/**
  * Read Current User
  *
  * Return the authenticated user's full profile (private fields included).
@@ -51,7 +56,7 @@ export const authLogin = <ThrowOnError extends boolean = false>(options: Options
  * is still valid. Expired, malformed, missing, or inactive-user tokens are
  * rejected by the CurrentUser dependency before this function runs.
  */
-export const usersMe = <ThrowOnError extends boolean = false>(options?: Options<UsersMeData, ThrowOnError>) => (options?.client ?? client).get<UsersMeResponses, unknown, ThrowOnError>({
+export const usersMe = <ThrowOnError extends boolean = false>(options?: Options<UsersMeData, ThrowOnError>) => (options?.client ?? client).get<UsersMeResponses, UsersMeErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/users/me',
     ...options
@@ -156,7 +161,7 @@ export const calendarEventsUpdate = <ThrowOnError extends boolean = false>(optio
  *
  * Return all assets for the authenticated user.
  */
-export const portfolioAssetsList = <ThrowOnError extends boolean = false>(options?: Options<PortfolioAssetsListData, ThrowOnError>) => (options?.client ?? client).get<PortfolioAssetsListResponses, unknown, ThrowOnError>({
+export const portfolioAssetsList = <ThrowOnError extends boolean = false>(options?: Options<PortfolioAssetsListData, ThrowOnError>) => (options?.client ?? client).get<PortfolioAssetsListResponses, PortfolioAssetsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/portfolio/assets',
     ...options
@@ -202,7 +207,7 @@ export const portfolioAssetsUpdate = <ThrowOnError extends boolean = false>(opti
  *
  * Return all liabilities for the authenticated user.
  */
-export const portfolioLiabilitiesList = <ThrowOnError extends boolean = false>(options?: Options<PortfolioLiabilitiesListData, ThrowOnError>) => (options?.client ?? client).get<PortfolioLiabilitiesListResponses, unknown, ThrowOnError>({
+export const portfolioLiabilitiesList = <ThrowOnError extends boolean = false>(options?: Options<PortfolioLiabilitiesListData, ThrowOnError>) => (options?.client ?? client).get<PortfolioLiabilitiesListResponses, PortfolioLiabilitiesListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/portfolio/liabilities',
     ...options
@@ -273,7 +278,7 @@ export const communityFeedGlobal = <ThrowOnError extends boolean = false>(option
  *
  * Returns all posts saved by the current user, newest save first.
  */
-export const communityPostsSavedList = <ThrowOnError extends boolean = false>(options?: Options<CommunityPostsSavedListData, ThrowOnError>) => (options?.client ?? client).get<CommunityPostsSavedListResponses, unknown, ThrowOnError>({
+export const communityPostsSavedList = <ThrowOnError extends boolean = false>(options?: Options<CommunityPostsSavedListData, ThrowOnError>) => (options?.client ?? client).get<CommunityPostsSavedListResponses, CommunityPostsSavedListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/community/posts/saved',
     ...options

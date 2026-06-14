@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import uuid
+from decimal import Decimal
 
 from sqlalchemy import Index
 from sqlmodel import Field, SQLModel
@@ -23,8 +24,8 @@ class PortfolioAsset(SQLModel, table=True):
     name: str = Field(nullable=False, max_length=200)
     category: str = Field(nullable=False, max_length=64)
     custom_category: str | None = Field(default=None, max_length=100)
-    value: float = Field(nullable=False)
-    cost_basis: float | None = Field(default=None)
+    value: Decimal = Field(max_digits=14, decimal_places=2, nullable=False)
+    cost_basis: Decimal | None = Field(default=None, max_digits=14, decimal_places=2)
     liquidity: str = Field(nullable=False, max_length=16)
     risk: str = Field(nullable=False, max_length=16)
     notes: str | None = Field(default=None, max_length=500)
@@ -54,10 +55,10 @@ class PortfolioLiability(SQLModel, table=True):
     name: str = Field(nullable=False, max_length=200)
     category: str = Field(nullable=False, max_length=64)
     custom_category: str | None = Field(default=None, max_length=100)
-    balance: float = Field(nullable=False)
-    original_amount: float | None = Field(default=None)
-    interest_rate: float | None = Field(default=None)
-    monthly_payment: float | None = Field(default=None)
+    balance: Decimal = Field(max_digits=14, decimal_places=2, nullable=False)
+    original_amount: Decimal | None = Field(default=None, max_digits=14, decimal_places=2)
+    interest_rate: Decimal | None = Field(default=None, max_digits=7, decimal_places=4)
+    monthly_payment: Decimal | None = Field(default=None, max_digits=14, decimal_places=2)
     maturity_date: datetime.date | None = Field(default=None)
     notes: str | None = Field(default=None, max_length=500)
 

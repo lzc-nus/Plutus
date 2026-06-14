@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import type { UserRead } from "@/lib/api/generated";
+import { logoutAccount } from "@/lib/api/auth";
 
 type HeaderMeta = {
   title: string;
@@ -162,7 +163,8 @@ export default function Header({ currentUser }: HeaderProps) {
     day: "numeric",
   }).format(new Date());
 
-  function handleLogout() {
+  async function handleLogout() {
+    await logoutAccount();
     localStorage.removeItem("plutus_access_token");
     router.replace("/login");
   }

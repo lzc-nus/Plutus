@@ -1,4 +1,4 @@
-import { authLogin, authRegister } from "@/lib/api/generated";
+import { authLogin, authLogout, authRegister } from "@/lib/api/generated";
 import type { LoginRequest, RegisterRequest } from "@/lib/api/generated";
 import { configureApiClient } from "./configureClient";
 
@@ -10,6 +10,11 @@ export async function loginWithEmailPassword(body: LoginRequest) {
 export async function registerAccount(body: RegisterRequest) {
   configureApiClient();
   return authRegister({ body });
+}
+
+export async function logoutAccount() {
+  configureApiClient();
+  return authLogout();
 }
 
 export function getApiErrorMessage(error: unknown, fallback: string) {

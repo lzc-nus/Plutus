@@ -21,9 +21,11 @@ from app.features.community.schemas import (
     CommentCreate,
     CommentUpdate,
     PostCreate,
+    PostRead,
     PostUpdate,
     RepostCreate,
 )
+from app.features.users.models import User
 
 UTC = datetime.timezone.utc
 
@@ -70,6 +72,72 @@ def list_global_posts(
         stmt = stmt.where(Post.created_at < before)  # type: ignore[attr-defined]
     stmt = stmt.order_by(Post.created_at.desc()).limit(limit)  # type: ignore[attr-defined]
     return list(db.exec(stmt).all())
+
+
+def read_post_for_user(
+    db: Session,
+    *,
+    post: Post,
+    current_user_id: uuid.UUID,
+) -> PostRead:
+    """Return a post response annotated with the current user's interaction state."""
+    post_read = PostRead.model_validate(post, from_attributes=True)
+    post_read.is_liked_by_me = (
+        db.exec(
+            select(PostLike).where(
+                PostLike.user_id == current_user_id,
+                PostLike.post_id == post.id,
+            )
+        ).first()
+        is not None
+    )
+    post_read.is_saved_by_me = (
+        db.exec(
+            select(PostSave).where(
+                PostSave.user_id == current_user_id,
+                PostSave.post_id == post.id,
+            )
+        ).first()
+        is not None
+    )
+    return post_read
+
+
+def read_posts_for_user(
+    db: Session,
+    *,
+    posts: list[Post],
+    current_user_id: uuid.UUID,
+) -> list[PostRead]:
+    """Return post responses annotated with current-user like/save state in batches."""
+    if not posts:
+        return []
+
+    post_ids = [post.id for post in posts]
+    liked_ids = set(
+        db.exec(
+            select(PostLike.post_id).where(
+                PostLike.user_id == current_user_id,
+                PostLike.post_id.in_(post_ids),  # type: ignore[attr-defined]
+            )
+        ).all()
+    )
+    saved_ids = set(
+        db.exec(
+            select(PostSave.post_id).where(
+                PostSave.user_id == current_user_id,
+                PostSave.post_id.in_(post_ids),  # type: ignore[attr-defined]
+            )
+        ).all()
+    )
+
+    post_reads: list[PostRead] = []
+    for post in posts:
+        post_read = PostRead.model_validate(post, from_attributes=True)
+        post_read.is_liked_by_me = post.id in liked_ids
+        post_read.is_saved_by_me = post.id in saved_ids
+        post_reads.append(post_read)
+    return post_reads
 
 
 # ── Posts ─────────────────────────────────────────────────────────────────────
@@ -174,11 +242,17 @@ def create_comment(
 def update_comment(
     db: Session,
     *,
+    post_id: uuid.UUID,
     comment_id: uuid.UUID,
     author_id: uuid.UUID,
     payload: CommentUpdate,
 ) -> Comment | None:
-    comment = _get_author_comment(db, comment_id=comment_id, author_id=author_id)
+    comment = _get_author_comment(
+        db,
+        post_id=post_id,
+        comment_id=comment_id,
+        author_id=author_id,
+    )
     if not comment:
         return None
     if payload.content_blocks is not None:
@@ -193,10 +267,16 @@ def update_comment(
 def delete_comment(
     db: Session,
     *,
+    post_id: uuid.UUID,
     comment_id: uuid.UUID,
     author_id: uuid.UUID,
 ) -> bool:
-    comment = _get_author_comment(db, comment_id=comment_id, author_id=author_id)
+    comment = _get_author_comment(
+        db,
+        post_id=post_id,
+        comment_id=comment_id,
+        author_id=author_id,
+    )
     if not comment:
         return False
 
@@ -212,12 +292,14 @@ def delete_comment(
 def _get_author_comment(
     db: Session,
     *,
+    post_id: uuid.UUID,
     comment_id: uuid.UUID,
     author_id: uuid.UUID,
 ) -> Comment | None:
     return db.exec(
         select(Comment).where(
             Comment.id == comment_id,
+            Comment.post_id == post_id,
             Comment.author_id == author_id,
         )
     ).first()
@@ -326,10 +408,11 @@ def like_comment(
     db: Session,
     *,
     user_id: uuid.UUID,
+    post_id: uuid.UUID,
     comment_id: uuid.UUID,
 ) -> CommentLike | None:
     """Returns None if already liked or comment not found."""
-    comment = db.get(Comment, comment_id)
+    comment = _get_post_comment(db, post_id=post_id, comment_id=comment_id)
     if not comment:
         return None
 
@@ -355,8 +438,12 @@ def unlike_comment(
     db: Session,
     *,
     user_id: uuid.UUID,
+    post_id: uuid.UUID,
     comment_id: uuid.UUID,
 ) -> bool:
+    if not _get_post_comment(db, post_id=post_id, comment_id=comment_id):
+        return False
+
     like = db.exec(
         select(CommentLike).where(
             CommentLike.user_id == user_id,
@@ -466,11 +553,12 @@ def share_comment(
     db: Session,
     *,
     user_id: uuid.UUID,
+    post_id: uuid.UUID,
     comment_id: uuid.UUID,
     base_url: str,
 ) -> tuple[CommentShare, str] | None:
     """Records the share event, increments share_count, and returns the share URL."""
-    comment = db.get(Comment, comment_id)
+    comment = _get_post_comment(db, post_id=post_id, comment_id=comment_id)
     if not comment:
         return None
 
@@ -495,6 +583,8 @@ def follow_user(
 ) -> UserFollow | None:
     """Returns None if already following or attempting self-follow."""
     if follower_id == followee_id:
+        return None
+    if not db.get(User, followee_id):
         return None
 
     existing = db.exec(
@@ -538,3 +628,17 @@ def list_following(db: Session, *, user_id: uuid.UUID) -> list[UserFollow]:
 
 def list_followers(db: Session, *, user_id: uuid.UUID) -> list[UserFollow]:
     return list(db.exec(select(UserFollow).where(UserFollow.followee_id == user_id)).all())
+
+
+def _get_post_comment(
+    db: Session,
+    *,
+    post_id: uuid.UUID,
+    comment_id: uuid.UUID,
+) -> Comment | None:
+    return db.exec(
+        select(Comment).where(
+            Comment.id == comment_id,
+            Comment.post_id == post_id,
+        )
+    ).first()

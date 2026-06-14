@@ -29,17 +29,12 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await loginWithEmailPassword(parsed.data);
+      const { error } = await loginWithEmailPassword(parsed.data);
 
       if (error) {
         throw new Error(getApiErrorMessage(error, "Unable to sign in."));
       }
 
-      if (!data?.access_token) {
-        throw new Error("Login response did not include an access token.");
-      }
-
-      localStorage.setItem("plutus_access_token", data.access_token);
       router.push("/dashboard/overview");
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Unable to sign in.");
