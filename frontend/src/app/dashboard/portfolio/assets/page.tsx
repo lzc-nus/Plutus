@@ -14,6 +14,7 @@ import {
   ASSET_CATEGORY_ICONS,
   type AssetCategory,
 } from "@/data/portfolioTypes";
+import { useSearchParams, useRouter } from "next/navigation";
 
 const CURRENCY = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -160,6 +161,16 @@ export default function AssetsPage() {
     ...unusedStandard,
     ...(showOtherStub ? ["other" as AssetCategory] : []),
   ];
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (searchParams.get("add") === "true") {
+      openAddModal(undefined, lastUsedCustomCategory);
+      router.replace("/dashboard/portfolio/assets");
+    }
+  }, [searchParams]);
 
   return (
     <>
