@@ -606,6 +606,14 @@ export type PostRead = {
      */
     save_count: number;
     /**
+     * Is Liked By Me
+     */
+    is_liked_by_me?: boolean;
+    /**
+     * Is Saved By Me
+     */
+    is_saved_by_me?: boolean;
+    /**
      * Created At
      */
     created_at: string;
@@ -802,11 +810,65 @@ export type TransactionRead = {
 };
 
 /**
+ * UserProfileUpdate
+ *
+ * Inbound payload for updating the authenticated user's profile.
+ */
+export type UserProfileUpdate = {
+    /**
+     * Display Name
+     */
+    display_name?: string | null;
+    /**
+     * Bio
+     */
+    bio?: string | null;
+    /**
+     * Avatar Url
+     */
+    avatar_url?: string | null;
+};
+
+/**
+ * UserPublicRead
+ *
+ * Public user shape returned when fetching another user's profile.
+ *
+ * Intentionally excludes email and internal flags.
+ */
+export type UserPublicRead = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Username
+     */
+    username: string;
+    /**
+     * Display Name
+     */
+    display_name: string | null;
+    /**
+     * Bio
+     */
+    bio: string | null;
+    /**
+     * Avatar Url
+     */
+    avatar_url: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
  * UserRead
  *
- * Public user shape returned to clients.
+ * Full user shape returned to the authenticated user only (via /users/me).
  *
- * This intentionally excludes hashed_password and any future internal fields.
+ * Includes private fields like email, is_active, is_verified.
  */
 export type UserRead = {
     /**
@@ -833,6 +895,26 @@ export type UserRead = {
      * Is Verified
      */
     is_verified: boolean;
+    /**
+     * Display Name
+     */
+    display_name: string | null;
+    /**
+     * Bio
+     */
+    bio: string | null;
+    /**
+     * Avatar Url
+     */
+    avatar_url: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
 };
 
 /**
@@ -928,6 +1010,61 @@ export type UsersMeResponses = {
 };
 
 export type UsersMeResponse = UsersMeResponses[keyof UsersMeResponses];
+
+export type UsersMeUpdateData = {
+    body: UserProfileUpdate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me';
+};
+
+export type UsersMeUpdateErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UsersMeUpdateError = UsersMeUpdateErrors[keyof UsersMeUpdateErrors];
+
+export type UsersMeUpdateResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserRead;
+};
+
+export type UsersMeUpdateResponse = UsersMeUpdateResponses[keyof UsersMeUpdateResponses];
+
+export type UsersGetByIdData = {
+    body?: never;
+    path: {
+        /**
+         * User Id
+         */
+        user_id: string;
+    };
+    query?: never;
+    url: '/api/v1/users/{user_id}';
+};
+
+export type UsersGetByIdErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UsersGetByIdError = UsersGetByIdErrors[keyof UsersGetByIdErrors];
+
+export type UsersGetByIdResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserPublicRead;
+};
+
+export type UsersGetByIdResponse = UsersGetByIdResponses[keyof UsersGetByIdResponses];
 
 export type TransactionsListData = {
     body?: never;
@@ -1404,6 +1541,24 @@ export type CommunityFeedGlobalResponses = {
 
 export type CommunityFeedGlobalResponse = CommunityFeedGlobalResponses[keyof CommunityFeedGlobalResponses];
 
+export type CommunityPostsSavedListData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/community/posts/saved';
+};
+
+export type CommunityPostsSavedListResponses = {
+    /**
+     * Response Community Posts Saved List
+     *
+     * Successful Response
+     */
+    200: Array<PostRead>;
+};
+
+export type CommunityPostsSavedListResponse = CommunityPostsSavedListResponses[keyof CommunityPostsSavedListResponses];
+
 export type CommunityPostsDeleteData = {
     body?: never;
     path: {
@@ -1638,24 +1793,6 @@ export type CommunityPostsSaveResponses = {
 };
 
 export type CommunityPostsSaveResponse = CommunityPostsSaveResponses[keyof CommunityPostsSaveResponses];
-
-export type CommunityPostsSavedListData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/community/posts/saved';
-};
-
-export type CommunityPostsSavedListResponses = {
-    /**
-     * Response Community Posts Saved List
-     *
-     * Successful Response
-     */
-    200: Array<PostRead>;
-};
-
-export type CommunityPostsSavedListResponse = CommunityPostsSavedListResponses[keyof CommunityPostsSavedListResponses];
 
 export type CommunityPostsShareData = {
     body?: never;

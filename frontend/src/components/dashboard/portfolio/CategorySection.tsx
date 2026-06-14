@@ -169,6 +169,9 @@ function CategoryShell({
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center gap-3 p-5 text-left transition-colors hover:bg-[#f4ede0]"
       >
+        <span className="text-lg" aria-hidden>
+          {icon}
+        </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-[#1d211c]">{label}</p>
           <p className="text-xs text-[#9a8f7a]">{count} {count === 1 ? "item" : "items"}</p>

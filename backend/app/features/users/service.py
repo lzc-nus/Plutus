@@ -41,8 +41,8 @@ def update_user(
     user: User,
     payload: UserProfileUpdate | UserUpdate,
 ) -> User:
-    """Apply non-None fields from payload onto the user and persist."""
-    for field, value in payload.model_dump(exclude_none=True).items():
+    """Apply explicitly provided fields from payload onto the user and persist."""
+    for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(user, field, value)
 
     user.updated_at = datetime.datetime.now(UTC)

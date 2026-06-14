@@ -87,6 +87,8 @@ class PostRead(SQLModel):
     repost_count: int
     share_count: int
     save_count: int
+    is_liked_by_me: bool = False
+    is_saved_by_me: bool = False
     created_at: datetime.datetime
     updated_at: datetime.datetime
 

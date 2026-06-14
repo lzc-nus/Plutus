@@ -167,10 +167,14 @@ export default function AssetsPage() {
 
   useEffect(() => {
     if (searchParams.get("add") === "true") {
-      openAddModal(undefined, lastUsedCustomCategory);
-      router.replace("/dashboard/portfolio/assets");
+      const timer = window.setTimeout(() => {
+        openAddModal(undefined, lastUsedCustomCategory);
+        router.replace("/dashboard/portfolio/assets");
+      }, 0);
+
+      return () => window.clearTimeout(timer);
     }
-  }, [searchParams]);
+  }, [lastUsedCustomCategory, router, searchParams]);
 
   return (
     <>
