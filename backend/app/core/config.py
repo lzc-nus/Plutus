@@ -25,11 +25,22 @@ class Settings(BaseSettings):
 
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
+    sql_echo: bool = False
+
+    auth_cookie_name: str = "plutus_access_token"
+    auth_cookie_secure: bool | None = None
+    auth_cookie_samesite: Literal["lax", "strict", "none"] = "lax"
 
     allowed_origins: list[str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ]
+
+    @property
+    def resolved_auth_cookie_secure(self) -> bool:
+        if self.auth_cookie_secure is not None:
+            return self.auth_cookie_secure
+        return self.environment == "production"
 
     @field_validator("secret_key")
     @classmethod
@@ -43,6 +54,14 @@ class Settings(BaseSettings):
     def validate_access_token_expiry(cls, value: int) -> int:
         if value <= 0:
             raise ValueError("ACCESS_TOKEN_EXPIRE_MINUTES must be positive.")
+        return value
+
+    @field_validator("auth_cookie_name")
+    @classmethod
+    def validate_auth_cookie_name(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("AUTH_COOKIE_NAME must not be empty.")
         return value
 
     @field_validator("allowed_origins", mode="before")

@@ -18,17 +18,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     let isMounted = true;
 
     async function verifyAuth() {
-      const token = localStorage.getItem("plutus_access_token");
-
-      if (!token) {
-        if (isMounted) {
-          setCanRenderDashboard(false);
-          setCurrentUser(null);
-        }
-        router.replace("/login");
-        return;
-      }
-
       const { data, error, response } = await getMe();
 
       if (!isMounted) {
@@ -36,7 +25,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       }
 
       if (response?.status === 401 || response?.status === 403) {
-        localStorage.removeItem("plutus_access_token");
         setCanRenderDashboard(false);
         setCurrentUser(null);
         router.replace("/login");
