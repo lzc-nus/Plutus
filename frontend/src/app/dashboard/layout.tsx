@@ -4,7 +4,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Header from "@/components/dashboard/Header";
-import { getCurrentUser } from "@/lib/api/users";
+import { getMe } from "@/lib/api/users";
+import { AuthProvider } from "@/lib/contexts/AuthContext"
 import type { UserRead } from "@/lib/api/generated";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -28,7 +29,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         return;
       }
 
-      const { data, error, response } = await getCurrentUser();
+      const { data, error, response } = await getMe();
 
       if (!isMounted) {
         return;
@@ -75,12 +76,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen bg-[#f4efe6]">
-      <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Header currentUser={currentUser} />
-        <main className="flex-1 overflow-auto p-8">{children}</main>
+    <AuthProvider>
+      <div className="flex h-screen bg-[#f4efe6]">
+        <Sidebar />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Header currentUser={currentUser} />
+          <main className="flex-1 overflow-auto p-8">{children}</main>
+        </div>
       </div>
-    </div>
+    </AuthProvider>
   );
 }
