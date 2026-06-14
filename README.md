@@ -350,12 +350,15 @@ Frontend scripts:
 
 ```bash
 npm run dev
+npm run dev:turbo
 npm run build
 npm run start
 npm run lint
 npm run typecheck
 npm run api:generate
 ```
+
+`npm run dev` uses Webpack for local development because Turbopack can currently panic with `Next.js package not found` in this project. Use `npm run dev:turbo` only when intentionally testing Turbopack behavior.
 
 Use `npm run build` before opening a pull request or merging major frontend changes. Use `npm run api:generate` after backend API contract changes; the backend must be running at the OpenAPI URL configured in `frontend/openapi-ts.config.ts`.
 
