@@ -63,3 +63,9 @@ class TokenResponse(SQLModel):
 
     access_token: str
     token_type: str = "bearer"
+
+
+class LogoutResponse(SQLModel):
+    """Outbound payload returned after clearing the browser auth cookie."""
+
+    authenticated: bool = False

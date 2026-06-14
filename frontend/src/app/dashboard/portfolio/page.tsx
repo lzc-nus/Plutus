@@ -24,14 +24,15 @@ function groupAssets(assets: AssetRead[], totalAssets: number) {
 
   for (const asset of assets) {
     const cat = asset.category as AssetCategory;
+    const value = Number(asset.value);
     const existing = map.get(cat);
     if (existing) {
-      existing.value += asset.value;
+      existing.value += value;
       existing.count += 1;
     } else {
       map.set(cat, {
         label: ASSET_CATEGORY_LABELS[cat],
-        value: asset.value,
+        value,
         count: 1,
       });
     }
@@ -50,14 +51,15 @@ function groupLiabilities(liabilities: LiabilityRead[], totalLiabilities: number
 
   for (const liability of liabilities) {
     const cat = liability.category as LiabilityCategory;
+    const balance = Number(liability.balance);
     const existing = map.get(cat);
     if (existing) {
-      existing.value += liability.balance;
+      existing.value += balance;
       existing.count += 1;
     } else {
       map.set(cat, {
         label: LIABILITY_CATEGORY_LABELS[cat],
-        value: liability.balance,
+        value: balance,
         count: 1,
       });
     }
@@ -99,8 +101,8 @@ export default function PortfolioPage() {
     }
   }
 
-  const totalAssets = assets.reduce((sum, a) => sum + a.value, 0);
-  const totalLiabilities = liabilities.reduce((sum, l) => sum + l.balance, 0);
+  const totalAssets = assets.reduce((sum, a) => sum + Number(a.value), 0);
+  const totalLiabilities = liabilities.reduce((sum, l) => sum + Number(l.balance), 0);
   const netWorth = totalAssets - totalLiabilities;
   const isPositive = netWorth >= 0;
 

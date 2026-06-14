@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import uuid
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Literal
 
 from pydantic import ConfigDict, field_validator, model_validator
@@ -30,6 +31,12 @@ LiabilityCategory = Literal[
 
 LiquidityLevel = Literal["high", "medium", "low"]
 RiskLevel = Literal["low", "moderate", "high", "very_high"]
+MONEY_QUANT = Decimal("0.01")
+RATE_QUANT = Decimal("0.0001")
+
+
+def _quantize_decimal(value: Decimal, quant: Decimal) -> Decimal:
+    return value.quantize(quant, rounding=ROUND_HALF_UP)
 
 
 # ── Assets ────────────────────────────────────────────────────────────────────
@@ -40,8 +47,8 @@ class AssetCreate(SQLModel):
     name: str = Field(min_length=1, max_length=200)
     category: AssetCategory
     custom_category: str | None = Field(default=None, max_length=100)
-    value: float = Field(gt=0)
-    cost_basis: float | None = Field(default=None, ge=0)
+    value: Decimal = Field(gt=0, max_digits=14, decimal_places=2)
+    cost_basis: Decimal | None = Field(default=None, ge=0, max_digits=14, decimal_places=2)
     liquidity: LiquidityLevel = "medium"
     risk: RiskLevel = "moderate"
     notes: str | None = Field(default=None, max_length=500)
@@ -53,6 +60,13 @@ class AssetCreate(SQLModel):
         if value is None:
             return None
         return str(value).strip()
+
+    @field_validator("value", "cost_basis")
+    @classmethod
+    def quantize_money(cls, value: Decimal | None) -> Decimal | None:
+        if value is None:
+            return None
+        return _quantize_decimal(value, MONEY_QUANT)
 
     @model_validator(mode="after")
     def custom_category_only_for_other(self) -> AssetCreate:
@@ -67,8 +81,8 @@ class AssetUpdate(SQLModel):
     name: str | None = Field(default=None, max_length=200)
     category: AssetCategory | None = None
     custom_category: str | None = Field(default=None, max_length=100)
-    value: float | None = Field(default=None, gt=0)
-    cost_basis: float | None = Field(default=None, ge=0)
+    value: Decimal | None = Field(default=None, gt=0, max_digits=14, decimal_places=2)
+    cost_basis: Decimal | None = Field(default=None, ge=0, max_digits=14, decimal_places=2)
     liquidity: LiquidityLevel | None = None
     risk: RiskLevel | None = None
     notes: str | None = Field(default=None, max_length=500)
@@ -80,6 +94,13 @@ class AssetUpdate(SQLModel):
         if value is None:
             return None
         return str(value).strip()
+
+    @field_validator("value", "cost_basis")
+    @classmethod
+    def quantize_money(cls, value: Decimal | None) -> Decimal | None:
+        if value is None:
+            return None
+        return _quantize_decimal(value, MONEY_QUANT)
 
     @model_validator(mode="after")
     def custom_category_only_for_other(self) -> AssetUpdate:
@@ -97,8 +118,8 @@ class AssetRead(SQLModel):
     name: str
     category: str
     custom_category: str | None
-    value: float
-    cost_basis: float | None
+    value: Decimal
+    cost_basis: Decimal | None
     liquidity: str
     risk: str
     notes: str | None
@@ -115,10 +136,10 @@ class LiabilityCreate(SQLModel):
     name: str = Field(min_length=1, max_length=200)
     category: LiabilityCategory
     custom_category: str | None = Field(default=None, max_length=100)
-    balance: float = Field(gt=0)
-    original_amount: float | None = Field(default=None, ge=0)
-    interest_rate: float | None = Field(default=None, ge=0)
-    monthly_payment: float | None = Field(default=None, ge=0)
+    balance: Decimal = Field(gt=0, max_digits=14, decimal_places=2)
+    original_amount: Decimal | None = Field(default=None, ge=0, max_digits=14, decimal_places=2)
+    interest_rate: Decimal | None = Field(default=None, ge=0, max_digits=7, decimal_places=4)
+    monthly_payment: Decimal | None = Field(default=None, ge=0, max_digits=14, decimal_places=2)
     maturity_date: datetime.date | None = None
     notes: str | None = Field(default=None, max_length=500)
 
@@ -128,6 +149,20 @@ class LiabilityCreate(SQLModel):
         if value is None:
             return None
         return str(value).strip()
+
+    @field_validator("balance", "original_amount", "monthly_payment")
+    @classmethod
+    def quantize_money(cls, value: Decimal | None) -> Decimal | None:
+        if value is None:
+            return None
+        return _quantize_decimal(value, MONEY_QUANT)
+
+    @field_validator("interest_rate")
+    @classmethod
+    def quantize_rate(cls, value: Decimal | None) -> Decimal | None:
+        if value is None:
+            return None
+        return _quantize_decimal(value, RATE_QUANT)
 
     @model_validator(mode="after")
     def custom_category_only_for_other(self) -> LiabilityCreate:
@@ -142,10 +177,10 @@ class LiabilityUpdate(SQLModel):
     name: str | None = Field(default=None, max_length=200)
     category: LiabilityCategory | None = None
     custom_category: str | None = Field(default=None, max_length=100)
-    balance: float | None = Field(default=None, gt=0)
-    original_amount: float | None = Field(default=None, ge=0)
-    interest_rate: float | None = Field(default=None, ge=0)
-    monthly_payment: float | None = Field(default=None, ge=0)
+    balance: Decimal | None = Field(default=None, gt=0, max_digits=14, decimal_places=2)
+    original_amount: Decimal | None = Field(default=None, ge=0, max_digits=14, decimal_places=2)
+    interest_rate: Decimal | None = Field(default=None, ge=0, max_digits=7, decimal_places=4)
+    monthly_payment: Decimal | None = Field(default=None, ge=0, max_digits=14, decimal_places=2)
     maturity_date: datetime.date | None = None
     notes: str | None = Field(default=None, max_length=500)
 
@@ -155,6 +190,20 @@ class LiabilityUpdate(SQLModel):
         if value is None:
             return None
         return str(value).strip()
+
+    @field_validator("balance", "original_amount", "monthly_payment")
+    @classmethod
+    def quantize_money(cls, value: Decimal | None) -> Decimal | None:
+        if value is None:
+            return None
+        return _quantize_decimal(value, MONEY_QUANT)
+
+    @field_validator("interest_rate")
+    @classmethod
+    def quantize_rate(cls, value: Decimal | None) -> Decimal | None:
+        if value is None:
+            return None
+        return _quantize_decimal(value, RATE_QUANT)
 
     @model_validator(mode="after")
     def custom_category_only_for_other(self) -> LiabilityUpdate:
@@ -172,10 +221,10 @@ class LiabilityRead(SQLModel):
     name: str
     category: str
     custom_category: str | None
-    balance: float
-    original_amount: float | None
-    interest_rate: float | None
-    monthly_payment: float | None
+    balance: Decimal
+    original_amount: Decimal | None
+    interest_rate: Decimal | None
+    monthly_payment: Decimal | None
     maturity_date: datetime.date | None
     notes: str | None
     created_at: datetime.datetime

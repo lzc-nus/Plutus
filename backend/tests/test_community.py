@@ -333,6 +333,45 @@ def test_update_comment_by_non_author_returns_404(client: TestClient) -> None:
     assert response.status_code == 404
 
 
+def test_update_comment_through_wrong_post_returns_404(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="comment-author", email="comment-author@example.com"
+    )
+    post = _create_post(client, token, content="Original post.")
+    other_post = _create_post(client, token, content="Different post.")
+    comment = _create_comment(client, token, post_id=post["id"])
+
+    response = client.patch(
+        f"/api/v1/community/posts/{other_post['id']}/comments/{comment['id']}",
+        headers=_auth_headers(token),
+        json={"content_blocks": [{"type": "text", "value": "Wrong parent."}]},
+    )
+
+    assert response.status_code == 404
+
+
+def test_delete_comment_through_wrong_post_returns_404(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="comment-author", email="comment-author@example.com"
+    )
+    post = _create_post(client, token, content="Original post.")
+    other_post = _create_post(client, token, content="Different post.")
+    comment = _create_comment(client, token, post_id=post["id"])
+
+    response = client.delete(
+        f"/api/v1/community/posts/{other_post['id']}/comments/{comment['id']}",
+        headers=_auth_headers(token),
+    )
+
+    assert response.status_code == 404
+
+    comments_response = client.get(
+        f"/api/v1/community/posts/{post['id']}/comments",
+        headers=_auth_headers(token),
+    )
+    assert len(comments_response.json()) == 1
+
+
 def test_comment_on_nonexistent_post_returns_404(client: TestClient) -> None:
     token = _register_and_login(
         client, username="commenter", email="commenter@example.com"
@@ -405,6 +444,29 @@ def test_duplicate_like_returns_409(client: TestClient) -> None:
     assert response.status_code == 409
 
 
+def test_feed_marks_post_liked_and_saved_by_current_user(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="state-user", email="state-user@example.com"
+    )
+    other_token = _register_and_login(
+        client, username="state-other", email="state-other@example.com"
+    )
+    post = _create_post(client, token)
+
+    client.post(f"/api/v1/community/posts/{post['id']}/like", headers=_auth_headers(token))
+    client.post(f"/api/v1/community/posts/{post['id']}/save", headers=_auth_headers(token))
+
+    owner_feed = client.get("/api/v1/community/feed/global", headers=_auth_headers(token))
+    owner_post = next(p for p in owner_feed.json() if p["id"] == post["id"])
+    assert owner_post["is_liked_by_me"] is True
+    assert owner_post["is_saved_by_me"] is True
+
+    other_feed = client.get("/api/v1/community/feed/global", headers=_auth_headers(other_token))
+    other_post = next(p for p in other_feed.json() if p["id"] == post["id"])
+    assert other_post["is_liked_by_me"] is False
+    assert other_post["is_saved_by_me"] is False
+
+
 def test_like_comment_increments_like_count(client: TestClient) -> None:
     token = _register_and_login(
         client, username="liker", email="liker@example.com"
@@ -419,6 +481,20 @@ def test_like_comment_increments_like_count(client: TestClient) -> None:
 
     assert response.status_code == 201
     assert response.json()["like_count"] == 1
+
+
+def test_follow_nonexistent_user_returns_404(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="follower", email="follower@example.com"
+    )
+    fake_id = "00000000-0000-0000-0000-000000000000"
+
+    response = client.post(
+        f"/api/v1/community/users/{fake_id}/follow",
+        headers=_auth_headers(token),
+    )
+
+    assert response.status_code == 404
 
 
 # ── Saves ─────────────────────────────────────────────────────────────────────
