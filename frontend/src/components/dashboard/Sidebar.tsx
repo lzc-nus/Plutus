@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Great_Vibes } from "next/font/google";
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
 
 const logoFont = Great_Vibes({
@@ -339,4 +339,3 @@ export default function Sidebar() {
     </aside>
   );
 }
-

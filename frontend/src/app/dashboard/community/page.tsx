@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import type { PostRead } from "@/lib/api/generated";
 import { getFeed, getGlobalFeed } from "@/lib/api/community";
 import { FeedTabs } from "@/components/dashboard/community/FeedTabs";
 import { PostFeed } from "@/components/dashboard/community/PostFeed";
@@ -22,7 +21,7 @@ export default function CommunityPage() {
 
   const feedKey = `${activeTab}-${feedVersion}`;
 
-  function handlePostCreated(_post: PostRead) {
+  function handlePostCreated() {
     if (activeTab === "following") {
       setFeedVersion((v) => v + 1);
     } else {

@@ -99,6 +99,20 @@ def get_global_feed(
 # ── Posts ─────────────────────────────────────────────────────────────────────
 
 @router.get(
+    "/posts/saved",
+    response_model=list[PostRead],
+    operation_id="community_posts_saved_list",
+)
+def get_saved_posts(
+    current_user: CurrentUser,
+    db: Annotated[Session, Depends(get_db)],
+) -> list[PostRead]:
+    """Returns all posts saved by the current user, newest save first."""
+    posts = list_saved_posts(db, user_id=current_user.id)
+    return [PostRead.model_validate(p, from_attributes=True) for p in posts]
+
+
+@router.get(
     "/posts/{post_id}",
     response_model=PostRead,
     operation_id="community_posts_get",
@@ -255,20 +269,6 @@ def unsave_post_endpoint(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Saved post not found.",
         )
-
-
-@router.get(
-    "/posts/saved",
-    response_model=list[PostRead],
-    operation_id="community_posts_saved_list",
-)
-def get_saved_posts(
-    current_user: CurrentUser,
-    db: Annotated[Session, Depends(get_db)],
-) -> list[PostRead]:
-    """Returns all posts saved by the current user, newest save first."""
-    posts = list_saved_posts(db, user_id=current_user.id)
-    return [PostRead.model_validate(p, from_attributes=True) for p in posts]
 
 
 # ── Post shares ───────────────────────────────────────────────────────────────

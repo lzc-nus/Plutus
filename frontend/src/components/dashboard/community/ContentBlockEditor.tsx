@@ -14,14 +14,6 @@ interface ContentBlockEditorProps {
 
 type MediaType = "image" | "video" | "audio" | "gif" | "sticker";
 
-// Map from MIME type prefix → block type
-const MIME_TO_BLOCK: Record<string, MediaType> = {
-  "image/gif": "gif",
-  "image/": "image",
-  "video/": "video",
-  "audio/": "audio",
-};
-
 function mimeToBlockType(mime: string): MediaType {
   if (mime === "image/gif") return "gif";
   if (mime.startsWith("image/")) return "image";

@@ -26,9 +26,13 @@ export function PostFeed({ fetcher, feedKey }: PostFeedProps) {
 
   // Reset whenever the feed source changes (tab switch or profile navigation)
   useEffect(() => {
-    setPosts([]);
-    cursorRef.current = undefined;
-    setStatus("idle");
+    const timer = window.setTimeout(() => {
+      setPosts([]);
+      cursorRef.current = undefined;
+      setStatus("idle");
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [feedKey]);
 
   const loadMore = useCallback(async () => {
@@ -58,7 +62,11 @@ export function PostFeed({ fetcher, feedKey }: PostFeedProps) {
   // Trigger initial load
   useEffect(() => {
     if (status === "idle" && posts.length === 0) {
-      loadMore();
+      const timer = window.setTimeout(() => {
+        void loadMore();
+      }, 0);
+
+      return () => window.clearTimeout(timer);
     }
   }, [status, posts.length, loadMore]);
 
@@ -141,7 +149,7 @@ export function PostFeed({ fetcher, feedKey }: PostFeedProps) {
         )}
         {status === "done" && posts.length > 0 && (
           <p className="text-center text-xs text-zinc-600">
-            You're all caught up.
+            You&apos;re all caught up.
           </p>
         )}
       </div>
