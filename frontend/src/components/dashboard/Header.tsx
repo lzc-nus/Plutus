@@ -73,6 +73,13 @@ const routeMeta: Array<{ path: string; meta: HeaderMeta }> = [
     },
   },
   {
+    path: "/dashboard/community",
+    meta: {
+      title: "Community",
+      description: "Communicate with the world.",
+    },
+  },
+  {
     path: "/dashboard/settings",
     meta: {
       title: "Settings",
