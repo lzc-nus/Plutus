@@ -113,6 +113,11 @@ SECRET_KEY=paste_generated_secret_here
 
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
+SQL_ECHO=false
+
+AUTH_COOKIE_NAME=plutus_access_token
+AUTH_COOKIE_SECURE=false
+AUTH_COOKIE_SAMESITE=lax
 
 ALLOWED_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000","http://localhost:3001","http://127.0.0.1:3001"]
 ```
@@ -330,7 +335,7 @@ When adding routes, document expected error responses in the FastAPI route metad
 
 ## Frontend Reference
 
-The frontend owns the public landing experience, login and register screens, client-side validation, auth token storage for the current local-development flow, dashboard routing, route guarding, and typed API calls to the FastAPI backend.
+The frontend owns the public landing experience, login and register screens, client-side validation, dashboard routing, route guarding, and typed API calls to the FastAPI backend.
 
 The app uses the Next.js App Router:
 
@@ -369,13 +374,13 @@ Login and register pages validate form input with Zod before sending requests to
 page.tsx -> src/lib/api/auth.ts -> src/lib/api/generated -> FastAPI backend
 ```
 
-Login stores the returned access token in local storage under:
+Login sets an HttpOnly auth cookie from the backend. Browser code should not persist access tokens in local storage for authenticated sessions. The current cookie name is:
 
 ```text
 plutus_access_token
 ```
 
-The dashboard layout checks for this token and redirects unauthenticated users to `/login`. Frontend route guards are for user experience; private financial data must still be protected by backend dependencies and authorization checks.
+The dashboard layout verifies the session through `/api/v1/users/me` and redirects unauthenticated users to `/login`. Frontend route guards are for user experience; private financial data must still be protected by backend dependencies and authorization checks.
 
 The frontend API client is generated from FastAPI's OpenAPI schema using `@hey-api/openapi-ts`.
 
@@ -449,6 +454,8 @@ Stopping the container does not delete database data. The data is stored in the 
 - Do not commit `.env` files.
 - Use a strong `SECRET_KEY`, generated with Python `secrets` or `openssl rand -hex 32`.
 - Keep production, staging, and local databases separate.
+- Keep `SQL_ECHO=false` outside deliberate local SQL debugging sessions.
+- Use secure auth cookies in production. Leave `AUTH_COOKIE_SECURE` unset in production so it resolves to `true`, or set it explicitly to `true`.
 - Use backend authentication dependencies for every route that returns private user data.
 - Treat frontend route guards as user experience protection, not as the final security layer.
 

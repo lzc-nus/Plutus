@@ -44,6 +44,10 @@ def test_login_returns_bearer_token(client: TestClient) -> None:
     body = response.json()
     assert body["token_type"] == "bearer"
     assert body["access_token"]
+    set_cookie = response.headers["set-cookie"].lower()
+    assert "plutus_access_token=" in set_cookie
+    assert "httponly" in set_cookie
+    assert "samesite=lax" in set_cookie
 
 
 def test_current_user_returns_authenticated_user(client: TestClient) -> None:
@@ -74,6 +78,55 @@ def test_current_user_returns_authenticated_user(client: TestClient) -> None:
     assert body["username"] == "trump"
     assert body["email"] == "trump@example.com"
     assert "hashed_password" not in body
+
+
+def test_current_user_accepts_auth_cookie(client: TestClient) -> None:
+    client.post(
+        "/api/v1/auth/register",
+        json={
+            "username": "trump",
+            "email": "trump@example.com",
+            "password": "StrongPass1!",
+        },
+    )
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": "trump@example.com",
+            "password": "StrongPass1!",
+        },
+    )
+    assert login_response.status_code == 200
+
+    response = client.get("/api/v1/users/me")
+
+    assert response.status_code == 200
+    assert response.json()["username"] == "trump"
+
+
+def test_logout_clears_auth_cookie(client: TestClient) -> None:
+    client.post(
+        "/api/v1/auth/register",
+        json={
+            "username": "trump",
+            "email": "trump@example.com",
+            "password": "StrongPass1!",
+        },
+    )
+    client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": "trump@example.com",
+            "password": "StrongPass1!",
+        },
+    )
+
+    logout_response = client.post("/api/v1/auth/logout")
+    assert logout_response.status_code == 200
+    assert logout_response.json() == {"authenticated": False}
+
+    response = client.get("/api/v1/users/me")
+    assert response.status_code == 401
 
 
 def test_current_user_rejects_missing_token(client: TestClient) -> None:

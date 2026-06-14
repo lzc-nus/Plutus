@@ -38,6 +38,8 @@ from app.features.community.service import (
     list_following,
     list_global_posts,
     list_saved_posts,
+    read_post_for_user,
+    read_posts_for_user,
     save_post,
     share_comment,
     share_post,
@@ -48,6 +50,7 @@ from app.features.community.service import (
     update_comment,
     update_post,
 )
+from app.features.users.service import get_user_by_id
 
 router = APIRouter(prefix="/community", tags=["Community"])
 
@@ -77,7 +80,7 @@ def get_feed(
         limit=limit,
         before=before,
     )
-    return [PostRead.model_validate(p, from_attributes=True) for p in posts]
+    return read_posts_for_user(db, posts=posts, current_user_id=current_user.id)
 
 
 @router.get(
@@ -93,7 +96,7 @@ def get_global_feed(
 ) -> list[PostRead]:
     """Chronological feed of all posts regardless of follows."""
     posts = list_global_posts(db, limit=limit, before=before)
-    return [PostRead.model_validate(p, from_attributes=True) for p in posts]
+    return read_posts_for_user(db, posts=posts, current_user_id=current_user.id)
 
 
 # ── Posts ─────────────────────────────────────────────────────────────────────
@@ -109,7 +112,7 @@ def get_saved_posts(
 ) -> list[PostRead]:
     """Returns all posts saved by the current user, newest save first."""
     posts = list_saved_posts(db, user_id=current_user.id)
-    return [PostRead.model_validate(p, from_attributes=True) for p in posts]
+    return read_posts_for_user(db, posts=posts, current_user_id=current_user.id)
 
 
 @router.get(
@@ -129,7 +132,7 @@ def get_post_endpoint(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Post not found.",
         )
-    return PostRead.model_validate(post, from_attributes=True)
+    return read_post_for_user(db, post=post, current_user_id=current_user.id)
 
 @router.post(
     "/posts",
@@ -143,7 +146,7 @@ def create_post_endpoint(
     db: Annotated[Session, Depends(get_db)],
 ) -> PostRead:
     post = create_post(db, author_id=current_user.id, payload=payload)
-    return PostRead.model_validate(post, from_attributes=True)
+    return read_post_for_user(db, post=post, current_user_id=current_user.id)
 
 
 @router.patch(
@@ -168,7 +171,7 @@ def update_post_endpoint(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Post not found or unauthorized.",
         )
-    return PostRead.model_validate(updated, from_attributes=True)
+    return read_post_for_user(db, post=updated, current_user_id=current_user.id)
 
 
 @router.delete(
@@ -209,7 +212,12 @@ def like_post_endpoint(
             detail="Post not found or already liked.",
         )
     post = db.get(Post, post_id)
-    return PostRead.model_validate(post, from_attributes=True)
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Post not found.",
+        )
+    return read_post_for_user(db, post=post, current_user_id=current_user.id)
 
 
 @router.delete(
@@ -250,7 +258,12 @@ def save_post_endpoint(
             detail="Post not found or already saved.",
         )
     post = db.get(Post, post_id)
-    return PostRead.model_validate(post, from_attributes=True)
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Post not found.",
+        )
+    return read_post_for_user(db, post=post, current_user_id=current_user.id)
 
 
 @router.delete(
@@ -402,6 +415,7 @@ def update_comment_endpoint(
 ) -> CommentRead:
     updated = update_comment(
         db,
+        post_id=post_id,
         comment_id=comment_id,
         author_id=current_user.id,
         payload=payload,
@@ -425,7 +439,12 @@ def delete_comment_endpoint(
     current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> None:
-    success = delete_comment(db, comment_id=comment_id, author_id=current_user.id)
+    success = delete_comment(
+        db,
+        post_id=post_id,
+        comment_id=comment_id,
+        author_id=current_user.id,
+    )
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -447,7 +466,12 @@ def like_comment_endpoint(
     current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> CommentRead:
-    like = like_comment(db, user_id=current_user.id, comment_id=comment_id)
+    like = like_comment(
+        db,
+        user_id=current_user.id,
+        post_id=post_id,
+        comment_id=comment_id,
+    )
     if not like:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -468,7 +492,12 @@ def unlike_comment_endpoint(
     current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> None:
-    success = unlike_comment(db, user_id=current_user.id, comment_id=comment_id)
+    success = unlike_comment(
+        db,
+        user_id=current_user.id,
+        post_id=post_id,
+        comment_id=comment_id,
+    )
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -495,6 +524,7 @@ def share_comment_endpoint(
     result = share_comment(
         db,
         user_id=current_user.id,
+        post_id=post_id,
         comment_id=comment_id,
         base_url=base_url,
     )
@@ -520,6 +550,12 @@ def follow_user_endpoint(
     current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> FollowRead:
+    if not get_user_by_id(db, user_id=user_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found.",
+        )
+
     follow = follow_user(db, follower_id=current_user.id, followee_id=user_id)
     if not follow:
         raise HTTPException(
