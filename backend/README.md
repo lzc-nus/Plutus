@@ -98,15 +98,43 @@ ALLOWED_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000","http://localho
 
 Generate a local development secret:
 
-```bash
-openssl rand -hex 32
+```powershell
+py -3.14 -c "import secrets; print(secrets.token_hex(32))"
 ```
 
 ## Install
 
-```bash
+A fresh machine needs Python 3.14 and Poetry installed before this command will work. Check them first:
+
+```powershell
+py -3.14 --version
+poetry --version
+```
+
+On Windows PowerShell, install Poetry if `poetry --version` fails:
+
+```powershell
+(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -
+
+$poetryBin = "$env:APPDATA\Python\Scripts"
+$userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+if ($userPath -notlike "*$poetryBin*") {
+  [Environment]::SetEnvironmentVariable("Path", "$userPath;$poetryBin", "User")
+}
+$env:Path += ";$poetryBin"
+
+poetry --version
+```
+
+On macOS or Linux, use `python3.14 --version` instead of `py -3.14 --version`. If Python is installed as `python3` instead of `python3.14`, confirm `python3 --version` reports Python 3.14.x and use `python3` in the Poetry command below.
+
+```powershell
+$python314 = py -3.14 -c "import sys; print(sys.executable)"
+poetry env use $python314
 poetry install
 ```
+
+On macOS or Linux, use `poetry env use python3.14`.
 
 ## Local Database
 
@@ -115,13 +143,7 @@ The local backend expects PostgreSQL on `localhost:5432`.
 Create the local Docker database if it does not exist:
 
 ```bash
-docker run --name plutus-postgres \
-  -e POSTGRES_USER=plutus \
-  -e POSTGRES_PASSWORD=plutus \
-  -e POSTGRES_DB=plutus \
-  -p 5432:5432 \
-  -v plutus_pgdata:/var/lib/postgresql/data \
-  -d postgres:16
+docker run --name plutus-postgres -e POSTGRES_USER=plutus -e POSTGRES_PASSWORD=plutus -e POSTGRES_DB=plutus -p 5432:5432 -v plutus_pgdata:/var/lib/postgresql/data -d postgres:16
 ```
 
 Start the database on later development sessions:
