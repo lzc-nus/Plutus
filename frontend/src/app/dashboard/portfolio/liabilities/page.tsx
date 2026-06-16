@@ -14,7 +14,7 @@ import {
   LIABILITY_CATEGORY_ICONS,
   type LiabilityCategory,
 } from "@/data/portfolioTypes";
-import { useRouter, useSearchParams } from "next/dist/client/components/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const CURRENCY = new Intl.NumberFormat("en-US", {
   style: "currency",
