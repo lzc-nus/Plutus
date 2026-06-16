@@ -11,20 +11,6 @@ type HeaderMeta = {
 
 const routeMeta: Array<{ path: string; meta: HeaderMeta }> = [
   {
-    path: "/dashboard/portfolio/assets?add=true",
-    meta: {
-      title: "Add Asset",
-      description: "Record a new holding and keep the asset side of your balance sheet current.",
-    },
-  },
-  {
-    path: "/dashboard/portfolio/liabilities?add=true",
-    meta: {
-      title: "Add Liability",
-      description: "Capture debts, taxes, and obligations so net worth stays honest.",
-    },
-  },
-  {
     path: "/dashboard/transactions/new",
     meta: {
       title: "New Transaction",
