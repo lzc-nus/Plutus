@@ -125,10 +125,10 @@ ALLOWED_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000","http://localho
 Create `frontend/.env` only when you need to override the backend URL:
 
 ```env
-NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-If this variable is missing, frontend API helpers fall back to `http://127.0.0.1:8000`. Only use `NEXT_PUBLIC_` variables for values that are safe to expose in browser code.
+If this variable is missing, frontend API helpers fall back to `http://localhost:8000`. Keep the frontend URL and backend API URL on the same host family during local development; for example, use `localhost` for both instead of mixing `localhost` and `127.0.0.1`. Only use `NEXT_PUBLIC_` variables for values that are safe to expose in browser code.
 
 Install frontend dependencies:
 
@@ -183,13 +183,13 @@ http://localhost:3000
 Open the backend docs:
 
 ```text
-http://127.0.0.1:8000/docs
+http://localhost:8000/docs
 ```
 
 Check backend and database health:
 
 ```text
-http://127.0.0.1:8000/health
+http://localhost:8000/health
 ```
 
 `/health` returns `200` when the API can reach PostgreSQL and `503` when the database is unavailable.
@@ -313,7 +313,7 @@ The auth tests use an in-memory SQLite database and override FastAPI's database 
 FastAPI exposes the backend contract at:
 
 ```text
-http://127.0.0.1:8000/openapi.json
+http://localhost:8000/openapi.json
 ```
 
 The frontend uses that OpenAPI contract to generate typed API functions and types under:

@@ -83,6 +83,13 @@ export const liabilityFormSchema = z.object({
     "other",
   ]),
 
+  custom_category: z
+    .string()
+    .trim()
+    .max(100, "Custom category must be at most 100 characters.")
+    .nullable()
+    .optional(),
+
   balance: z
     .number("Balance is required.")
     .positive("Balance must be greater than 0."),
@@ -117,6 +124,14 @@ export const liabilityFormSchema = z.object({
     .max(500, "Notes must be at most 500 characters.")
     .nullable()
     .optional(),
+}).superRefine((data, ctx) => {
+  if (data.category !== "other" && data.custom_category) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Custom category is only allowed when category is 'Other'.",
+      path: ["custom_category"],
+    });
+  }
 });
 
 export type LiabilityFormInput = z.infer<typeof liabilityFormSchema>;
