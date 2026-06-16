@@ -112,22 +112,25 @@ export default function AssetsPage() {
     }
   }
 
-  async function handleCreate(payload: AssetFormInput) {
+  async function handleCreate(payload: AssetFormInput): Promise<boolean> {
     const { data, error } = await createAsset(payload);
-    if (error || !data) return;
+    if (error || !data) return false;
     setAssets((prev) => [...prev, data]);
+    return true;
   }
 
-  async function handleUpdate(id: string, payload: AssetFormInput) {
+  async function handleUpdate(id: string, payload: AssetFormInput): Promise<boolean> {
     const { data, error } = await updateAsset(id, payload);
-    if (error || !data) return;
+    if (error || !data) return false;
     setAssets((prev) => prev.map((a) => (String(a.id) === id ? data : a)));
+    return true;
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete(id: string): Promise<boolean> {
     const { error } = await deleteAsset(id);
-    if (error) return;
+    if (error) return false;
     setAssets((prev) => prev.filter((a) => String(a.id) !== id));
+    return true;
   }
 
   function openAddModal(category?: AssetCategory, customCategory?: string, lock?: boolean) {
@@ -184,7 +187,7 @@ export default function AssetsPage() {
           eyebrow="Assets dashboard"
           title="What you own"
           description="Browse by category. Each section shows individual holdings with value, cost basis, liquidity, and risk."
-          backHref="/portfolio"
+          backHref="/dashboard/portfolio"
           backLabel="Balance sheet"
           action={
             <button
