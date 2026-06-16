@@ -1,17 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { assetFormSchema, type AssetFormInput } from "@/lib/validations/portfolio";
 import { ASSET_CATEGORY_LABELS, type AssetCategory } from "@/data/portfolioTypes";
 import type { AssetRead } from "@/lib/api/generated";
-
-const ADD_NEW = "__add_new__";
+import { CustomCategoryField } from "./CustomCategoryField";
 
 interface EditAssetModalProps {
     asset: AssetRead;
     existingCustomCategories?: string[];
     onClose: () => void;
-    onSave: (id: string, payload: AssetFormInput) => void;
+    onSave: (id: string, payload: AssetFormInput) => boolean | Promise<boolean>;
     onDelete: () => void;
 }
 
@@ -38,20 +37,12 @@ export function EditAssetModal({
     onSave,
     onDelete,
 }: EditAssetModalProps) {
-    // Determine initial custom_category_select:
-    // If the asset has a custom_category, pre-select it; otherwise default to first existing or ADD_NEW
-    const initialCustomSelect =
-        asset.custom_category?.trim()
-            ? asset.custom_category.trim()
-            : existingCustomCategories.length > 0
-                ? existingCustomCategories[0]
-                : ADD_NEW;
+    const customCategoryId = useId();
 
     const [form, setForm] = useState<{
         name: string;
         category: AssetCategory;
-        custom_category_select: string;
-        custom_category_input: string;
+        custom_category: string;
         value: string;
         cost_basis: string;
         liquidity: "high" | "medium" | "low";
@@ -61,8 +52,7 @@ export function EditAssetModal({
     }>({
         name: asset.name,
         category: asset.category as AssetCategory,
-        custom_category_select: initialCustomSelect,
-        custom_category_input: "",
+        custom_category: asset.custom_category ?? "",
         value: String(asset.value),
         cost_basis: asset.cost_basis != null ? String(asset.cost_basis) : "",
         liquidity: asset.liquidity as "high" | "medium" | "low",
@@ -72,16 +62,15 @@ export function EditAssetModal({
     });
 
     const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
+    const [submitError, setSubmitError] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
 
     function resolvedCustomCategory(): string | null {
         if (form.category !== "other") return null;
-        if (form.custom_category_select === ADD_NEW) {
-            return form.custom_category_input.trim() || null;
-        }
-        return form.custom_category_select || null;
+        return form.custom_category.trim() || null;
     }
 
-    function handleSubmit() {
+    async function handleSubmit() {
         const result = assetFormSchema.safeParse({
             name: form.name,
             category: form.category,
@@ -97,21 +86,34 @@ export function EditAssetModal({
         if (!result.success) {
             const flat = result.error.flatten().fieldErrors;
             setErrors(Object.fromEntries(Object.entries(flat).map(([k, v]) => [k, v?.[0]])));
+            setSubmitError("");
             return;
         }
 
         setErrors({});
-        onSave(String(asset.id), result.data);
-        onClose();
+        setSubmitError("");
+        setIsSaving(true);
+
+        try {
+            const saved = await onSave(String(asset.id), result.data);
+            if (!saved) {
+                setSubmitError("Could not save this asset. Please try again.");
+                return;
+            }
+            onClose();
+        } catch {
+            setSubmitError("Could not save this asset. Please try again.");
+        } finally {
+            setIsSaving(false);
+        }
     }
 
     const isOther = form.category === "other";
-    const isAddingNew = form.custom_category_select === ADD_NEW;
 
     return (
         <div
             className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(29,33,28,0.5)] p-4 sm:items-center"
-            onClick={(e) => e.target === e.currentTarget && onClose()}
+            onClick={(e) => e.target === e.currentTarget && !isSaving && onClose()}
         >
             <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-[#d9d0c1] bg-[#fbf7ef] shadow-[0_24px_80px_rgba(43,34,24,0.2)]">
                 {/* Header */}
@@ -157,16 +159,14 @@ export function EditAssetModal({
                             <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">Category</label>
                             <select
                                 value={form.category}
-                                onChange={(e) =>
+                                onChange={(e) => {
+                                    const nextCategory = e.target.value as AssetCategory;
                                     setForm({
                                         ...form,
-                                        category: e.target.value as AssetCategory,
-                                        custom_category_select: existingCustomCategories.length > 0
-                                            ? existingCustomCategories[0]
-                                            : ADD_NEW,
-                                        custom_category_input: "",
-                                    })
-                                }
+                                        category: nextCategory,
+                                        custom_category: nextCategory === "other" ? form.custom_category : "",
+                                    });
+                                }}
                                 className={INPUT_CLS}
                             >
                                 {(Object.entries(ASSET_CATEGORY_LABELS) as [AssetCategory, string][]).map(
@@ -179,39 +179,14 @@ export function EditAssetModal({
 
                         {/* Custom category */}
                         {isOther && (
-                            <div className="space-y-2">
-                                <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
-                                    Custom category
-                                    <span className="ml-1.5 font-normal text-[#9a8f7a]">(optional)</span>
-                                </label>
-                                <select
-                                    value={form.custom_category_select}
-                                    onChange={(e) =>
-                                        setForm({ ...form, custom_category_select: e.target.value, custom_category_input: "" })
-                                    }
-                                    className={INPUT_CLS}
-                                >
-                                    {existingCustomCategories.map((label) => (
-                                        <option key={label} value={label}>{label}</option>
-                                    ))}
-                                    <option value={ADD_NEW}>
-                                        {existingCustomCategories.length > 0 ? "＋ Add new category…" : "Type a new category…"}
-                                    </option>
-                                </select>
-                                {isAddingNew && (
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. Collectibles, Angel investments…"
-                                        value={form.custom_category_input}
-                                        onChange={(e) => setForm({ ...form, custom_category_input: e.target.value })}
-                                        className={INPUT_CLS}
-                                        autoFocus
-                                    />
-                                )}
-                                {errors.custom_category && (
-                                    <p className="mt-1 text-xs text-[#993c1d]">{errors.custom_category}</p>
-                                )}
-                            </div>
+                            <CustomCategoryField
+                                id={customCategoryId}
+                                value={form.custom_category}
+                                suggestions={existingCustomCategories}
+                                placeholder="e.g. Collectibles, angel investments"
+                                error={errors.custom_category}
+                                onChange={(value) => setForm({ ...form, custom_category: value })}
+                            />
                         )}
 
                         {/* Value + Cost basis */}
@@ -310,28 +285,33 @@ export function EditAssetModal({
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between gap-3 border-t border-[#e4dece] px-6 py-4">
-                    {/* Left side — destructive action */}
-                    <button
-                        onClick={() => { onDelete(); onClose(); }}
-                        className="rounded-lg bg-[#a32d2d] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#791f1f]"
-                    >
-                        Delete
-                    </button>
-
-                    {/* Right side — cancel + save */}
-                    <button
-                        onClick={onClose}
-                        className="rounded-lg border border-[#d9d0c1] bg-white px-4 py-2 text-sm font-medium text-[#6f675b] transition-colors hover:bg-[#f4ede0]"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        className="rounded-lg bg-[#3b6d11] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#27500a]"
-                    >
-                        Save changes
-                    </button>
+                <div className="border-t border-[#e4dece] px-6 py-4">
+                    {submitError ? <p className="mb-3 text-sm text-[#993c1d]">{submitError}</p> : null}
+                    <div className="flex items-center justify-between gap-3">
+                        <button
+                            onClick={() => { onDelete(); onClose(); }}
+                            disabled={isSaving}
+                            className="rounded-lg bg-[#a32d2d] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#791f1f] disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            Delete
+                        </button>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={onClose}
+                                disabled={isSaving}
+                                className="rounded-lg border border-[#d9d0c1] bg-white px-4 py-2 text-sm font-medium text-[#6f675b] transition-colors hover:bg-[#f4ede0] disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSubmit}
+                                disabled={isSaving}
+                                className="rounded-lg bg-[#3b6d11] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#27500a] disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {isSaving ? "Saving..." : "Save changes"}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -14,6 +14,7 @@ import {
   LIABILITY_CATEGORY_ICONS,
   type LiabilityCategory,
 } from "@/data/portfolioTypes";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const CURRENCY = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -111,22 +112,25 @@ export default function LiabilitiesPage() {
     }
   }
 
-  async function handleCreate(payload: LiabilityFormInput) {
+  async function handleCreate(payload: LiabilityFormInput): Promise<boolean> {
     const { data, error } = await createLiability(payload);
-    if (error || !data) return;
+    if (error || !data) return false;
     setLiabilities((prev) => [...prev, data]);
+    return true;
   }
 
-  async function handleUpdate(id: string, payload: LiabilityFormInput) {
+  async function handleUpdate(id: string, payload: LiabilityFormInput): Promise<boolean> {
     const { data, error } = await updateLiability(id, payload);
-    if (error || !data) return;
+    if (error || !data) return false;
     setLiabilities((prev) => prev.map((l) => (String(l.id) === id ? data : l)));
+    return true;
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete(id: string): Promise<boolean> {
     const { error } = await deleteLiability(id);
-    if (error) return;
+    if (error) return false;
     setLiabilities((prev) => prev.filter((l) => String(l.id) !== id));
+    return true;
   }
 
   function openAddModal(category?: LiabilityCategory, customCategory?: string, lock?: boolean) {
@@ -165,6 +169,20 @@ export default function LiabilitiesPage() {
     ...(showOtherStub ? ["other" as LiabilityCategory] : []),
   ];
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  useEffect(() => {
+    if (searchParams.get("add") === "true") {
+      const timer = window.setTimeout(() => {
+        openAddModal(undefined, lastUsedCustomCategory);
+        router.replace("/dashboard/portfolio/liabilities");
+      }, 0);
+  
+      return () => window.clearTimeout(timer);
+    }
+  }, [lastUsedCustomCategory, router, searchParams]);
+
   return (
     <>
       <div className="grid gap-6">
@@ -173,7 +191,7 @@ export default function LiabilitiesPage() {
           eyebrow="Liabilities dashboard"
           title="What you owe"
           description="Browse by obligation type. Each section shows individual liabilities with balance, rate, and payment schedule."
-          backHref="/portfolio"
+          backHref="/dashboard/portfolio"
           backLabel="Balance sheet"
           action={
             <button

@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
+
 interface ConfirmDeleteDialogProps {
   itemName: string;
   itemType?: string;
-  onConfirm: () => void;
+  onConfirm: () => boolean | Promise<boolean>;
   onClose: () => void;
 }
 
@@ -13,10 +15,31 @@ export function ConfirmDeleteDialog({
   onConfirm,
   onClose,
 }: ConfirmDeleteDialogProps) {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleConfirm() {
+    setError("");
+    setIsDeleting(true);
+
+    try {
+      const deleted = await onConfirm();
+      if (!deleted) {
+        setError(`Could not delete this ${itemType}. Please try again.`);
+        return;
+      }
+      onClose();
+    } catch {
+      setError(`Could not delete this ${itemType}. Please try again.`);
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(29,33,28,0.5)] p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onClick={(e) => e.target === e.currentTarget && !isDeleting && onClose()}
     >
       <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-[#d9d0c1] bg-[#fbf7ef] shadow-[0_24px_80px_rgba(43,34,24,0.2)]">
         {/* Icon */}
@@ -45,21 +68,24 @@ export function ConfirmDeleteDialog({
             <span className="font-medium text-[#1d211c]">{itemName}</span> will be permanently
             removed from your portfolio. This cannot be undone.
           </p>
+          {error ? <p className="mt-3 text-sm text-[#993c1d]">{error}</p> : null}
         </div>
 
         {/* Actions */}
         <div className="flex gap-3 border-t border-[#e4dece] px-6 py-4">
           <button
             onClick={onClose}
-            className="flex-1 rounded-lg border border-[#d9d0c1] bg-white px-4 py-2 text-sm font-medium text-[#6f675b] transition-colors hover:bg-[#f4ede0]"
+            disabled={isDeleting}
+            className="flex-1 rounded-lg border border-[#d9d0c1] bg-white px-4 py-2 text-sm font-medium text-[#6f675b] transition-colors hover:bg-[#f4ede0] disabled:cursor-not-allowed disabled:opacity-60"
           >
             Cancel
           </button>
           <button
-            onClick={() => { onConfirm(); onClose(); }}
-            className="flex-1 rounded-lg bg-[#a32d2d] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#791f1f]"
+            onClick={handleConfirm}
+            disabled={isDeleting}
+            className="flex-1 rounded-lg bg-[#a32d2d] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#791f1f] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Delete
+            {isDeleting ? "Deleting..." : "Delete"}
           </button>
         </div>
       </div>
