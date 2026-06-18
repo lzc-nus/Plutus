@@ -50,12 +50,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     window.addEventListener("pageshow", handleAuthCheck);
     window.addEventListener("focus", handleAuthCheck);
     window.addEventListener("storage", handleAuthCheck);
+    window.addEventListener("plutus-auth-refresh", handleAuthCheck);
 
     return () => {
       isMounted = false;
       window.removeEventListener("pageshow", handleAuthCheck);
       window.removeEventListener("focus", handleAuthCheck);
       window.removeEventListener("storage", handleAuthCheck);
+      window.removeEventListener("plutus-auth-refresh", handleAuthCheck);
     };
   }, [pathname, router]);
 
