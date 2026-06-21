@@ -18,6 +18,8 @@ import {
   formatCurrencyWithCents,
   formatPercent,
 } from "@/lib/format";
+import type { CalendarEventRead } from "@/lib/api/generated";
+import { getCalendarEventColor } from "@/data/calendarEventColors";
 
 export function SectionHeader({
   eyebrow,
@@ -647,5 +649,104 @@ export function AllocationBar({ assets }: { assets: Asset[] }) {
         ))}
       </div>
     </div>
+  );
+}
+
+function groupEventsByDay(events: CalendarEventRead[]) {
+  const groups = new Map<string, CalendarEventRead[]>();
+  for (const event of events) {
+    const key = new Date(event.start_at).toDateString();
+    const list = groups.get(key) ?? [];
+    list.push(event);
+    groups.set(key, list);
+  }
+  return Array.from(groups.entries()).map(([key, items]) => ({
+    date: new Date(key),
+    items,
+  }));
+}
+
+function formatDayLabel(date: Date): string {
+  const month = date.toLocaleDateString("en-US", { month: "short" });
+  const weekday = date.toLocaleDateString("en-US", { weekday: "short" });
+  return `${month}, ${weekday}`;
+}
+
+export function UpcomingEventsCard({
+  events,
+  loading,
+}: {
+  events: CalendarEventRead[];
+  loading: boolean;
+}) {
+  const groups = groupEventsByDay(events);
+  const todayKey = new Date().toDateString();
+
+  return (
+    <article className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 sm:p-7">
+      <SectionHeader eyebrow="Upcoming" title="Next 14 days" />
+      <div className="mt-6 divide-y divide-[#e2dacd]">
+        {groups.map(({ date, items }) => {
+          const dateKey = date.toDateString();
+          const isToday = dateKey === todayKey;
+
+          return (
+            <div
+              className="grid grid-cols-[7.5rem_1fr] items-center gap-4 py-4"
+              key={dateKey}
+            >
+              <div className="flex items-center gap-2 pt-1">
+                <span
+                  className={
+                    isToday
+                      ? "flex size-9 shrink-0 items-center justify-center rounded-full bg-[#1d211c] text-base font-semibold text-[#fbf7ef]"
+                      : "text-xl font-semibold text-[#1d211c]"
+                  }
+                >
+                  {date.getDate()}
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-[#8a8173]">
+                  {formatDayLabel(date)}
+                </span>
+              </div>
+
+              <div className="grid gap-3">
+                {items.map((event) => {
+                  const color = getCalendarEventColor(event.color);
+                  return (
+                    <div
+                      className="grid grid-cols-[auto_5.5rem_1fr] items-center gap-5 text-sm"
+                      key={`${event.id}-${event.start_at}`}
+                    >
+                      <span
+                        className="size-2.5 rounded-full"
+                        style={{ backgroundColor: color.swatch }}
+                      />
+                      <span className="text-[#756d60]">
+                        {event.is_all_day
+                          ? "All day"
+                          : new Date(event.start_at).toLocaleTimeString(
+                              "en-US",
+                              { hour: "numeric", minute: "2-digit" },
+                            )}
+                      </span>
+                      <span className="font-semibold text-[#1d211c]">
+                        {event.title}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+
+        {!loading && groups.length === 0 ? (
+          <p className="py-4 text-sm text-[#756d60]">
+            Nothing on the calendar for the next two weeks.
+          </p>
+        ) : null}
+      </div>
+    </article>
   );
 }

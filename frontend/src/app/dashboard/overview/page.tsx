@@ -1,65 +1,224 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 import {
   CashflowBreakdownChart,
   MetricCard,
-  NextActionCard,
-  RiskItemCard,
-  RiskScoreCard,
   SectionHeader,
+  UpcomingEventsCard,
 } from "@/components/WealthComponents";
 import {
-  financialSnapshot,
-  inflowBreakdown,
-  liabilities,
-  nextActions,
-  outflowBreakdown,
-  riskItems,
-  transactions,
-  user,
-} from "@/data/wealthData";
+  calendarEventsList,
+  CalendarEventRead,
+  portfolioAssetsList,
+  portfolioLiabilitiesList,
+  transactionsList,
+} from "@/lib/api/generated";
 import { formatCurrency, formatCurrencyWithCents } from "@/lib/format";
 
+const TOP_CATEGORY_COUNT = 5;
+const UPCOMING_WINDOW_DAYS = 14;
+
+type CashflowItem = {
+  id: string;
+  label: string;
+  value: number;
+  percentage: number;
+};
+
+type LiabilityRow = {
+  id: string;
+  name: string;
+  category: string;
+  balance: number;
+  interestRate: number | null;
+};
+
+type TransactionRow = {
+  id: string;
+  description: string;
+  date: string;
+  category: string;
+  account: string;
+  amount: number;
+};
+
+type OverviewState = {
+  loading: boolean;
+  error: string | null;
+  netWorth: number;
+  totalLiabilities: number;
+  monthlyRepayment: number;
+  liabilities: LiabilityRow[];
+  inflowTotal: number;
+  outflowTotal: number;
+  inflowBreakdown: CashflowItem[];
+  outflowBreakdown: CashflowItem[];
+  recentMovements: TransactionRow[];
+  upcomingEvents: CalendarEventRead[];
+};
+
+const INITIAL_STATE: OverviewState = {
+  loading: true,
+  error: null,
+  netWorth: 0,
+  totalLiabilities: 0,
+  monthlyRepayment: 0,
+  liabilities: [],
+  inflowTotal: 0,
+  outflowTotal: 0,
+  inflowBreakdown: [],
+  outflowBreakdown: [],
+  recentMovements: [],
+  upcomingEvents: [],
+};
+
 export default function OverviewPage() {
-  const liabilityBreakdown = liabilities.slice(0, 5);
-  const recentMovements = transactions.slice(0, 5);
+  const [state, setState] = useState<OverviewState>(INITIAL_STATE);
+
+  useEffect(() => {
+    async function loadOverview() {
+      setState((prev) => ({ ...prev, loading: true, error: null }));
+
+      const now = new Date();
+      const windowEnd = new Date(now);
+      windowEnd.setDate(windowEnd.getDate() + UPCOMING_WINDOW_DAYS);
+
+      try {
+        const [assetsRes, liabilitiesRes, transactionsRes, eventsRes] =
+          await Promise.all([
+            portfolioAssetsList(),
+            portfolioLiabilitiesList(),
+            transactionsList({ query: { range: "1M" } }),
+            calendarEventsList({
+              query: {
+                start_window: now.toISOString(),
+                end_window: windowEnd.toISOString(),
+              },
+            }),
+          ]);
+
+        const assets = assetsRes.data ?? [];
+        const liabilities = liabilitiesRes.data ?? [];
+        // Already sorted latest-first by the API (occurred_at desc).
+        const transactions = (transactionsRes.data ?? []).map((t) => ({
+          ...t,
+          amount: Number(t.amount),
+        }));
+        const events = eventsRes.data ?? [];
+
+        const totalAssets = assets.reduce(
+          (sum, asset) => sum + Number(asset.value),
+          0,
+        );
+        const totalLiabilities = liabilities.reduce(
+          (sum, liability) => sum + Number(liability.balance),
+          0,
+        );
+        const monthlyRepayment = liabilities.reduce(
+          (sum, liability) => sum + Number(liability.monthly_payment ?? 0),
+          0,
+        );
+
+        const liabilityRows: LiabilityRow[] = liabilities
+          .slice()
+          .sort((a, b) => Number(b.balance) - Number(a.balance))
+          .slice(0, 5)
+          .map((liability) => ({
+            id: liability.id,
+            name: liability.name,
+            category: liability.category,
+            balance: Number(liability.balance),
+            interestRate:
+              liability.interest_rate != null
+                ? Number(liability.interest_rate)
+                : null,
+          }));
+
+        const inflow = buildBreakdown(transactions, "inflow");
+        const outflow = buildBreakdown(transactions, "outflow");
+
+        // Top 5 latest transactions, not top 5 by amount — the API already
+        // returns the list sorted by occurred_at desc, so this is a plain slice.
+        const recentMovements: TransactionRow[] = transactions
+          .slice(0, 5)
+          .map((t) => ({
+            id: t.id,
+            description: t.description,
+            date: formatShortDate(t.occurred_at),
+            category: t.category,
+            account: t.account,
+            amount: t.amount,
+          }));
+
+        const upcomingEvents: CalendarEventRead[] = events.slice(0, 5);
+
+        setState({
+          loading: false,
+          error: null,
+          netWorth: totalAssets - totalLiabilities,
+          totalLiabilities,
+          monthlyRepayment,
+          liabilities: liabilityRows,
+          inflowTotal: inflow.total,
+          outflowTotal: outflow.total,
+          inflowBreakdown: inflow.items,
+          outflowBreakdown: outflow.items,
+          recentMovements,
+          upcomingEvents,
+        });
+      } catch {
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          error: "Couldn't load your overview. Try refreshing.",
+        }));
+      }
+    }
+
+    loadOverview();
+  }, []);
 
   return (
     <div className="grid gap-6">
-      <section className="relative overflow-hidden rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 shadow-[0_24px_90px_rgba(43,34,24,0.08)] sm:p-8">
-        <div className="relative max-w-4xl">
-          <p className="text-sm font-semibold uppercase text-[#7a6332]">
-            Welcome back, dear {user.name}.
-          </p>
-          <h2 className="font-display mt-3 text-4xl font-semibold leading-tight text-[#1d211c] sm:text-5xl">
-            Your financial position at a glance.
-          </h2>
-          <p className="mt-4 max-w-3xl text-sm leading-6 text-[#696154]">
-            A concise command center for net worth, cashflow, obligations, risk signals, and next actions.
-          </p>
-        </div>
-      </section>
+      {state.error ? (
+        <section className="rounded-lg border border-[#d9b3a3] bg-[#fbf1ee] p-6 text-sm text-[#8f3f32]">
+          {state.error}
+        </section>
+      ) : null}
 
       <section className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           dominant
           label="Net Worth"
           sublabel="Total assets less total liabilities"
-          value={formatCurrency(financialSnapshot.netWorth)}
+          value={state.loading ? "—" : formatCurrency(state.netWorth)}
         />
         <MetricCard
-          dominant
-          label="Safe to Spend"
-          sublabel="AI-guided, after obligations"
-          value={formatCurrency(financialSnapshot.safeToSpend)}
+          label="Total Liabilities"
+          sublabel="Outstanding balance across all obligations"
+          value={state.loading ? "—" : formatCurrency(state.totalLiabilities)}
+        />
+        <MetricCard
+          label="Monthly Repayment"
+          sublabel="Committed monthly debt service"
+          value={state.loading ? "—" : formatCurrency(state.monthlyRepayment)}
         />
       </section>
+
+      <UpcomingEventsCard
+        events={state.upcomingEvents}
+        loading={state.loading}
+      />
 
       <section className="grid gap-5 lg:grid-cols-2">
         <CashflowBreakdownChart
           colors={["#33483d", "#5f725e", "#b99a52", "#c8b58a", "#8a8173"]}
-          items={inflowBreakdown}
-          subtitle="Sources of monthly inflow before obligations and investment decisions."
+          items={state.inflowBreakdown}
+          subtitle="Sources of monthly inflow over the trailing 30 days."
           title="Inflow breakdown"
-          total={financialSnapshot.inflow}
+          total={state.inflowTotal}
         />
         <CashflowBreakdownChart
           colors={[
@@ -70,91 +229,76 @@ export default function OverviewPage() {
             "#c8b58a",
             "#8a8173",
           ]}
-          items={outflowBreakdown}
-          subtitle="Uses of monthly outflow across commitments, reserves, and lifestyle spend."
+          items={state.outflowBreakdown}
+          subtitle="Uses of monthly outflow over the trailing 30 days."
           title="Outflow breakdown"
-          total={financialSnapshot.outflow}
+          total={state.outflowTotal}
         />
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+      <section className="grid gap-5 lg:grid-cols-2">
         <article className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 sm:p-7">
           <SectionHeader
             description="Liabilities are treated as commitments, not alarms. The goal is to preserve optionality and avoid expensive debt drag."
             eyebrow="Liabilities"
-            title={formatCurrency(financialSnapshot.totalLiabilities)}
+            title={state.loading ? "—" : formatCurrency(state.totalLiabilities)}
           />
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div>
               <p className="text-sm text-[#756d60]">Monthly repayment</p>
               <p className="mt-1 text-2xl font-semibold">
-                {formatCurrency(financialSnapshot.monthlyRepayment)}
+                {state.loading ? "—" : formatCurrency(state.monthlyRepayment)}
               </p>
             </div>
-            <div className="sm:col-span-2">
-              <p className="text-sm text-[#756d60]">Interest risk</p>
+            <div>
+              <p className="text-sm text-[#756d60]">Obligations tracked</p>
               <p className="mt-1 text-2xl font-semibold">
-                {financialSnapshot.liabilityRisk}
+                {state.liabilities.length}
               </p>
             </div>
           </div>
           <div className="mt-6 divide-y divide-[#e2dacd]">
-            {liabilityBreakdown.map((liability) => (
+            {state.liabilities.map((liability) => (
               <div
                 className="grid grid-cols-[1fr_auto] gap-4 py-3 text-sm"
                 key={liability.id}
               >
                 <div>
                   <p className="font-semibold">{liability.name}</p>
-                  <p className="mt-1 text-[#756d60]">{liability.riskLabel}</p>
+                  <p className="mt-1 text-[#756d60]">
+                    {formatCategoryLabel(liability.category)}
+                    {liability.interestRate !== null
+                      ? ` · ${liability.interestRate}% APR`
+                      : ""}
+                  </p>
                 </div>
                 <p className="font-semibold">
                   {formatCurrency(liability.balance)}
                 </p>
               </div>
             ))}
-          </div>
-        </article>
-
-        <section className="grid gap-5">
-          <RiskScoreCard
-            label={financialSnapshot.riskLabel}
-            score={financialSnapshot.riskScore}
-            summary={financialSnapshot.riskSummary}
-          />
-          <div className="grid gap-4 sm:grid-cols-2">
-            {riskItems.map((item) => (
-              <RiskItemCard item={item} key={item.id} />
-            ))}
-          </div>
-        </section>
-      </section>
-
-      <section className="grid gap-5 lg:grid-cols-[0.82fr_1.18fr]">
-        <article className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 sm:p-7">
-          <SectionHeader eyebrow="Next actions" title="Most urgent" />
-          <div className="mt-6 grid gap-5">
-            {nextActions.map((action) => (
-              <NextActionCard action={action} key={action.id} />
-            ))}
+            {!state.loading && state.liabilities.length === 0 ? (
+              <p className="py-3 text-sm text-[#756d60]">
+                No liabilities recorded yet.
+              </p>
+            ) : null}
           </div>
         </article>
 
         <article className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 sm:p-7">
           <SectionHeader eyebrow="Recent movements" title="Account activity" />
-          <div className="mt-5 divide-y divide-[#e2dacd]">
-            {recentMovements.map((movement) => (
+          <div className="mt-6 divide-y divide-[#e2dacd]">
+            {state.recentMovements.map((movement) => (
               <div
-                className="grid gap-2 py-4 sm:grid-cols-[1fr_0.7fr_auto] sm:items-center"
+                className="grid grid-cols-[1fr_auto] gap-4 py-3 text-sm"
                 key={movement.id}
               >
                 <div>
                   <p className="font-semibold">{movement.description}</p>
-                  <p className="mt-1 text-sm text-[#756d60]">
-                    {movement.date} · {movement.category}
+                  <p className="mt-1 text-[#756d60]">
+                    {movement.date} · {movement.category} · {movement.account}
                   </p>
                 </div>
-                <p className="text-sm text-[#756d60]">{movement.account}</p>
                 <p
                   className={`font-semibold ${
                     movement.amount > 0 ? "text-[#1f6b48]" : "text-[#8f3f32]"
@@ -164,9 +308,67 @@ export default function OverviewPage() {
                 </p>
               </div>
             ))}
+            {!state.loading && state.recentMovements.length === 0 ? (
+              <p className="py-3 text-sm text-[#756d60]">
+                No transactions in the last 30 days.
+              </p>
+            ) : null}
           </div>
         </article>
       </section>
     </div>
   );
+}
+
+function buildBreakdown(
+  transactions: { category: string; amount: number }[],
+  direction: "inflow" | "outflow",
+): { items: CashflowItem[]; total: number } {
+  const filtered = transactions.filter((t) =>
+    direction === "inflow" ? t.amount > 0 : t.amount < 0,
+  );
+
+  const totals = new Map<string, number>();
+  for (const t of filtered) {
+    const magnitude = Math.abs(t.amount);
+    totals.set(t.category, (totals.get(t.category) ?? 0) + magnitude);
+  }
+
+  const sorted = Array.from(totals.entries()).sort((a, b) => b[1] - a[1]);
+  const top = sorted.slice(0, TOP_CATEGORY_COUNT);
+  const rest = sorted.slice(TOP_CATEGORY_COUNT);
+  const restTotal = rest.reduce((sum, [, value]) => sum + value, 0);
+  const total = top.reduce((sum, [, value]) => sum + value, 0) + restTotal;
+
+  const items: CashflowItem[] = top.map(([category, value]) => ({
+    id: category,
+    label: formatCategoryLabel(category),
+    value,
+    percentage: total > 0 ? Math.round((value / total) * 1000) / 10 : 0,
+  }));
+
+  if (restTotal > 0) {
+    items.push({
+      id: "other",
+      label: "Other",
+      value: restTotal,
+      percentage: total > 0 ? Math.round((restTotal / total) * 1000) / 10 : 0,
+    });
+  }
+
+  return { items, total };
+}
+
+function formatCategoryLabel(category: string): string {
+  return category
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function formatShortDate(value: string): string {
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
 }
