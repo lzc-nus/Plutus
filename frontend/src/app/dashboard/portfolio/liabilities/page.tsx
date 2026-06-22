@@ -6,13 +6,17 @@ import { LiabilityCategorySection } from "@/components/dashboard/portfolio/Categ
 import { AddLiabilityModal } from "@/components/dashboard/portfolio/AddLiabilityModal";
 import { EditLiabilityModal } from "@/components/dashboard/portfolio/EditLiabilityModal";
 import { ConfirmDeleteDialog } from "@/components/dashboard/portfolio/ConfirmDeleteDialog";
+import { LiabilitySearchFilterBar } from "@/components/dashboard/portfolio/LiabilitySearchFilterBar";
 import { listLiabilities, createLiability, updateLiability, deleteLiability } from "@/lib/api/portfolio";
 import type { LiabilityRead } from "@/lib/api/generated";
 import type { LiabilityFormInput } from "@/lib/validations/portfolio";
+import { filterLiabilities } from "@/lib/portfolio/filterLiabilities";
 import {
   LIABILITY_CATEGORY_LABELS,
   LIABILITY_CATEGORY_ICONS,
+  DEFAULT_LIABILITY_FILTERS,
   type LiabilityCategory,
+  type LiabilityFilterState
 } from "@/data/portfolioTypes";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -94,6 +98,8 @@ export default function LiabilitiesPage() {
   // Delete dialog
   const [deletingLiability, setDeletingLiability] = useState<LiabilityRead | null>(null);
 
+  const [filters, setFilters] = useState<LiabilityFilterState>(DEFAULT_LIABILITY_FILTERS);
+
   useEffect(() => {
     fetchLiabilities();
   }, []);
@@ -140,9 +146,10 @@ export default function LiabilitiesPage() {
     setAddOpen(true);
   }
 
-  const categories = buildCategories(liabilities);
-  const totalLiabilities = liabilities.reduce((sum, l) => sum + Number(l.balance), 0);
-  const totalMonthlyPayments = liabilities.reduce(
+  const filteredLiabilities = filterLiabilities(liabilities, filters);
+  const categories = buildCategories(filteredLiabilities);
+  const totalLiabilities = filteredLiabilities.reduce((sum, l) => sum + Number(l.balance), 0);
+  const totalMonthlyPayments = filteredLiabilities.reduce(
     (sum, l) => sum + Number(l.monthly_payment ?? 0),
     0
   );
@@ -251,7 +258,22 @@ export default function LiabilitiesPage() {
               </div>
             </div>
 
+            {/* Search & filter */}
+            <LiabilitySearchFilterBar filters={filters} onChange={setFilters} />
+
             <div className="grid gap-3">
+              {categories.filter((c) => c.items.length > 0).length === 0 && filteredLiabilities.length === 0 && liabilities.length > 0 && (
+                <div className="rounded-xl border border-[#d9d0c1] bg-[#fbf7ef] px-5 py-10 text-center">
+                  <p className="text-sm text-[#6f675b]">No liabilities match your search or filters.</p>
+                  <button
+                    onClick={() => setFilters(DEFAULT_LIABILITY_FILTERS)}
+                    className="mt-2 text-sm font-medium text-[#7a6332] underline underline-offset-2 hover:text-[#5a4520]"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              )}
+
               {/* Populated buckets */}
               {categories
                 .filter((c) => c.items.length > 0)
