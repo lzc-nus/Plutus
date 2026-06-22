@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import {
   CashflowBreakdownChart,
+  CashflowButterflyChart,
   MetricCard,
   SectionHeader,
   UpcomingEventsCard,
@@ -136,8 +137,12 @@ export default function OverviewPage() {
                 : null,
           }));
 
-        const inflow = buildBreakdown(transactions, "inflow");
-        const outflow = buildBreakdown(transactions, "outflow");
+        const rawInflow = groupByCategory(transactions, "inflow");
+        const rawOutflow = groupByCategory(transactions, "outflow");
+        const grandTotal = rawInflow.rawTotal + rawOutflow.rawTotal;
+
+        const inflowBreakdown = assignPercentages(rawInflow.items, grandTotal);
+        const outflowBreakdown = assignPercentages(rawOutflow.items, grandTotal);
 
         // Top 5 latest transactions, not top 5 by amount — the API already
         // returns the list sorted by occurred_at desc, so this is a plain slice.
@@ -161,10 +166,10 @@ export default function OverviewPage() {
           totalLiabilities,
           monthlyRepayment,
           liabilities: liabilityRows,
-          inflowTotal: inflow.total,
-          outflowTotal: outflow.total,
-          inflowBreakdown: inflow.items,
-          outflowBreakdown: outflow.items,
+          inflowTotal: rawInflow.rawTotal,
+          outflowTotal: rawOutflow.rawTotal,
+          inflowBreakdown,
+          outflowBreakdown,
           recentMovements,
           upcomingEvents,
         });
@@ -212,29 +217,14 @@ export default function OverviewPage() {
         loading={state.loading}
       />
 
-      <section className="grid gap-5 lg:grid-cols-2">
-        <CashflowBreakdownChart
-          colors={["#33483d", "#5f725e", "#b99a52", "#c8b58a", "#8a8173"]}
-          items={state.inflowBreakdown}
-          subtitle="Sources of monthly inflow over the trailing 30 days."
-          title="Inflow breakdown"
-          total={state.inflowTotal}
-        />
-        <CashflowBreakdownChart
-          colors={[
-            "#9b5548",
-            "#b99a52",
-            "#6f7568",
-            "#5d4e3e",
-            "#c8b58a",
-            "#8a8173",
-          ]}
-          items={state.outflowBreakdown}
-          subtitle="Uses of monthly outflow over the trailing 30 days."
-          title="Outflow breakdown"
-          total={state.outflowTotal}
-        />
-      </section>
+      <CashflowButterflyChart
+        outflowItems={state.outflowBreakdown}
+        outflowTotal={state.outflowTotal}
+        inflowItems={state.inflowBreakdown}
+        inflowTotal={state.inflowTotal}
+        outflowColors={["#9b5548", "#b99a52", "#6f7568", "#5d4e3e", "#c8b58a", "#8a8173"]}
+        inflowColors={["#33483d", "#5f725e", "#b99a52", "#c8b58a", "#8a8173"]}
+      />
 
       <section className="grid gap-5 lg:grid-cols-2">
         <article className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 sm:p-7">
@@ -320,43 +310,43 @@ export default function OverviewPage() {
   );
 }
 
-function buildBreakdown(
+function groupByCategory(
   transactions: { category: string; amount: number }[],
   direction: "inflow" | "outflow",
-): { items: CashflowItem[]; total: number } {
+): { items: { id: string; label: string; value: number }[]; rawTotal: number } {
   const filtered = transactions.filter((t) =>
     direction === "inflow" ? t.amount > 0 : t.amount < 0,
   );
-
   const totals = new Map<string, number>();
   for (const t of filtered) {
     const magnitude = Math.abs(t.amount);
     totals.set(t.category, (totals.get(t.category) ?? 0) + magnitude);
   }
-
   const sorted = Array.from(totals.entries()).sort((a, b) => b[1] - a[1]);
   const top = sorted.slice(0, TOP_CATEGORY_COUNT);
   const rest = sorted.slice(TOP_CATEGORY_COUNT);
-  const restTotal = rest.reduce((sum, [, value]) => sum + value, 0);
-  const total = top.reduce((sum, [, value]) => sum + value, 0) + restTotal;
+  const restTotal = rest.reduce((sum, [, v]) => sum + v, 0);
+  const rawTotal = top.reduce((sum, [, v]) => sum + v, 0) + restTotal;
 
-  const items: CashflowItem[] = top.map(([category, value]) => ({
-    id: category,
-    label: formatCategoryLabel(category),
-    value,
-    percentage: total > 0 ? Math.round((value / total) * 1000) / 10 : 0,
+  const items = [
+    ...top.map(([category, value]) => ({
+      id: category,
+      label: formatCategoryLabel(category),
+      value,
+    })),
+    ...(restTotal > 0 ? [{ id: "other", label: "Other", value: restTotal }] : []),
+  ];
+  return { items, rawTotal };
+}
+
+function assignPercentages(
+  items: { id: string; label: string; value: number }[],
+  grandTotal: number,
+): CashflowItem[] {
+  return items.map((item) => ({
+    ...item,
+    percentage: grandTotal > 0 ? Math.round((item.value / grandTotal) * 1000) / 10 : 0,
   }));
-
-  if (restTotal > 0) {
-    items.push({
-      id: "other",
-      label: "Other",
-      value: restTotal,
-      percentage: total > 0 ? Math.round((restTotal / total) * 1000) / 10 : 0,
-    });
-  }
-
-  return { items, total };
 }
 
 function formatCategoryLabel(category: string): string {
