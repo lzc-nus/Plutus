@@ -22,7 +22,7 @@ export function PostCard({ post: initialPost, disableNavigation = false }: PostC
   const postUrl = `/dashboard/community/posts/${post.id}`;
 
   return (
-    <article className="border-b border-zinc-800 px-4 py-4 transition-colors hover:bg-zinc-900/40">
+    <article className="border-b border-[#d7c6a3]/30 px-4 py-4 transition-colors hover:bg-[#f0e8d8]/60">
 
       {/* Author row */}
       <div className="mb-3 flex items-start justify-between gap-3">
@@ -31,7 +31,7 @@ export function PostCard({ post: initialPost, disableNavigation = false }: PostC
         </div>
         <time
           dateTime={post.created_at}
-          className="shrink-0 text-xs text-zinc-500"
+          className="shrink-0 text-xs text-[#a99b82]"
           title={formatFullTimestamp(post.created_at)}
         >
           {formatRelativeTime(post.created_at)}

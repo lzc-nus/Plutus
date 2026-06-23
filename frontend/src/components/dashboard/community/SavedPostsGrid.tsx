@@ -42,7 +42,7 @@ export function SavedPostsGrid() {
   if (status === "error") {
     return (
       <div className="flex flex-col items-center gap-3 py-16 text-center">
-        <p className="text-sm text-zinc-400">{"Saved posts couldn't be loaded."}</p>
+        <p className="text-sm text-[#a99b82]">{"Saved posts couldn't be loaded."}</p>
         <button
           onClick={() => {
             setStatus("loading");
@@ -50,7 +50,7 @@ export function SavedPostsGrid() {
               .then((res) => { setPosts(res.data ?? []); setStatus("ready"); })
               .catch(() => setStatus("error"));
           }}
-          className="text-sm text-emerald-400 hover:underline"
+          className="text-sm text-[#d8bd75] hover:underline"
         >
           Try again
         </button>
@@ -61,8 +61,8 @@ export function SavedPostsGrid() {
   if (posts.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 py-20 text-center">
-        <p className="text-sm font-medium text-zinc-300">No saved posts yet.</p>
-        <p className="text-xs text-zinc-500">
+        <p className="text-sm font-medium text-[#1c2018]">No saved posts yet.</p>
+        <p className="text-xs text-[#a99b82]">
           Tap the bookmark on any post to save it here.
         </p>
       </div>
@@ -104,13 +104,13 @@ function SavedPostRow({
           <div className="flex items-center gap-1">
             <button
               onClick={() => setConfirming(false)}
-              className="rounded-full px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-800"
+              className="rounded-full px-2 py-1 text-xs text-[#a99b82] hover:bg-[#ede5d4]"
             >
               Keep
             </button>
             <button
               onClick={onUnsave}
-              className="rounded-full px-2 py-1 text-xs text-rose-400 hover:bg-rose-400/10"
+              className="rounded-full px-2 py-1 text-xs text-rose-500 hover:bg-rose-50"
             >
               Remove
             </button>
@@ -120,7 +120,7 @@ function SavedPostRow({
             onClick={() => setConfirming(true)}
             aria-label="Remove from saved"
             title="Remove from saved"
-            className="rounded-full p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
+            className="rounded-full p-1.5 text-[#a99b82] transition-colors hover:bg-[#ede5d4] hover:text-[#6b6252]"
           >
             <UnsaveIcon />
           </button>
@@ -134,14 +134,14 @@ function SavedPostRow({
 
 function SavedPostSkeleton() {
   return (
-    <div className="animate-pulse border-b border-zinc-800 px-4 py-4">
+    <div className="animate-pulse border-b border-[#d7c6a3]/30 px-4 py-4">
       <div className="mb-3 flex items-center gap-3">
-        <div className="h-8 w-8 rounded-full bg-zinc-800" />
-        <div className="h-3 w-28 rounded bg-zinc-800" />
+        <div className="h-8 w-8 rounded-full bg-[#e8dfc8]" />
+        <div className="h-3 w-28 rounded bg-[#e8dfc8]" />
       </div>
       <div className="space-y-2">
-        <div className="h-3 w-full rounded bg-zinc-800" />
-        <div className="h-3 w-4/5 rounded bg-zinc-800" />
+        <div className="h-3 w-full rounded bg-[#e8dfc8]" />
+        <div className="h-3 w-4/5 rounded bg-[#e8dfc8]" />
       </div>
     </div>
   );

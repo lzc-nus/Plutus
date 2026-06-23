@@ -230,8 +230,8 @@ function ActionButton({
       title={title}
       className={[
         "flex items-center gap-1.5 rounded-full px-2 py-1.5 text-xs transition-colors",
-        "hover:bg-zinc-800",
-        active ? activeColor : "text-zinc-500 hover:text-zinc-300",
+        "hover:bg-[#ede5d4]",
+        active ? activeColor : "text-[#a99b82] hover:text-[#6b6252]",
       ].join(" ")}
     >
       <span className="h-4 w-4">{icon}</span>
