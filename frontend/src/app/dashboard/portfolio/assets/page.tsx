@@ -6,13 +6,17 @@ import { AssetCategorySection } from "@/components/dashboard/portfolio/CategoryS
 import { AddAssetModal } from "@/components/dashboard/portfolio/AddAssetModal";
 import { EditAssetModal } from "@/components/dashboard/portfolio/EditAssetModal";
 import { ConfirmDeleteDialog } from "@/components/dashboard/portfolio/ConfirmDeleteDialog";
+import { AssetSearchFilterBar } from "@/components/dashboard/portfolio/AssetSearchFilterBar";
 import { listAssets, createAsset, updateAsset, deleteAsset } from "@/lib/api/portfolio";
 import type { AssetRead } from "@/lib/api/generated";
 import type { AssetFormInput } from "@/lib/validations/portfolio";
+import { filterAssets } from "@/lib/portfolio/filterAssets";
 import {
   ASSET_CATEGORY_LABELS,
   ASSET_CATEGORY_ICONS,
+  DEFAULT_ASSET_FILTERS,
   type AssetCategory,
+  type AssetFilterState
 } from "@/data/portfolioTypes";
 import { useSearchParams, useRouter } from "next/navigation";
 
@@ -94,6 +98,8 @@ export default function AssetsPage() {
   // Delete dialog
   const [deletingAsset, setDeletingAsset] = useState<AssetRead | null>(null);
 
+  const [filters, setFilters] = useState<AssetFilterState>(DEFAULT_ASSET_FILTERS);
+
   useEffect(() => {
     fetchAssets();
   }, []);
@@ -140,8 +146,9 @@ export default function AssetsPage() {
     setAddOpen(true);
   }
 
-  const categories = buildCategories(assets);
-  const totalAssets = assets.reduce((sum, a) => sum + Number(a.value), 0);
+  const filteredAssets = filterAssets(assets, filters);
+  const categories = buildCategories(filteredAssets);
+  const totalAssets = filteredAssets.reduce((sum, a) => sum + Number(a.value), 0);
 
   const existingCustomCategories = Array.from(
     new Set(
@@ -242,7 +249,22 @@ export default function AssetsPage() {
               </div>
             </div>
 
+            {/* Search & filter */}
+            <AssetSearchFilterBar filters={filters} onChange={setFilters} />
+
             <div className="grid gap-3">
+              {categories.filter((c) => c.items.length > 0).length === 0 && filteredAssets.length === 0 && assets.length > 0 && (
+                <div className="rounded-xl border border-[#d9d0c1] bg-[#fbf7ef] px-5 py-10 text-center">
+                  <p className="text-sm text-[#6f675b]">No assets match your search or filters.</p>
+                  <button
+                    onClick={() => setFilters(DEFAULT_ASSET_FILTERS)}
+                    className="mt-2 text-sm font-medium text-[#7a6332] underline underline-offset-2 hover:text-[#5a4520]"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              )}
+
               {/* Populated buckets */}
               {categories
                 .filter((c) => c.items.length > 0)
