@@ -7,6 +7,11 @@ import { PdfExportButton } from "@/components/WealthComponents";
 import { listAssets, listLiabilities } from "@/lib/api/portfolio";
 import type { AssetRead, LiabilityRead } from "@/lib/api/generated";
 import {
+  PortfolioSearchFilterBar,
+  DEFAULT_OVERVIEW_FILTERS,
+  type PortfolioOverviewFilterState,
+} from "@/components/dashboard/portfolio/PortfolioSearchFilterBar";
+import {
   ASSET_CATEGORY_LABELS,
   LIABILITY_CATEGORY_LABELS,
   type AssetCategory,
@@ -19,26 +24,37 @@ const CURRENCY = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
-function groupAssets(assets: AssetRead[], totalAssets: number) {
+function groupAssets(assets: AssetRead[], totalAssets: number, filters: PortfolioOverviewFilterState) {
   const map = new Map<AssetCategory, { label: string; value: number; count: number }>();
 
   for (const asset of assets) {
     const cat = asset.category as AssetCategory;
-    const value = Number(asset.value);
     const existing = map.get(cat);
     if (existing) {
-      existing.value += value;
+      existing.value += Number(asset.value);
       existing.count += 1;
     } else {
       map.set(cat, {
         label: ASSET_CATEGORY_LABELS[cat],
-        value,
+        value: Number(asset.value),
         count: 1,
       });
     }
   }
 
-  return Array.from(map.values())
+  const search = filters.search.trim().toLowerCase();
+  const valueMin = filters.valueMin === "" ? null : Number(filters.valueMin);
+  const valueMax = filters.valueMax === "" ? null : Number(filters.valueMax);
+
+  return Array.from(map.entries())
+    .filter(([cat, group]) => {
+      if (filters.assetCategories.length > 0 && !filters.assetCategories.includes(cat)) return false;
+      if (search && !group.label.toLowerCase().includes(search)) return false;
+      if (valueMin !== null && !Number.isNaN(valueMin) && group.value < valueMin) return false;
+      if (valueMax !== null && !Number.isNaN(valueMax) && group.value > valueMax) return false;
+      return true;
+    })
+    .map(([, group]) => group)
     .sort((a, b) => b.value - a.value)
     .map((cat) => ({
       ...cat,
@@ -46,26 +62,37 @@ function groupAssets(assets: AssetRead[], totalAssets: number) {
     }));
 }
 
-function groupLiabilities(liabilities: LiabilityRead[], totalLiabilities: number) {
+function groupLiabilities(liabilities: LiabilityRead[], totalLiabilities: number, filters: PortfolioOverviewFilterState) {
   const map = new Map<LiabilityCategory, { label: string; value: number; count: number }>();
 
   for (const liability of liabilities) {
     const cat = liability.category as LiabilityCategory;
-    const balance = Number(liability.balance);
     const existing = map.get(cat);
     if (existing) {
-      existing.value += balance;
+      existing.value += Number(liability.balance);
       existing.count += 1;
     } else {
       map.set(cat, {
         label: LIABILITY_CATEGORY_LABELS[cat],
-        value: balance,
+        value: Number(liability.balance),
         count: 1,
       });
     }
   }
 
-  return Array.from(map.values())
+  const search = filters.search.trim().toLowerCase();
+  const valueMin = filters.valueMin === "" ? null : Number(filters.valueMin);
+  const valueMax = filters.valueMax === "" ? null : Number(filters.valueMax);
+
+  return Array.from(map.entries())
+    .filter(([cat, group]) => {
+      if (filters.liabilityCategories.length > 0 && !filters.liabilityCategories.includes(cat)) return false;
+      if (search && !group.label.toLowerCase().includes(search)) return false;
+      if (valueMin !== null && !Number.isNaN(valueMin) && group.value < valueMin) return false;
+      if (valueMax !== null && !Number.isNaN(valueMax) && group.value > valueMax) return false;
+      return true;
+    })
+    .map(([, group]) => group)
     .sort((a, b) => b.value - a.value)
     .map((cat) => ({
       ...cat,
@@ -78,6 +105,7 @@ export default function PortfolioPage() {
   const [liabilities, setLiabilities] = useState<LiabilityRead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<PortfolioOverviewFilterState>(DEFAULT_OVERVIEW_FILTERS);
 
   useEffect(() => {
     fetchData();
@@ -106,8 +134,8 @@ export default function PortfolioPage() {
   const netWorth = totalAssets - totalLiabilities;
   const isPositive = netWorth >= 0;
 
-  const assetGroups = groupAssets(assets, totalAssets);
-  const liabilityGroups = groupLiabilities(liabilities, totalLiabilities);
+  const assetGroups = groupAssets(assets, totalAssets, filters);
+  const liabilityGroups = groupLiabilities(liabilities, totalLiabilities, filters);
 
   return (
     <div className="grid gap-6">
@@ -181,6 +209,11 @@ export default function PortfolioPage() {
           </>
         )}
       </div>
+
+      {/* Search & filter */}
+      {!loading && !error && (
+        <PortfolioSearchFilterBar filters={filters} onChange={setFilters} />
+      )}
 
       {/* Overview cards */}
       {loading ? (

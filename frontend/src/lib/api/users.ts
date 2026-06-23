@@ -1,9 +1,15 @@
 import {
   usersMe,
+  usersMePasswordUpdate,
+  usersMeSettingsUpdate,
   usersMeUpdate,
   usersGetById,
 } from "@/lib/api/generated";
-import type { UserProfileUpdate } from "@/lib/api/generated";
+import type {
+  UserPasswordUpdate,
+  UserProfileUpdate,
+  UserSettingsUpdate,
+} from "@/lib/api/generated";
 import { configureApiClient } from "./configureClient";
 
 /**
@@ -21,6 +27,22 @@ export async function getMe() {
 export async function updateMe(payload: UserProfileUpdate) {
   configureApiClient();
   return usersMeUpdate({ body: payload });
+}
+
+/**
+ * Updates editable account settings and profile fields.
+ */
+export async function updateSettings(payload: UserSettingsUpdate) {
+  configureApiClient();
+  return usersMeSettingsUpdate({ body: payload });
+}
+
+/**
+ * Changes the authenticated user's password after current-password validation.
+ */
+export async function changePassword(payload: UserPasswordUpdate) {
+  configureApiClient();
+  return usersMePasswordUpdate({ body: payload });
 }
 
 /**

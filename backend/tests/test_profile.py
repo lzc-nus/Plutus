@@ -187,6 +187,197 @@ def test_update_profile_requires_authentication(client: TestClient) -> None:
     assert response.status_code == 401
 
 
+# ── PATCH /users/me/settings ─────────────────────────────────────────────────
+
+def test_update_settings_updates_account_and_profile_fields(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="settings-user", email="settings-user@example.com"
+    )
+
+    response = client.patch(
+        "/api/v1/users/me/settings",
+        headers=_auth_headers(token),
+        json={
+            "username": "updated-user",
+            "email": "UPDATED-USER@EXAMPLE.COM",
+            "base_currency": "usd",
+            "display_name": "  Updated User  ",
+            "bio": "  Long-term investor.  ",
+            "avatar_url": "https://example.com/avatar.png",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["username"] == "updated-user"
+    assert body["email"] == "updated-user@example.com"
+    assert body["base_currency"] == "USD"
+    assert body["display_name"] == "Updated User"
+    assert body["bio"] == "Long-term investor."
+    assert body["avatar_url"] == "https://example.com/avatar.png"
+
+
+def test_update_settings_preserves_account_fields_when_null(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="settings-user", email="settings-user@example.com"
+    )
+
+    response = client.patch(
+        "/api/v1/users/me/settings",
+        headers=_auth_headers(token),
+        json={"username": None, "email": None, "base_currency": None, "bio": None},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["username"] == "settings-user"
+    assert body["email"] == "settings-user@example.com"
+    assert body["base_currency"] == "SGD"
+    assert body["bio"] is None
+
+
+def test_update_settings_rejects_duplicate_username(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="settings-user", email="settings-user@example.com"
+    )
+    _register_and_login(
+        client, username="taken-user", email="taken-user@example.com"
+    )
+
+    response = client.patch(
+        "/api/v1/users/me/settings",
+        headers=_auth_headers(token),
+        json={"username": "taken-user"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "Username already taken."
+
+
+def test_update_settings_rejects_duplicate_email(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="settings-user", email="settings-user@example.com"
+    )
+    _register_and_login(
+        client, username="other-user", email="other-user@example.com"
+    )
+
+    response = client.patch(
+        "/api/v1/users/me/settings",
+        headers=_auth_headers(token),
+        json={"email": "other-user@example.com"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "Email already registered."
+
+
+def test_update_settings_requires_authentication(client: TestClient) -> None:
+    response = client.patch(
+        "/api/v1/users/me/settings",
+        json={"username": "ghost-user"},
+    )
+
+    assert response.status_code == 401
+
+
+# ── PATCH /users/me/password ─────────────────────────────────────────────────
+
+def test_update_password_requires_current_password(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="password-user", email="password-user@example.com"
+    )
+
+    response = client.patch(
+        "/api/v1/users/me/password",
+        headers=_auth_headers(token),
+        json={
+            "current_password": "WrongPass1!",
+            "new_password": "NewStrongPass1!",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Current password is incorrect."
+
+
+def test_update_password_rejects_same_password(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="password-user", email="password-user@example.com"
+    )
+
+    response = client.patch(
+        "/api/v1/users/me/password",
+        headers=_auth_headers(token),
+        json={
+            "current_password": "StrongPass1!",
+            "new_password": "StrongPass1!",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "New password must be different from current password."
+
+
+def test_update_password_rejects_weak_new_password(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="password-user", email="password-user@example.com"
+    )
+
+    response = client.patch(
+        "/api/v1/users/me/password",
+        headers=_auth_headers(token),
+        json={
+            "current_password": "StrongPass1!",
+            "new_password": "weakpass",
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_update_password_changes_login_credentials(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="password-user", email="password-user@example.com"
+    )
+
+    response = client.patch(
+        "/api/v1/users/me/password",
+        headers=_auth_headers(token),
+        json={
+            "current_password": "StrongPass1!",
+            "new_password": "NewStrongPass1!",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["password_changed"] is True
+
+    old_login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "password-user@example.com", "password": "StrongPass1!"},
+    )
+    new_login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "password-user@example.com", "password": "NewStrongPass1!"},
+    )
+
+    assert old_login.status_code == 401
+    assert new_login.status_code == 200
+
+
+def test_update_password_requires_authentication(client: TestClient) -> None:
+    response = client.patch(
+        "/api/v1/users/me/password",
+        json={
+            "current_password": "StrongPass1!",
+            "new_password": "NewStrongPass1!",
+        },
+    )
+
+    assert response.status_code == 401
+
+
 # ── GET /users/{user_id} ──────────────────────────────────────────────────────
 
 def test_get_user_by_id_returns_public_profile(client: TestClient) -> None:
