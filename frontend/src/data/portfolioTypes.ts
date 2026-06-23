@@ -53,6 +53,50 @@ export interface CategorySummary<T extends AssetCategory | LiabilityCategory> {
   items: T extends AssetCategory ? Asset[] : Liability[];
 }
 
+export interface AssetFilterState {
+  search: string;
+  categories: AssetCategory[];
+  riskLevels: RiskLevel[];
+  liquidityLevels: LiquidityLevel[];
+  valueMin: string;
+  valueMax: string;
+  acquiredFrom: string;
+  acquiredTo: string;
+}
+
+export const DEFAULT_ASSET_FILTERS: AssetFilterState = {
+  search: "",
+  categories: [],
+  riskLevels: [],
+  liquidityLevels: [],
+  valueMin: "",
+  valueMax: "",
+  acquiredFrom: "",
+  acquiredTo: "",
+};
+
+export interface LiabilityFilterState {
+  search: string;
+  categories: LiabilityCategory[];
+  rateMin: string;
+  rateMax: string;
+  balanceMin: string;
+  balanceMax: string;
+  maturityFrom: string;
+  maturityTo: string;
+}
+
+export const DEFAULT_LIABILITY_FILTERS: LiabilityFilterState = {
+  search: "",
+  categories: [],
+  rateMin: "",
+  rateMax: "",
+  balanceMin: "",
+  balanceMax: "",
+  maturityFrom: "",
+  maturityTo: "",
+};
+
 export const ASSET_CATEGORY_LABELS: Record<AssetCategory, string> = {
   stocks: "Stocks & Equities",
   bonds: "Bonds & Fixed Income",
