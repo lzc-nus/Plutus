@@ -62,7 +62,7 @@ export function CommentThread({
 
   if (status === "error") {
     return (
-      <p className="px-4 py-6 text-center text-sm text-zinc-500">
+      <p className="px-4 py-6 text-center text-sm text-[#a99b82]">
         {"Comments couldn't be loaded."}
       </p>
     );
@@ -70,7 +70,7 @@ export function CommentThread({
 
   if (localComments.length === 0) {
     return (
-      <p className="px-4 py-8 text-center text-sm text-zinc-600">
+      <p className="px-4 py-8 text-center text-sm text-[#a99b82]">
         No comments yet. Be the first.
       </p>
     );
@@ -152,7 +152,7 @@ function CommentCard({ postId, comment, onUpdate, onDelete }: CommentCardProps) 
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="group border-b border-zinc-800/60 px-4 py-3">
+    <div className="group border-b border-[#d7c6a3]/30 px-4 py-3">
       {/* Author row */}
       <div className="mb-2 flex items-center justify-between gap-2">
         <UserAvatar userId={comment.author_id} size="sm" />
@@ -175,7 +175,7 @@ function CommentCard({ postId, comment, onUpdate, onDelete }: CommentCardProps) 
               "rounded-full p-1 text-xs transition-colors",
               deleteStatus === "confirming"
                 ? "text-rose-400 hover:bg-rose-400/10"
-                : "text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300",
+                : "text-[#a99b82] hover:bg-[#ede5d4] hover:text-[#6b6252]",
             ].join(" ")}
           >
             {deleteStatus === "confirming" ? (
@@ -203,7 +203,7 @@ function CommentCard({ postId, comment, onUpdate, onDelete }: CommentCardProps) 
           <div className="flex justify-end gap-2">
             <button
               onClick={handleCancelEdit}
-              className="rounded-lg px-3 py-1.5 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-white"
+              className="rounded-lg px-3 py-1.5 text-xs text-[#a99b82] hover:bg-[#ede5d4] hover:text-[#1c2018]"
             >
               Cancel
             </button>
@@ -214,7 +214,7 @@ function CommentCard({ postId, comment, onUpdate, onDelete }: CommentCardProps) 
                 "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
                 editBlocks.length > 0 && editStatus !== "saving"
                   ? "bg-emerald-500 text-white hover:bg-emerald-400"
-                  : "cursor-not-allowed bg-zinc-800 text-zinc-500",
+                  : "cursor-not-allowed bg-[#e8dfc8] text-[#a99b82]",
               ].join(" ")}
             >
               {editStatus === "saving" ? "Saving…" : "Save"}
@@ -225,7 +225,7 @@ function CommentCard({ postId, comment, onUpdate, onDelete }: CommentCardProps) 
         <div className="pl-9">
           <ContentBlockRenderer blocks={comment.content_blocks as ContentBlock[]} />
           {comment.updated_at !== comment.created_at && (
-            <span className="mt-1 block text-xs text-zinc-600">edited</span>
+            <span className="mt-1 block text-xs text-[#a99b82]">edited</span>
           )}
         </div>
       )}
@@ -322,7 +322,7 @@ function CommentActionBar({ postId, comment, onUpdate }: CommentActionBarProps) 
         {/* Timestamp */}
         <time
           dateTime={comment.created_at}
-          className="ml-auto text-xs text-zinc-600"
+          className="ml-auto text-xs text-[#a99b82]"
           title={formatFullTimestamp(comment.created_at)}
         >
           {formatRelativeTime(comment.created_at)}
@@ -356,8 +356,8 @@ function ActionButton({
       onClick={onClick}
       aria-label={label}
       className={[
-        "flex items-center gap-1 rounded-full px-2 py-1 transition-colors hover:bg-zinc-800",
-        active ? activeColor : "text-zinc-500 hover:text-zinc-300",
+        "flex items-center gap-1 rounded-full px-2 py-1 transition-colors hover:bg-[#ede5d4]",
+        active ? activeColor : "text-[#a99b82] hover:text-[#6b6252]",
       ].join(" ")}
     >
       {children}
@@ -380,7 +380,7 @@ function IconButton({
     <button
       onClick={onClick}
       aria-label={label}
-      className="rounded-full p-1 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
+      className="rounded-full p-1 text-[#a99b82] transition-colors hover:bg-[#ede5d4] hover:text-[#6b6252]"
     >
       {children}
     </button>
@@ -393,12 +393,12 @@ function CommentSkeleton() {
   return (
     <div className="animate-pulse border-b border-zinc-800/60 px-4 py-3">
       <div className="mb-2 flex items-center gap-2">
-        <div className="h-7 w-7 rounded-full bg-zinc-800" />
-        <div className="h-2.5 w-24 rounded bg-zinc-800" />
+        <div className="h-7 w-7 rounded-full bg-[#e8dfc8]" />
+        <div className="h-2.5 w-24 rounded bg-[#e8dfc8]" />
       </div>
       <div className="space-y-1.5 pl-9">
-        <div className="h-2.5 w-full rounded bg-zinc-800" />
-        <div className="h-2.5 w-3/4 rounded bg-zinc-800" />
+        <div className="h-2.5 w-full rounded bg-[#e8dfc8]" />
+        <div className="h-2.5 w-3/4 rounded bg-[#e8dfc8]" />
       </div>
     </div>
   );
