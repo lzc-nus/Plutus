@@ -18,6 +18,8 @@ import {
   formatCurrencyWithCents,
   formatPercent,
 } from "@/lib/format";
+import type { CalendarEventRead } from "@/lib/api/generated";
+import { getCalendarEventColor } from "@/data/calendarEventColors";
 
 export function SectionHeader({
   eyebrow,
@@ -647,5 +649,310 @@ export function AllocationBar({ assets }: { assets: Asset[] }) {
         ))}
       </div>
     </div>
+  );
+}
+
+function groupEventsByDay(events: CalendarEventRead[]) {
+  const groups = new Map<string, CalendarEventRead[]>();
+  for (const event of events) {
+    const key = new Date(event.start_at).toDateString();
+    const list = groups.get(key) ?? [];
+    list.push(event);
+    groups.set(key, list);
+  }
+  return Array.from(groups.entries()).map(([key, items]) => ({
+    date: new Date(key),
+    items,
+  }));
+}
+
+function formatDayLabel(date: Date): string {
+  const month = date.toLocaleDateString("en-US", { month: "short" });
+  const weekday = date.toLocaleDateString("en-US", { weekday: "short" });
+  return `${month}, ${weekday}`;
+}
+
+export function UpcomingEventsCard({
+  events,
+  loading,
+}: {
+  events: CalendarEventRead[];
+  loading: boolean;
+}) {
+  const groups = groupEventsByDay(events);
+  const todayKey = new Date().toDateString();
+
+  return (
+    <article className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 sm:p-7">
+      <SectionHeader eyebrow="Upcoming" title="Next 14 days" />
+      <div className="mt-6 divide-y divide-[#e2dacd]">
+        {groups.map(({ date, items }) => {
+          const dateKey = date.toDateString();
+          const isToday = dateKey === todayKey;
+
+          return (
+            <div
+              className="grid grid-cols-[7.5rem_1fr] items-center gap-4 py-4"
+              key={dateKey}
+            >
+              <div className="flex items-center gap-2 pt-1">
+                <span
+                  className={
+                    isToday
+                      ? "flex size-9 shrink-0 items-center justify-center rounded-full bg-[#1d211c] text-base font-semibold text-[#fbf7ef]"
+                      : "text-xl font-semibold text-[#1d211c]"
+                  }
+                >
+                  {date.getDate()}
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-[#8a8173]">
+                  {formatDayLabel(date)}
+                </span>
+              </div>
+
+              <div className="grid gap-3">
+                {items.map((event) => {
+                  const color = getCalendarEventColor(event.color);
+                  return (
+                    <div
+                      className="grid grid-cols-[auto_5.5rem_1fr] items-center gap-5 text-sm"
+                      key={`${event.id}-${event.start_at}`}
+                    >
+                      <span
+                        className="size-2.5 rounded-full"
+                        style={{ backgroundColor: color.swatch }}
+                      />
+                      <span className="text-[#756d60]">
+                        {event.is_all_day
+                          ? "All day"
+                          : new Date(event.start_at).toLocaleTimeString(
+                              "en-US",
+                              { hour: "numeric", minute: "2-digit" },
+                            )}
+                      </span>
+                      <span className="font-semibold text-[#1d211c]">
+                        {event.title}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+
+        {!loading && groups.length === 0 ? (
+          <p className="py-4 text-sm text-[#756d60]">
+            Nothing on the calendar for the next two weeks.
+          </p>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+type CashflowItem = {
+  id: string;
+  label: string;
+  value: number;
+  percentage: number;
+};
+
+export function CashflowButterflyChart({
+  inflowItems,
+  inflowTotal,
+  outflowItems,
+  outflowTotal,
+  inflowColors,
+  outflowColors,
+}: {
+  inflowItems: CashflowItem[];
+  inflowTotal: number;
+  outflowItems: CashflowItem[];
+  outflowTotal: number;
+  inflowColors: string[];
+  outflowColors: string[];
+}) {
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius;
+  const maxRows = Math.max(inflowItems.length, outflowItems.length);
+  const outflowSegments = buildSegments(outflowItems, circumference);
+  const inflowSegments = buildSegments(inflowItems, circumference);
+
+  return (
+    <article className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 sm:p-7">
+      <SectionHeader eyebrow="Cashflow" title="Inflow & Outflow" />
+
+      <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-0">
+
+        {/* Left: outflow bars */}
+        <div className="grid gap-3 pr-5">
+          {Array.from({ length: maxRows }, (_, i) => {
+            const item = outflowItems[i] ?? null;
+            const color = outflowColors[i % outflowColors.length];
+            return item ? (
+              <div key={item.id} className="flex items-center gap-3">
+                <div className="flex w-32 shrink-0 flex-col items-end">
+                  <span className="text-xs font-semibold text-[#1d211c]">
+                    {formatCurrency(item.value)}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate text-right text-xs text-[#756d60]">
+                      {item.label}
+                    </span>
+                    <span
+                      className="size-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: color }}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-1 justify-end">
+                  <div
+                    className="h-5 rounded-l-sm"
+                    style={{
+                      width: `${item.percentage}%`,
+                      backgroundColor: color,
+                      opacity: 0.85,
+                    }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div key={`empty-out-${i}`} className="h-10" />
+            );
+          })}
+        </div>
+
+        {/* Center: outflow donut + inflow donut */}
+        <div className="flex items-center gap-2">
+          <div className="relative size-32">
+            <svg
+              aria-label="Outflow breakdown donut"
+              className="-rotate-90"
+              viewBox="0 0 120 120"
+            >
+              <circle
+                cx="60" cy="60"
+                fill="transparent"
+                r={radius}
+                stroke="#e5ddcf"
+                strokeWidth="18"
+              />
+              {outflowSegments.map((seg, i) => (
+                <circle
+                  key={seg.id}
+                  cx="60" cy="60"
+                  fill="transparent"
+                  r={radius}
+                  stroke={outflowColors[i % outflowColors.length]}
+                  strokeDasharray={`${seg.length} ${circumference - seg.length}`}
+                  strokeDashoffset={-seg.offset}
+                  strokeLinecap="butt"
+                  strokeWidth="18"
+                />
+              ))}
+            </svg>
+            <div className="absolute inset-0 grid place-items-center text-center">
+              <div>
+                <p className="text-[10px] uppercase text-[#8a8173]">Out</p>
+                <p className="text-sm font-semibold text-[#8f3f32]">
+                  {formatCurrency(outflowTotal)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative size-32">
+            <svg
+              aria-label="Inflow breakdown donut"
+              className="-rotate-90"
+              viewBox="0 0 120 120"
+            >
+              <circle
+                cx="60" cy="60"
+                fill="transparent"
+                r={radius}
+                stroke="#e5ddcf"
+                strokeWidth="18"
+              />
+              {inflowSegments.map((seg, i) => (
+                <circle
+                  key={seg.id}
+                  cx="60" cy="60"
+                  fill="transparent"
+                  r={radius}
+                  stroke={inflowColors[i % inflowColors.length]}
+                  strokeDasharray={`${seg.length} ${circumference - seg.length}`}
+                  strokeDashoffset={-seg.offset}
+                  strokeLinecap="butt"
+                  strokeWidth="18"
+                />
+              ))}
+            </svg>
+            <div className="absolute inset-0 grid place-items-center text-center">
+              <div>
+                <p className="text-[10px] uppercase text-[#8a8173]">In</p>
+                <p className="text-sm font-semibold text-[#1f6b48]">
+                  {formatCurrency(inflowTotal)}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right: inflow bars */}
+        <div className="grid gap-3 pl-5">
+          {Array.from({ length: maxRows }, (_, i) => {
+            const item = inflowItems[i] ?? null;
+            const color = inflowColors[i % inflowColors.length];
+            return item ? (
+              <div key={item.id} className="flex items-center gap-3">
+                <div className="flex flex-1 justify-start">
+                  <div
+                    className="h-5 rounded-r-sm"
+                    style={{
+                      width: `${item.percentage}%`,
+                      backgroundColor: color,
+                      opacity: 0.85,
+                    }}
+                  />
+                </div>
+                <div className="flex w-32 shrink-0 flex-col items-start">
+                  <span className="text-xs font-semibold text-[#1d211c]">
+                    {formatCurrency(item.value)}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className="size-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: color }}
+                    />
+                    <span className="truncate text-xs text-[#756d60]">
+                      {item.label}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div key={`empty-in-${i}`} className="h-10" />
+            );
+          })}
+        </div>
+
+      </div>
+    </article>
+  );
+}
+
+function buildSegments(
+  items: CashflowItem[],
+  circumference: number,
+): (CashflowItem & { length: number; offset: number })[] {
+  return items.reduce<(CashflowItem & { length: number; offset: number })[]>(
+    (acc, item) => {
+      const length = circumference * (item.percentage / 100);
+      const offset = acc.reduce((total, seg) => total + seg.length, 0);
+      return [...acc, { ...item, length, offset }];
+    },
+    [],
   );
 }
