@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import datetime
 import uuid
+from typing import Any
 
 from sqlmodel import Session, select
 
+from app.core.security import get_password_hash
 from app.features.users.models import User
 from app.features.users.schemas import UserProfileUpdate, UserUpdate
 
@@ -42,9 +44,29 @@ def update_user(
     payload: UserProfileUpdate | UserUpdate,
 ) -> User:
     """Apply explicitly provided fields from payload onto the user and persist."""
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    return update_user_fields(db, user=user, values=payload.model_dump(exclude_unset=True))
+
+
+def update_user_fields(
+    db: Session,
+    *,
+    user: User,
+    values: dict[str, Any],
+) -> User:
+    """Persist a dict of already-validated user fields."""
+    for field, value in values.items():
         setattr(user, field, value)
 
+    user.updated_at = datetime.datetime.now(UTC)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def update_user_password(db: Session, *, user: User, new_password: str) -> User:
+    """Replace a user's password hash after the caller validates credentials."""
+    user.hashed_password = get_password_hash(new_password)
     user.updated_at = datetime.datetime.now(UTC)
     db.add(user)
     db.commit()
