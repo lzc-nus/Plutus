@@ -102,7 +102,7 @@ export function PostFeed({ fetcher, feedKey }: PostFeedProps) {
   if (status === "error" && posts.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 py-16 text-center">
-        <p className="text-sm text-zinc-400">Failed to load posts.</p>
+        <p className="text-sm text-[#a99b82]">Failed to load posts.</p>
         <button
           onClick={() => { setStatus("idle"); }}
           className="text-sm text-emerald-400 hover:underline"
@@ -117,7 +117,7 @@ export function PostFeed({ fetcher, feedKey }: PostFeedProps) {
     return (
       <div className="flex flex-col items-center gap-2 py-20 text-center">
         <p className="text-sm font-medium text-zinc-300">Nothing here yet.</p>
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-[#a99b82]">
           Follow people or be the first to post.
         </p>
       </div>
@@ -148,7 +148,7 @@ export function PostFeed({ fetcher, feedKey }: PostFeedProps) {
           </div>
         )}
         {status === "done" && posts.length > 0 && (
-          <p className="text-center text-xs text-zinc-600">
+          <p className="text-center text-xs text-[#a99b82]">
             You&apos;re all caught up.
           </p>
         )}
@@ -161,18 +161,18 @@ export function PostFeed({ fetcher, feedKey }: PostFeedProps) {
 
 function PostCardSkeleton() {
   return (
-    <div className="animate-pulse border-b border-zinc-800 px-4 py-4">
+    <div className="animate-pulse border-b border-[#d7c6a3]/30 px-4 py-4">
       <div className="mb-3 flex items-center gap-3">
-        <div className="h-8 w-8 rounded-full bg-zinc-800" />
-        <div className="h-3 w-28 rounded bg-zinc-800" />
+        <div className="h-8 w-8 rounded-full bg-[#e8dfc8]" />
+        <div className="h-3 w-28 rounded bg-[#e8dfc8]" />
       </div>
       <div className="space-y-2">
-        <div className="h-3 w-full rounded bg-zinc-800" />
-        <div className="h-3 w-4/5 rounded bg-zinc-800" />
+        <div className="h-3 w-full rounded bg-[#e8dfc8]" />
+        <div className="h-3 w-4/5 rounded bg-[#e8dfc8]" />
       </div>
       <div className="mt-4 flex gap-6">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-3 w-8 rounded bg-zinc-800" />
+          <div key={i} className="h-3 w-8 rounded bg-[#e8dfc8]" />
         ))}
       </div>
     </div>

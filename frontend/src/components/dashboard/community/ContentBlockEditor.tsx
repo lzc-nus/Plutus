@@ -134,7 +134,7 @@ export function ContentBlockEditor({
         onChange={handleTextChange}
         placeholder={placeholder}
         rows={3}
-        className="w-full resize-none overflow-hidden bg-transparent text-sm leading-relaxed text-zinc-200 placeholder:text-zinc-600 focus:outline-none"
+        className="w-full resize-none overflow-hidden bg-transparent text-sm leading-relaxed text-[#2c2c24] placeholder:text-[#a99b82] focus:outline-none"
       />
 
       {/* Non-text block previews */}
@@ -155,28 +155,28 @@ export function ContentBlockEditor({
 
       {/* Link panel */}
       {linkPanelOpen && (
-        <div className="flex flex-col gap-2 rounded-xl border border-zinc-700 bg-zinc-900 p-3">
+        <div className="flex flex-col gap-2 rounded-xl border border-[#d7c6a3]/50 bg-[#f5efe3] p-3">
           <input
             type="url"
             value={linkInput}
             onChange={(e) => setLinkInput(e.target.value)}
             placeholder="https://example.com"
             autoFocus
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none"
+            className="w-full rounded-lg border border-[#d7c6a3]/50 bg-white px-3 py-2 text-sm text-[#2c2c24] placeholder:text-[#a99b82] focus:border-[#d8bd75]/60 focus:outline-none"
           />
           <input
             type="text"
             value={linkTitle}
             onChange={(e) => setLinkTitle(e.target.value)}
             placeholder="Title (optional)"
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none"
+            className="w-full rounded-lg border border-[#d7c6a3]/50 bg-white px-3 py-2 text-sm text-[#2c2c24] placeholder:text-[#a99b82] focus:border-[#d8bd75]/60 focus:outline-none"
           />
           <input
             type="text"
             value={linkDescription}
             onChange={(e) => setLinkDescription(e.target.value)}
             placeholder="Description (optional)"
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none"
+            className="w-full rounded-lg border border-[#d7c6a3]/50 bg-white px-3 py-2 text-sm text-[#2c2c24] placeholder:text-[#a99b82] focus:border-[#d8bd75]/60 focus:outline-none"
           />
           <div className="flex justify-end gap-2">
             <button
@@ -203,14 +203,14 @@ export function ContentBlockEditor({
 
       {/* Sticker panel */}
       {stickerPanelOpen && (
-        <div className="flex flex-col gap-2 rounded-xl border border-zinc-700 bg-zinc-900 p-3">
+        <div className="flex flex-col gap-2 rounded-xl border border-[#d7c6a3]/50 bg-[#f5efe3] p-3">
           <input
             type="url"
             value={stickerInput}
             onChange={(e) => setStickerInput(e.target.value)}
             placeholder="Sticker URL"
             autoFocus
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none"
+            className="w-full rounded-lg border border-[#d7c6a3]/50 bg-white px-3 py-2 text-sm text-[#2c2c24] placeholder:text-[#a99b82] focus:border-[#d8bd75]/60 focus:outline-none"
           />
           <div className="flex justify-end gap-2">
             <button
@@ -236,7 +236,7 @@ export function ContentBlockEditor({
       )}
 
       {/* Toolbar */}
-      <div className="flex items-center gap-1 border-t border-zinc-800 pt-2">
+      <div className="flex items-center gap-1 border-t border-[#d7c6a3]/30 pt-2">
         {/* Media upload */}
         <input
           ref={fileInputRef}
@@ -389,10 +389,10 @@ function ToolbarButton({
       className={[
         "rounded-full p-1.5 transition-colors",
         disabled
-          ? "cursor-not-allowed text-zinc-700"
+          ? "cursor-not-allowed text-[#d7c6a3]"
           : active
           ? "bg-emerald-500/15 text-emerald-400"
-          : "text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300",
+          : "text-[#a99b82] hover:bg-[#ede5d4] hover:text-[#6b6252]",
       ].join(" ")}
     >
       {children}

@@ -44,11 +44,11 @@ export function UserAvatar({ userId, size = "md", disableLink = false }: UserAva
     : "h-9 w-9 text-xs";
 
   const nameClasses = size === "sm"
-    ? "text-xs font-medium text-zinc-300"
-    : "text-sm font-medium text-zinc-200";
+    ? "text-xs font-medium text-[#1c2018]"
+    : "text-sm font-medium text-[#1c2018]";
 
   const avatar = (
-    <div className={`${sizeClasses} shrink-0 overflow-hidden rounded-full bg-zinc-700`}>
+    <div className={`${sizeClasses} shrink-0 overflow-hidden rounded-full bg-[#d7c6a3]/60`}>
       {user?.avatar_url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -57,7 +57,7 @@ export function UserAvatar({ userId, size = "md", disableLink = false }: UserAva
           className="h-full w-full object-cover"
         />
       ) : (
-        <span className="flex h-full w-full items-center justify-center font-semibold uppercase text-zinc-400">
+        <span className="flex h-full w-full items-center justify-center font-semibold uppercase text-[#a99b82]">
           {getInitials(user?.display_name ?? userId)}
         </span>
       )}
@@ -67,7 +67,7 @@ export function UserAvatar({ userId, size = "md", disableLink = false }: UserAva
   const name = (
     <span className={nameClasses}>
       {user === null
-        ? <span className="inline-block h-3 w-20 animate-pulse rounded bg-zinc-700" />
+        ? <span className="inline-block h-3 w-20 animate-pulse rounded bg-[#d7c6a3]/60" />
         : (user.display_name ?? "")}
     </span>
   );
@@ -92,7 +92,7 @@ export function UserAvatar({ userId, size = "md", disableLink = false }: UserAva
       <div className="transition-opacity group-hover:opacity-80">{avatar}</div>
       <span className={`${nameClasses} group-hover:underline`}>
         {user?.display_name ?? (
-          <span className="inline-block h-3 w-20 animate-pulse rounded bg-zinc-700" />
+          <span className="inline-block h-3 w-20 animate-pulse rounded bg-[#d7c6a3]/60" />
         )}
       </span>
     </Link>

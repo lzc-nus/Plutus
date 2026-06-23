@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { dashboardTips } from "@/data/dashboardTips";
 import { MarketSnapshot } from "@/components/dashboard/community/MarketSnapshot";
 
@@ -33,15 +33,39 @@ function DashboardTip() {
   return (
     <div
       aria-live="polite"
-      className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900"
+      className="rounded-xl border border-[#d7c6a3]/30 bg-white/60 px-4 py-3"
     >
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-500 dark:text-[#d8bd75]">
+      <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-[#d8bd75]">
         {activeTip.title}
       </p>
-      <p className="mt-1 text-xs leading-5 text-zinc-500 dark:text-[#a99b82]">
+      <p className="mt-1 text-xs leading-5 text-[#a99b82]">
         {activeTip.body}
       </p>
     </div>
+  );
+}
+
+export function RightPanel() {
+  return (
+    <aside className="hidden w-[420px] shrink-0 xl:block">
+      <div className="sticky top-0 flex flex-col gap-3 px-5 py-5">
+
+        {/* Saved posts link */}
+        <Link
+          href="/dashboard/community/saved"
+          className="flex items-center gap-3 rounded-xl border border-[#d7c6a3]/40 bg-white/60 px-4 py-3 text-sm font-medium text-[#6b6252] transition-colors hover:border-[#d8bd75]/40 hover:bg-white hover:text-[#1c2018]"
+        >
+          <BookmarkIcon />
+          Saved posts
+        </Link>
+
+        {/* Market snapshot */}
+        <MarketSnapshot />
+
+        {/* Dashboard tip */}
+        <DashboardTip />
+      </div>
+    </aside>
   );
 }
 
@@ -50,23 +74,5 @@ function BookmarkIcon() {
     <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
     </svg>
-  );
-}
-
-export function RightPanel() {
-  return (
-    <aside className="hidden w-80 shrink-0 xl:block">
-      <div className="sticky top-0 flex flex-col gap-4 px-5 py-5">
-        <Link
-          href="/dashboard/community/saved"
-          className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-zinc-700 dark:hover:bg-zinc-800"
-        >
-          <BookmarkIcon />
-          Saved posts
-        </Link>
-        <MarketSnapshot />
-        <DashboardTip />
-      </div>
-    </aside>
   );
 }

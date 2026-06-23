@@ -59,15 +59,15 @@ export function PostComposer({ onClose, onCreated }: PostComposerProps) {
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="flex w-full max-w-lg flex-col rounded-t-2xl border border-zinc-800 bg-zinc-950 sm:rounded-2xl">
+      <div className="flex w-full max-w-lg flex-col rounded-t-2xl border border-[#d7c6a3]/40 bg-white sm:rounded-2xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
-          <span className="text-sm font-medium text-white">New post</span>
+        <div className="flex items-center justify-between border-b border-[#d7c6a3]/30 px-4 py-3">
+          <span className="text-sm font-medium text-[#1c2018]">New post</span>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="rounded-full p-1 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+            className="rounded-full p-1 text-[#a99b82] transition-colors hover:bg-[#ede5d4] hover:text-[#1c2018]"
           >
             <CloseIcon />
           </button>
@@ -91,10 +91,10 @@ export function PostComposer({ onClose, onCreated }: PostComposerProps) {
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 border-t border-zinc-800 px-4 py-3">
+        <div className="flex items-center justify-end gap-3 border-t border-[#d7c6a3]/30 px-4 py-3">
           <button
             onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+            className="rounded-lg px-4 py-2 text-sm text-[#a99b82] transition-colors hover:bg-[#ede5d4] hover:text-[#1c2018]"
           >
             Cancel
           </button>
@@ -105,7 +105,7 @@ export function PostComposer({ onClose, onCreated }: PostComposerProps) {
               "rounded-lg px-4 py-2 text-sm font-medium transition-colors",
               canSubmit
                 ? "bg-emerald-500 text-white hover:bg-emerald-400"
-                : "cursor-not-allowed bg-zinc-800 text-zinc-500",
+                : "cursor-not-allowed bg-[#e8dfc8] text-[#a99b82]",
             ].join(" ")}
           >
             {status === "submitting" ? "Posting…" : "Post"}
