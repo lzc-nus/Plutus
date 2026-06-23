@@ -68,7 +68,7 @@ function TextBlock({ value, compact }: { value: string; compact: boolean }) {
   return (
     <p
       className={[
-        "whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-200",
+        "whitespace-pre-wrap break-words text-sm leading-relaxed text-[#2c2c24]",
         compact ? "line-clamp-3" : "",
       ].join(" ")}
     >

@@ -9,7 +9,7 @@ interface FeedTabsProps {
 
 export function FeedTabs({ active, onChange }: FeedTabsProps) {
   return (
-    <div className="relative flex border-b border-zinc-800">
+    <div className="relative flex border-b border-[#d7c6a3]/30">
       {(["following", "global"] as FeedTab[]).map((tab) => {
         const isActive = active === tab;
         return (
@@ -19,8 +19,8 @@ export function FeedTabs({ active, onChange }: FeedTabsProps) {
             className={[
               "flex-1 py-3 text-sm font-medium tracking-wide transition-colors",
               isActive
-                ? "text-white"
-                : "text-zinc-500 hover:text-zinc-300",
+                ? "text-[#1c2018]"
+                : "text-[#a99b82] hover:text-[#6b6252]",
             ].join(" ")}
           >
             {tab === "following" ? "Following" : "Discover"}
@@ -32,7 +32,7 @@ export function FeedTabs({ active, onChange }: FeedTabsProps) {
       <span
         aria-hidden
         className={[
-          "absolute bottom-0 h-0.5 w-1/2 bg-emerald-400 transition-transform duration-200",
+          "absolute bottom-0 h-0.5 w-1/2 bg-[#d8bd75] transition-transform duration-200",
           active === "global" ? "translate-x-full" : "translate-x-0",
         ].join(" ")}
       />

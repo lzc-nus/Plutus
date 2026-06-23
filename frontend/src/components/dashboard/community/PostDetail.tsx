@@ -11,6 +11,7 @@ import { CommentThread } from "@/components/dashboard/community/CommentThread";
 import { CommentComposer } from "@/components/dashboard/community/CommentComposer";
 import { UserAvatar } from "@/components/dashboard/community/UserAvatar";
 import { ContentBlock } from "@/lib/validations/community";
+import { RightPanel } from "./RightPanel";
 
 interface PostDetailProps {
   postId: string;
@@ -95,99 +96,104 @@ export function PostDetail({ postId }: PostDetailProps) {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <article className="flex flex-col">
-      {/* Back navigation */}
-      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-zinc-800 bg-zinc-950/90 px-4 py-3 backdrop-blur">
-        <button
-          onClick={() => router.back()}
-          aria-label="Go back"
-          className="rounded-full p-1 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            <path d="M19 12H5M12 5l-7 7 7 7" />
-          </svg>
-        </button>
-        <span className="text-sm font-medium text-white">Post</span>
-      </div>
+    <div className="flex min-h-screen w-full bg-[#fbf7ef]">
+      <div className="flex min-w-0 flex-1 flex-col border-r border-[#d7c6a3]/30">
+        <article className="flex flex-col">
+          {/* Back navigation */}
+          <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-[#d7c6a3]/30 bg-[#fbf7ef]/95 px-4 py-3 backdrop-blur">
+            <button
+              onClick={() => router.back()}
+              aria-label="Go back"
+              className="rounded-full p-1 text-[#a99b82] transition-colors hover:bg-[#ede5d4] hover:text-[#1c2018]"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M19 12H5M12 5l-7 7 7 7" />
+              </svg>
+            </button>
+            <span className="text-sm font-medium text-[#1c2018]">Post</span>
+          </div>
 
-      {/* Post body */}
-      <div className="border-b border-zinc-800 px-4 pb-4 pt-5">
-        {/* Author */}
-        <div className="mb-4 flex items-center gap-3">
-          <UserAvatar userId={post.author_id} />
-        </div>
+          {/* Post body */}
+          <div className="border-b border-[#d7c6a3]/30 px-4 pb-4 pt-5">
+            {/* Author */}
+            <div className="mb-4 flex items-center gap-3">
+              <UserAvatar userId={post.author_id} />
+            </div>
 
-        {/* Content */}
-        <div className="mb-5">
-          <ContentBlockRenderer blocks={post.content_blocks as ContentBlock[]} />
-        </div>
+            {/* Content */}
+            <div className="mb-5">
+              <ContentBlockRenderer blocks={post.content_blocks as ContentBlock[]} />
+            </div>
 
-        {/* Timestamp */}
-        <time
-          dateTime={post.created_at}
-          className="mb-4 block text-xs text-zinc-500"
-        >
-          {formatTimestamp(post.created_at)}
-        </time>
+            {/* Timestamp */}
+            <time
+              dateTime={post.created_at}
+              className="mb-4 block text-xs text-[#a99b82]"
+            >
+              {formatTimestamp(post.created_at)}
+            </time>
 
-        {/* Count summary row */}
-        <div className="flex gap-5 border-y border-zinc-800 py-3 text-sm text-zinc-400">
-          <span>
-            <strong className="font-semibold text-white">{post.comment_count}</strong>{" "}
-            {post.comment_count === 1 ? "comment" : "comments"}
-          </span>
-          <span>
-            <strong className="font-semibold text-white">{post.repost_count}</strong>{" "}
-            {post.repost_count === 1 ? "repost" : "reposts"}
-          </span>
-          <span>
-            <strong className="font-semibold text-white">{post.like_count}</strong>{" "}
-            {post.like_count === 1 ? "like" : "likes"}
-          </span>
-          <span>
-            <strong className="font-semibold text-white">{post.save_count}</strong>{" "}
-            {post.save_count === 1 ? "save" : "saves"}
-          </span>
-        </div>
+            {/* Count summary row */}
+            <div className="flex gap-5 border-y border-[#d7c6a3]/30 py-3 text-sm text-[#a99b82]">
+              <span>
+                <strong className="font-semibold text-[#1c2018]">{post.comment_count}</strong>{" "}
+                {post.comment_count === 1 ? "comment" : "comments"}
+              </span>
+              <span>
+                <strong className="font-semibold text-[#1c2018]">{post.repost_count}</strong>{" "}
+                {post.repost_count === 1 ? "repost" : "reposts"}
+              </span>
+              <span>
+                <strong className="font-semibold text-[#1c2018]">{post.like_count}</strong>{" "}
+                {post.like_count === 1 ? "like" : "likes"}
+              </span>
+              <span>
+                <strong className="font-semibold text-[#1c2018]">{post.save_count}</strong>{" "}
+                {post.save_count === 1 ? "save" : "saves"}
+              </span>
+            </div>
 
-        {/* Action bar */}
-        <div className="pt-1">
-          <PostActionBar
-            post={post}
-            onUpdate={handlePostUpdate}
-            expanded
-            onCommentClick={() => {
-              composerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-              (composerRef.current?.querySelector("button, textarea") as HTMLElement | null)?.focus();
-            }}
+            {/* Action bar */}
+            <div className="pt-1">
+              <PostActionBar
+                post={post}
+                onUpdate={handlePostUpdate}
+                expanded
+                onCommentClick={() => {
+                  composerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  (composerRef.current?.querySelector("button, textarea") as HTMLElement | null)?.focus();
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Comment composer */}
+          <div ref={composerRef} className="border-b border-[#d7c6a3]/30 px-4 py-3">
+            <CommentComposer postId={post.id} onCreated={handleCommentCreated} />
+          </div>
+
+          {/* Comment thread */}
+          <CommentThread
+            postId={post.id}
+            comments={comments}
+            status={commentsStatus}
+            onDeleted={handleCommentDeleted}
           />
-        </div>
+        </article>
       </div>
-
-      {/* Comment composer */}
-      <div ref={composerRef} className="border-b border-zinc-800 px-4 py-3">
-        <CommentComposer postId={post.id} onCreated={handleCommentCreated} />
-      </div>
-
-      {/* Comment thread */}
-      <CommentThread
-        postId={post.id}
-        comments={comments}
-        status={commentsStatus}
-        onDeleted={handleCommentDeleted}
-      />
-    </article>
+      <RightPanel />
+    </div>
   );
 }
 

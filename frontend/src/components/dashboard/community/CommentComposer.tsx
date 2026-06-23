@@ -48,7 +48,7 @@ export function CommentComposer({ postId, onCreated }: CommentComposerProps) {
     return (
       <button
         onClick={() => setExpanded(true)}
-        className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2.5 text-left text-sm text-zinc-600 transition-colors hover:border-zinc-700 hover:text-zinc-500"
+        className="w-full rounded-xl border border-[#d7c6a3]/50 bg-white/70 px-4 py-2.5 text-left text-sm text-[#a99b82] transition-colors hover:border-[#d8bd75]/40 hover:bg-white"
       >
         Write a comment…
       </button>
@@ -58,7 +58,7 @@ export function CommentComposer({ postId, onCreated }: CommentComposerProps) {
   // ── Expanded state — full editor ───────────────────────────────────────────
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3">
+    <div className="flex flex-col gap-3 rounded-xl border border-[#d7c6a3]/50 bg-white px-4 py-3">
       <ContentBlockEditor
         blocks={blocks}
         onChange={setBlocks}
@@ -72,10 +72,10 @@ export function CommentComposer({ postId, onCreated }: CommentComposerProps) {
         </p>
       )}
 
-      <div className="flex items-center justify-end gap-2 border-t border-zinc-800 pt-2">
+      <div className="flex items-center justify-end gap-2 border-t border-[#d7c6a3]/30 pt-2">
         <button
           onClick={handleCancel}
-          className="rounded-lg px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+          className="rounded-lg px-3 py-1.5 text-xs text-[#a99b82] transition-colors hover:bg-[#ede5d4] hover:text-[#1c2018]"
         >
           Cancel
         </button>
@@ -86,7 +86,7 @@ export function CommentComposer({ postId, onCreated }: CommentComposerProps) {
             "rounded-lg px-4 py-1.5 text-xs font-medium transition-colors",
             canSubmit
               ? "bg-emerald-500 text-white hover:bg-emerald-400"
-              : "cursor-not-allowed bg-zinc-800 text-zinc-500",
+              : "cursor-not-allowed bg-[#e8dfc8] text-[#a99b82]",
           ].join(" ")}
         >
           {status === "submitting" ? "Posting…" : "Post"}
