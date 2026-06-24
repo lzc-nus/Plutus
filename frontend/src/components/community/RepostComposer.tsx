@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { PostRead } from "@/lib/api/generated";
 import { repostPost } from "@/lib/api/community";
-import { ContentBlockEditor } from "@/components/dashboard/community/ContentBlockEditor";
-import { ContentBlockRenderer } from "@/components/dashboard/community/ContentBlockRenderer";
-import { UserAvatar } from "@/components/dashboard/community/UserAvatar";
+import { ContentBlockEditor } from "@/components/community/ContentBlockEditor";
+import { ContentBlockRenderer } from "@/components/community/ContentBlockRenderer";
+import { UserAvatar } from "@/components/community/UserAvatar";
 import type { ContentBlock } from "@/lib/validations/community";
 
 interface RepostComposerProps {

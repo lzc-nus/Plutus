@@ -35,7 +35,7 @@
     pointer-events: none;
 }
 
-.container {
+.auth-shell-container {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -186,15 +186,32 @@
     pointer-events: all;
 }
 
-:global(.brand-link) {
+.brand-link {
     display: block;
     margin-bottom: 0.6rem;
     text-align: center;
     color: white;
     text-decoration: none;
-    font-size: 3rem;
+    font-family: "Brush Script MT", "Segoe Script", "Snell Roundhand", cursive;
+    font-size: 3.5rem;
     font-weight: 400;
     letter-spacing: 0;
+    line-height: 0.95;
+    text-shadow: 0 0 18px rgba(255, 214, 110, 0.22);
+    transition:
+        color 0.25s ease,
+        text-shadow 0.25s ease,
+        transform 0.25s ease;
+}
+
+.brand-link:hover,
+.brand-link:focus-visible {
+    color: var(--lamp-shade);
+    text-shadow:
+        0 0 14px rgba(255, 214, 110, 0.48),
+        0 0 32px rgba(255, 214, 110, 0.22);
+    transform: translateY(-1px);
+    outline: none;
 }
 
 .login-form h2 {
@@ -235,24 +252,31 @@
     font-size: 0.875rem;
 }
 
-:global(.auth-switch-link) {
+.auth-switch-link {
     color: var(--accent-color);
     font-weight: 600;
     text-decoration: underline;
     text-underline-offset: 4px;
     text-decoration-thickness: 1px;
+    transition:
+        color 0.2s ease,
+        text-decoration-color 0.2s ease,
+        text-shadow 0.2s ease;
 }
 
-:global(.auth-switch-link:hover) {
+.auth-switch-link:hover,
+.auth-switch-link:focus-visible {
     color: var(--lamp-shade);
     text-decoration-color: var(--lamp-shade);
+    text-shadow: 0 0 16px rgba(255, 214, 110, 0.38);
+    outline: none;
 }
 
-:global(.form-group) {
+.form-group {
     margin-bottom: 1.2rem;
 }
 
-:global(.form-group label) {
+.form-group label {
     display: block;
     color: #999;
     font-size: 0.85rem;
@@ -260,7 +284,7 @@
     margin-left: 5px;
 }
 
-:global(.form-group input) {
+.form-group input {
     width: 100%;
     padding: 14px 18px;
     background: rgba(255, 255, 255, 0.07);
@@ -272,16 +296,16 @@
     font-size: 1rem;
 }
 
-:global(.form-group input::placeholder) {
+.form-group input::placeholder {
     color: rgba(255, 255, 255, 0.35);
 }
 
-:global(.form-group input:focus) {
+.form-group input:focus {
     border-color: var(--accent-color);
     background: rgba(255, 255, 255, 0.12);
 }
 
-:global(.login-btn) {
+.login-btn {
     width: 100%;
     padding: 15px;
     background: linear-gradient(135deg,
@@ -300,13 +324,13 @@
     font-size: 1rem;
 }
 
-:global(.login-btn:hover) {
+.login-btn:hover {
     transform: scale(1.02);
     background: var(--lamp-shade);
 }
 
 @media (max-width: 768px) {
-    .container {
+    .auth-shell-container {
         gap: 2rem;
         padding: 2rem 1rem;
     }

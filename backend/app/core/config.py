@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     auth_cookie_name: str = "plutus_access_token"
     auth_cookie_secure: bool | None = None
     auth_cookie_samesite: Literal["lax", "strict", "none"] = "lax"
+    frontend_origin: str = "http://localhost:3000"
 
     allowed_origins: list[str] = [
         "http://localhost:3000",
@@ -62,6 +63,14 @@ class Settings(BaseSettings):
         value = value.strip()
         if not value:
             raise ValueError("AUTH_COOKIE_NAME must not be empty.")
+        return value
+
+    @field_validator("frontend_origin")
+    @classmethod
+    def validate_frontend_origin(cls, value: str) -> str:
+        value = value.strip().rstrip("/")
+        if not value:
+            raise ValueError("FRONTEND_ORIGIN must not be empty.")
         return value
 
     @field_validator("allowed_origins", mode="before")

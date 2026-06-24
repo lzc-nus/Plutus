@@ -2,22 +2,24 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { PostRead, CommentRead } from "@/lib/api/generated";
+import type { PostRead, CommentRead, UserRead } from "@/lib/api/generated";
 import { getPost } from "@/lib/api/community";
 import { listComments } from "@/lib/api/community";
-import { ContentBlockRenderer } from "@/components/dashboard/community/ContentBlockRenderer";
-import { PostActionBar } from "@/components/dashboard/community/PostActionBar";
-import { CommentThread } from "@/components/dashboard/community/CommentThread";
-import { CommentComposer } from "@/components/dashboard/community/CommentComposer";
-import { UserAvatar } from "@/components/dashboard/community/UserAvatar";
+import { ContentBlockRenderer } from "@/components/community/ContentBlockRenderer";
+import { PostActionBar } from "@/components/community/PostActionBar";
+import { CommentThread } from "@/components/community/CommentThread";
+import { CommentComposer } from "@/components/community/CommentComposer";
+import { UserAvatar } from "@/components/community/UserAvatar";
 import { ContentBlock } from "@/lib/validations/community";
 import { RightPanel } from "./RightPanel";
 
 interface PostDetailProps {
   postId: string;
+  viewer: UserRead | null;
+  onAuthRequired?: (action: string) => void;
 }
 
-export function PostDetail({ postId }: PostDetailProps) {
+export function PostDetail({ postId, viewer, onAuthRequired }: PostDetailProps) {
   const router = useRouter();
   const composerRef = useRef<HTMLDivElement>(null);
 
@@ -168,6 +170,8 @@ export function PostDetail({ postId }: PostDetailProps) {
             <div className="pt-1">
               <PostActionBar
                 post={post}
+                viewer={viewer}
+                onAuthRequired={onAuthRequired}
                 onUpdate={handlePostUpdate}
                 expanded
                 onCommentClick={() => {
@@ -180,7 +184,12 @@ export function PostDetail({ postId }: PostDetailProps) {
 
           {/* Comment composer */}
           <div ref={composerRef} className="border-b border-[#d7c6a3]/30 px-4 py-3">
-            <CommentComposer postId={post.id} onCreated={handleCommentCreated} />
+            <CommentComposer
+              postId={post.id}
+              viewer={viewer}
+              onAuthRequired={onAuthRequired}
+              onCreated={handleCommentCreated}
+            />
           </div>
 
           {/* Comment thread */}
@@ -188,11 +197,13 @@ export function PostDetail({ postId }: PostDetailProps) {
             postId={post.id}
             comments={comments}
             status={commentsStatus}
+            viewer={viewer}
+            onAuthRequired={onAuthRequired}
             onDeleted={handleCommentDeleted}
           />
         </article>
       </div>
-      <RightPanel />
+      <RightPanel viewer={viewer} onAuthRequired={onAuthRequired} />
     </div>
   );
 }

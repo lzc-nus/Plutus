@@ -1,17 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import type { CommentRead } from "@/lib/api/generated";
+import type { CommentRead, UserRead } from "@/lib/api/generated";
 import { createComment } from "@/lib/api/community";
-import { ContentBlockEditor } from "@/components/dashboard/community/ContentBlockEditor";
+import { ContentBlockEditor } from "@/components/community/ContentBlockEditor";
 import type { ContentBlock } from "@/lib/validations/community";
 
 interface CommentComposerProps {
   postId: string;
+  viewer: UserRead | null;
+  onAuthRequired?: (action: string) => void;
   onCreated: (comment: CommentRead) => void;
 }
 
-export function CommentComposer({ postId, onCreated }: CommentComposerProps) {
+export function CommentComposer({
+  postId,
+  viewer,
+  onAuthRequired,
+  onCreated,
+}: CommentComposerProps) {
   const [blocks, setBlocks] = useState<ContentBlock[]>([]);
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [expanded, setExpanded] = useState(false);
@@ -21,6 +28,11 @@ export function CommentComposer({ postId, onCreated }: CommentComposerProps) {
   const canSubmit = blocks.length > 0 && textLength <= 280 && status !== "submitting";
 
   async function handleSubmit() {
+    if (!viewer) {
+      onAuthRequired?.("comment");
+      return;
+    }
+
     if (!canSubmit) return;
     setStatus("submitting");
     try {
@@ -47,10 +59,16 @@ export function CommentComposer({ postId, onCreated }: CommentComposerProps) {
   if (!expanded) {
     return (
       <button
-        onClick={() => setExpanded(true)}
+        onClick={() => {
+          if (!viewer) {
+            onAuthRequired?.("comment");
+            return;
+          }
+          setExpanded(true);
+        }}
         className="w-full rounded-xl border border-[#d7c6a3]/50 bg-white/70 px-4 py-2.5 text-left text-sm text-[#a99b82] transition-colors hover:border-[#d8bd75]/40 hover:bg-white"
       >
-        Write a comment…
+        {viewer ? "Write a comment..." : "Sign in to comment"}
       </button>
     );
   }

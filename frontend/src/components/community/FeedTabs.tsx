@@ -9,33 +9,31 @@ interface FeedTabsProps {
 
 export function FeedTabs({ active, onChange }: FeedTabsProps) {
   return (
-    <div className="relative flex border-b border-[#d7c6a3]/30">
+    <div
+      role="tablist"
+      aria-label="Community feed"
+      className="grid grid-cols-2 gap-1 rounded-md border border-[#d7c6a3]/45 bg-[#f4efe6] p-1"
+    >
       {(["following", "global"] as FeedTab[]).map((tab) => {
         const isActive = active === tab;
         return (
           <button
+            type="button"
             key={tab}
+            role="tab"
+            aria-selected={isActive}
             onClick={() => onChange(tab)}
             className={[
-              "flex-1 py-3 text-sm font-medium tracking-wide transition-colors",
+              "h-9 rounded px-4 text-sm font-semibold transition",
               isActive
-                ? "text-[#1c2018]"
-                : "text-[#a99b82] hover:text-[#6b6252]",
+                ? "bg-[#fbf7ef] text-[#1c2018] shadow-[0_6px_18px_rgba(43,34,24,0.08)]"
+                : "text-[#7c7468] hover:bg-[#fbf7ef]/60 hover:text-[#1c2018]",
             ].join(" ")}
           >
             {tab === "following" ? "Following" : "Discover"}
           </button>
         );
       })}
-
-      {/* Sliding underline indicator */}
-      <span
-        aria-hidden
-        className={[
-          "absolute bottom-0 h-0.5 w-1/2 bg-[#d8bd75] transition-transform duration-200",
-          active === "global" ? "translate-x-full" : "translate-x-0",
-        ].join(" ")}
-      />
     </div>
   );
 }

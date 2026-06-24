@@ -1,11 +1,4 @@
 import Link from "next/link";
-import { Great_Vibes } from "next/font/google";
-
-const logoFont = Great_Vibes({
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-});
 
 const metrics = [
   ["5 min", "to build a wealth snapshot"],
@@ -50,7 +43,7 @@ export default function PublicHomePage() {
               AI wealth intelligence
             </p>
 
-            <h1 className={`${logoFont.className} text-5xl leading-none sm:text-8xl`}>
+            <h1 className="brand-script text-5xl leading-none sm:text-8xl">
               Plutus
             </h1>
 

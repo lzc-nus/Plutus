@@ -2384,6 +2384,47 @@ export type CommunityFollowResponses = {
 
 export type CommunityFollowResponse = CommunityFollowResponses[keyof CommunityFollowResponses];
 
+export type CommunityUserPostsListData = {
+    body?: never;
+    path: {
+        /**
+         * User Id
+         */
+        user_id: string;
+    };
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Before
+         */
+        before?: string | null;
+    };
+    url: '/api/v1/community/users/{user_id}/posts';
+};
+
+export type CommunityUserPostsListErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CommunityUserPostsListError = CommunityUserPostsListErrors[keyof CommunityUserPostsListErrors];
+
+export type CommunityUserPostsListResponses = {
+    /**
+     * Response Community User Posts List
+     *
+     * Successful Response
+     */
+    200: Array<PostRead>;
+};
+
+export type CommunityUserPostsListResponse = CommunityUserPostsListResponses[keyof CommunityUserPostsListResponses];
+
 export type CommunityFollowingListData = {
     body?: never;
     path: {
@@ -2451,9 +2492,25 @@ export type CommunityFollowersListResponse = CommunityFollowersListResponses[key
 export type MarketSnapshotData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Symbols
+         *
+         * Optional watchlist symbols. Repeat the query key for each symbol.
+         */
+        symbols?: Array<string> | null;
+    };
     url: '/api/v1/market/snapshot';
 };
+
+export type MarketSnapshotErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MarketSnapshotError = MarketSnapshotErrors[keyof MarketSnapshotErrors];
 
 export type MarketSnapshotResponses = {
     /**

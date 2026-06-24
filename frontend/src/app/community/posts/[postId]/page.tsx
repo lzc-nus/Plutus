@@ -1,24 +1,24 @@
 "use client";
 
 import { use, useState } from "react";
-import { PostDetail } from "@/components/community/PostDetail";
 import { AuthRequiredDialog } from "@/components/community/AuthRequiredDialog";
-import { useAuth } from "@/lib/hooks/useAuth";
+import { PostDetail } from "@/components/community/PostDetail";
+import { useOptionalViewer } from "@/lib/hooks/useOptionalViewer";
 
-interface PostPageProps {
+interface PublicPostPageProps {
   params: Promise<{ postId: string }>;
 }
 
-export default function PostPage({ params }: PostPageProps) {
+export default function PublicPostPage({ params }: PublicPostPageProps) {
   const { postId } = use(params);
-  const { user } = useAuth();
+  const { viewer } = useOptionalViewer();
   const [authAction, setAuthAction] = useState<string | null>(null);
 
   return (
     <>
       <PostDetail
         postId={postId}
-        viewer={user}
+        viewer={viewer}
         onAuthRequired={setAuthAction}
       />
       {authAction && (

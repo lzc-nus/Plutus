@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import type { UserPublicRead, UserRead } from "@/lib/api/generated";
-import { getMe, getUserById, updateMe } from "@/lib/api/users";
-import { getGlobalFeed } from "@/lib/api/community";
-import { PostFeed } from "@/components/dashboard/community/PostFeed";
-import { FollowButton } from "@/components/dashboard/community/FollowButton";
+import { getUserById, updateMe } from "@/lib/api/users";
+import { getUserPosts } from "@/lib/api/community";
+import { PostFeed } from "@/components/community/PostFeed";
+import { FollowButton } from "@/components/community/FollowButton";
 import { getFollowers, getFollowing } from "@/lib/api/community";
+import { AuthRequiredDialog } from "@/components/community/AuthRequiredDialog";
+import { useOptionalViewer } from "@/lib/hooks/useOptionalViewer";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileFormSchema, type ProfileFormInput } from "@/lib/validations/profile";
@@ -16,13 +18,14 @@ import { profileFormSchema, type ProfileFormInput } from "@/lib/validations/prof
 export default function ProfilePage() {
   const { userId } = useParams<{ userId: string }>();
 
-  const [currentUser, setCurrentUser] = useState<UserRead | null>(null);
+  const { viewer: currentUser } = useOptionalViewer();
   const [profile, setProfile] = useState<UserPublicRead | null>(null);
   const [followerCount, setFollowerCount] = useState<number | null>(null);
   const [followingCount, setFollowingCount] = useState<number | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [editOpen, setEditOpen] = useState(false);
+  const [authAction, setAuthAction] = useState<string | null>(null);
 
   const isOwnProfile = currentUser?.id === userId;
 
@@ -30,35 +33,27 @@ export default function ProfilePage() {
 
   useEffect(() => {
     Promise.all([
-      getMe(),
       getUserById(userId),
       getFollowers(userId),
       getFollowing(userId),
     ])
-      .then(([meRes, profileRes, followersRes, followingRes]) => {
-        const me = meRes.data ?? null;
+      .then(([profileRes, followersRes, followingRes]) => {
         const prof = profileRes.data ?? null;
         const followers = followersRes.data ?? [];
         const following = followingRes.data ?? [];
 
-        setCurrentUser(me);
         setProfile(prof);
         setFollowerCount(followers.length);
         setFollowingCount(following.length);
-        setIsFollowing(followers.some((f) => f.follower_id === me?.id));
+        setIsFollowing(followers.some((f) => f.follower_id === currentUser?.id));
         setStatus("ready");
       })
       .catch(() => setStatus("error"));
-  }, [userId]);
+  }, [userId, currentUser?.id]);
 
   // ── Post fetcher filtered to this user ──────────────────────────────────────
-  // The global feed is used here with the userId context.
-  // Replace with a dedicated user posts endpoint if you add one later.
   const fetcher = (before?: string) =>
-    getGlobalFeed(20, before).then((res) => ({
-      ...res,
-      data: (res.data ?? []).filter((p) => p.author_id === userId),
-    }));
+    getUserPosts(userId, 20, before);
 
   // ── Loading / error ─────────────────────────────────────────────────────────
 
@@ -116,6 +111,8 @@ export default function ProfilePage() {
           ) : (
             <FollowButton
               userId={userId}
+              viewer={currentUser}
+              onAuthRequired={setAuthAction}
               initialFollowing={isFollowing}
               onToggle={(following) => {
                 setFollowerCount((prev) =>
@@ -165,7 +162,12 @@ export default function ProfilePage() {
       </div>
 
       {/* Posts */}
-      <PostFeed fetcher={fetcher} feedKey={`profile-${userId}`} />
+      <PostFeed
+        fetcher={fetcher}
+        feedKey={`profile-${userId}-${currentUser?.id ?? "guest"}`}
+        viewer={currentUser}
+        onAuthRequired={setAuthAction}
+      />
 
       {/* Edit profile modal */}
       {editOpen && currentUser && (
@@ -185,6 +187,13 @@ export default function ProfilePage() {
             );
             setEditOpen(false);
           }}
+        />
+      )}
+
+      {authAction && (
+        <AuthRequiredDialog
+          action={authAction}
+          onClose={() => setAuthAction(null)}
         />
       )}
     </div>

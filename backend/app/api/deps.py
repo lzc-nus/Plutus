@@ -54,3 +54,36 @@ def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def get_optional_current_user(
+    token: Annotated[str | None, Depends(oauth2_scheme)],
+    db: Annotated[Session, Depends(get_db)],
+    auth_cookie: Annotated[str | None, Cookie(alias=settings.auth_cookie_name)] = None,
+) -> User | None:
+    """Return the current user when a valid credential exists, otherwise guest.
+
+    Public community reads should not fail just because a browser has an expired
+    cookie. Mutating routes still use CurrentUser and reject invalid credentials.
+    """
+    token = token or auth_cookie
+    if not token:
+        return None
+
+    try:
+        payload = decode_access_token(token)
+        subject = payload.get("sub")
+        if not isinstance(subject, str):
+            return None
+        user_id = uuid.UUID(subject)
+    except (jwt.PyJWTError, ValueError):
+        return None
+
+    user = get_user_by_id(db, user_id)
+    if not user or not user.is_active:
+        return None
+
+    return user
+
+
+OptionalCurrentUser = Annotated[User | None, Depends(get_optional_current_user)]

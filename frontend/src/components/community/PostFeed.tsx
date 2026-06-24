@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { PostRead } from "@/lib/api/generated";
-import { PostCard } from "@/components/dashboard/community/PostCard";
+import type { PostRead, UserRead } from "@/lib/api/generated";
+import { PostCard } from "@/components/community/PostCard";
 
 interface PostFeedProps {
   /**
@@ -14,11 +14,20 @@ interface PostFeedProps {
 
   /** Stable key — changing it resets the feed (e.g. when switching tabs). */
   feedKey: string;
+  viewer: UserRead | null;
+  onAuthRequired?: (action: string) => void;
+  detailBasePath?: string;
 }
 
 const PAGE_SIZE = 20;
 
-export function PostFeed({ fetcher, feedKey }: PostFeedProps) {
+export function PostFeed({
+  fetcher,
+  feedKey,
+  viewer,
+  onAuthRequired,
+  detailBasePath,
+}: PostFeedProps) {
   const [posts, setPosts] = useState<PostRead[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "done">("idle");
   const cursorRef = useRef<string | undefined>(undefined);
@@ -116,7 +125,7 @@ export function PostFeed({ fetcher, feedKey }: PostFeedProps) {
   if (status === "done" && posts.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 py-20 text-center">
-        <p className="text-sm font-medium text-zinc-300">Nothing here yet.</p>
+        <p className="text-sm font-semibold text-[#1c2018]">Nothing here yet.</p>
         <p className="text-xs text-[#a99b82]">
           Follow people or be the first to post.
         </p>
@@ -127,7 +136,13 @@ export function PostFeed({ fetcher, feedKey }: PostFeedProps) {
   return (
     <div className="flex flex-col">
       {posts.map((post) => (
-        <PostCard key={post.id} post={post} />
+        <PostCard
+          key={post.id}
+          post={post}
+          viewer={viewer}
+          onAuthRequired={onAuthRequired}
+          detailBasePath={detailBasePath}
+        />
       ))}
 
       {/* Pagination sentinel */}

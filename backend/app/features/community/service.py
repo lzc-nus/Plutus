@@ -74,14 +74,34 @@ def list_global_posts(
     return list(db.exec(stmt).all())
 
 
+def list_user_posts(
+    db: Session,
+    *,
+    user_id: uuid.UUID,
+    limit: int = 20,
+    before: datetime.datetime | None = None,
+) -> list[Post]:
+    """Posts authored by one user, newest-first."""
+    stmt = select(Post).where(Post.author_id == user_id)
+    if before is not None:
+        stmt = stmt.where(Post.created_at < before)  # type: ignore[attr-defined]
+    stmt = stmt.order_by(Post.created_at.desc()).limit(limit)  # type: ignore[attr-defined]
+    return list(db.exec(stmt).all())
+
+
 def read_post_for_user(
     db: Session,
     *,
     post: Post,
-    current_user_id: uuid.UUID,
+    current_user_id: uuid.UUID | None,
 ) -> PostRead:
     """Return a post response annotated with the current user's interaction state."""
     post_read = PostRead.model_validate(post, from_attributes=True)
+    if current_user_id is None:
+        post_read.is_liked_by_me = False
+        post_read.is_saved_by_me = False
+        return post_read
+
     post_read.is_liked_by_me = (
         db.exec(
             select(PostLike).where(
@@ -107,11 +127,20 @@ def read_posts_for_user(
     db: Session,
     *,
     posts: list[Post],
-    current_user_id: uuid.UUID,
+    current_user_id: uuid.UUID | None,
 ) -> list[PostRead]:
     """Return post responses annotated with current-user like/save state in batches."""
     if not posts:
         return []
+
+    if current_user_id is None:
+        post_reads: list[PostRead] = []
+        for post in posts:
+            post_read = PostRead.model_validate(post, from_attributes=True)
+            post_read.is_liked_by_me = False
+            post_read.is_saved_by_me = False
+            post_reads.append(post_read)
+        return post_reads
 
     post_ids = [post.id for post in posts]
     liked_ids = set(
@@ -529,7 +558,7 @@ def share_post(
     *,
     user_id: uuid.UUID,
     post_id: uuid.UUID,
-    base_url: str,
+    frontend_origin: str,
 ) -> tuple[PostShare, str] | None:
     """Records the share event, increments share_count, and returns the share URL."""
     post = db.get(Post, post_id)
@@ -543,7 +572,7 @@ def share_post(
     db.commit()
     db.refresh(share)
 
-    share_url = f"{base_url}/posts/{post_id}"
+    share_url = f"{frontend_origin}/community/posts/{post_id}"
     return share, share_url
 
 
@@ -555,7 +584,7 @@ def share_comment(
     user_id: uuid.UUID,
     post_id: uuid.UUID,
     comment_id: uuid.UUID,
-    base_url: str,
+    frontend_origin: str,
 ) -> tuple[CommentShare, str] | None:
     """Records the share event, increments share_count, and returns the share URL."""
     comment = _get_post_comment(db, post_id=post_id, comment_id=comment_id)
@@ -569,7 +598,7 @@ def share_comment(
     db.commit()
     db.refresh(share)
 
-    share_url = f"{base_url}/posts/{comment.post_id}?comment={comment_id}"
+    share_url = f"{frontend_origin}/community/posts/{comment.post_id}?comment={comment_id}"
     return share, share_url
 
 

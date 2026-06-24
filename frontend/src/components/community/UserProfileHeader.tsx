@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getFollowers, getFollowing } from "@/lib/api/community";
-import { FollowButton } from "@/components/dashboard/community/FollowButton";
+import { FollowButton } from "@/components/community/FollowButton";
 
 interface UserProfileHeaderProps {
   userId: string;

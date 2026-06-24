@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import type { UserRead } from "@/lib/api/generated";
 import { dashboardTips } from "@/data/dashboardTips";
-import { MarketSnapshot } from "@/components/dashboard/community/MarketSnapshot";
+import { MarketSnapshot } from "@/components/community/MarketSnapshot";
 
 const TIP_ROTATION_INTERVAL_MS = 60_000;
 
@@ -45,19 +46,34 @@ function DashboardTip() {
   );
 }
 
-export function RightPanel() {
+interface RightPanelProps {
+  viewer?: UserRead | null;
+  onAuthRequired?: (action: string) => void;
+}
+
+export function RightPanel({ viewer = null, onAuthRequired }: RightPanelProps) {
   return (
     <aside className="hidden w-[420px] shrink-0 xl:block">
       <div className="sticky top-0 flex flex-col gap-3 px-5 py-5">
 
         {/* Saved posts link */}
-        <Link
-          href="/dashboard/community/saved"
-          className="flex items-center gap-3 rounded-xl border border-[#d7c6a3]/40 bg-white/60 px-4 py-3 text-sm font-medium text-[#6b6252] transition-colors hover:border-[#d8bd75]/40 hover:bg-white hover:text-[#1c2018]"
-        >
-          <BookmarkIcon />
-          Saved posts
-        </Link>
+        {viewer ? (
+          <Link
+            href="/dashboard/community/saved"
+            className="flex items-center gap-3 rounded-xl border border-[#d7c6a3]/40 bg-white/60 px-4 py-3 text-sm font-medium text-[#6b6252] transition-colors hover:border-[#d8bd75]/40 hover:bg-white hover:text-[#1c2018]"
+          >
+            <BookmarkIcon />
+            Saved posts
+          </Link>
+        ) : (
+          <button
+            onClick={() => onAuthRequired?.("save posts")}
+            className="flex items-center gap-3 rounded-xl border border-[#d7c6a3]/40 bg-white/60 px-4 py-3 text-left text-sm font-medium text-[#6b6252] transition-colors hover:border-[#d8bd75]/40 hover:bg-white hover:text-[#1c2018]"
+          >
+            <BookmarkIcon />
+            Saved posts
+          </button>
+        )}
 
         {/* Market snapshot */}
         <MarketSnapshot />

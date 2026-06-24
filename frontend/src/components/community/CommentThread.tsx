@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { CommentRead } from "@/lib/api/generated";
+import type { CommentRead, UserRead } from "@/lib/api/generated";
 import {
   deleteComment,
   likeComment,
@@ -9,10 +9,10 @@ import {
   shareComment,
   updateComment,
 } from "@/lib/api/community";
-import { ContentBlockRenderer } from "@/components/dashboard/community/ContentBlockRenderer";
-import { ContentBlockEditor } from "@/components/dashboard/community/ContentBlockEditor";
-import { ShareModal } from "@/components/dashboard/community/ShareModal";
-import { UserAvatar } from "@/components/dashboard/community/UserAvatar";
+import { ContentBlockRenderer } from "@/components/community/ContentBlockRenderer";
+import { ContentBlockEditor } from "@/components/community/ContentBlockEditor";
+import { ShareModal } from "@/components/community/ShareModal";
+import { UserAvatar } from "@/components/community/UserAvatar";
 import type { ContentBlock } from "@/lib/validations/community";
 
 // ── CommentThread ─────────────────────────────────────────────────────────────
@@ -21,6 +21,8 @@ interface CommentThreadProps {
   postId: string;
   comments: CommentRead[];
   status: "loading" | "ready" | "error";
+  viewer: UserRead | null;
+  onAuthRequired?: (action: string) => void;
   onDeleted: (commentId: string) => void;
 }
 
@@ -28,23 +30,26 @@ export function CommentThread({
   postId,
   comments,
   status,
+  viewer,
+  onAuthRequired,
   onDeleted,
 }: CommentThreadProps) {
-  const [localComments, setLocalComments] = useState<CommentRead[]>(comments);
-
-  // Sync when parent pushes new comments (e.g. after CommentComposer creates one)
-  if (comments !== localComments && comments.length !== localComments.length) {
-    setLocalComments(comments);
-  }
+  const [commentOverrides, setCommentOverrides] = useState<Record<string, CommentRead>>({});
+  const [deletedCommentIds, setDeletedCommentIds] = useState<Set<string>>(() => new Set());
+  const visibleComments = comments
+    .map((comment) => commentOverrides[comment.id] ?? comment)
+    .filter((comment) => !deletedCommentIds.has(comment.id));
 
   function handleCommentUpdate(updated: CommentRead) {
-    setLocalComments((prev) =>
-      prev.map((c) => (c.id === updated.id ? updated : c)),
-    );
+    setCommentOverrides((prev) => ({ ...prev, [updated.id]: updated }));
   }
 
   function handleCommentDelete(commentId: string) {
-    setLocalComments((prev) => prev.filter((c) => c.id !== commentId));
+    setDeletedCommentIds((prev) => {
+      const next = new Set(prev);
+      next.add(commentId);
+      return next;
+    });
     onDeleted(commentId);
   }
 
@@ -68,7 +73,7 @@ export function CommentThread({
     );
   }
 
-  if (localComments.length === 0) {
+  if (visibleComments.length === 0) {
     return (
       <p className="px-4 py-8 text-center text-sm text-[#a99b82]">
         No comments yet. Be the first.
@@ -78,11 +83,13 @@ export function CommentThread({
 
   return (
     <div className="flex flex-col">
-      {localComments.map((comment) => (
+      {visibleComments.map((comment) => (
         <CommentCard
           key={comment.id}
           postId={postId}
           comment={comment}
+          viewer={viewer}
+          onAuthRequired={onAuthRequired}
           onUpdate={handleCommentUpdate}
           onDelete={handleCommentDelete}
         />
@@ -96,17 +103,27 @@ export function CommentThread({
 interface CommentCardProps {
   postId: string;
   comment: CommentRead;
+  viewer: UserRead | null;
+  onAuthRequired?: (action: string) => void;
   onUpdate: (updated: CommentRead) => void;
   onDelete: (commentId: string) => void;
 }
 
-function CommentCard({ postId, comment, onUpdate, onDelete }: CommentCardProps) {
+function CommentCard({
+  postId,
+  comment,
+  viewer,
+  onAuthRequired,
+  onUpdate,
+  onDelete,
+}: CommentCardProps) {
   const [editing, setEditing] = useState(false);
   const [editBlocks, setEditBlocks] = useState<ContentBlock[]>(
     comment.content_blocks as ContentBlock[],
   );
   const [editStatus, setEditStatus] = useState<"idle" | "saving" | "error">("idle");
   const [deleteStatus, setDeleteStatus] = useState<"idle" | "confirming" | "deleting">("idle");
+  const canManage = viewer?.id === comment.author_id;
 
   // ── Edit ────────────────────────────────────────────────────────────────────
 
@@ -156,6 +173,7 @@ function CommentCard({ postId, comment, onUpdate, onDelete }: CommentCardProps) 
       {/* Author row */}
       <div className="mb-2 flex items-center justify-between gap-2">
         <UserAvatar userId={comment.author_id} size="sm" />
+        {canManage && (
         <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
           {/* Edit button */}
           {!editing && (
@@ -187,6 +205,7 @@ function CommentCard({ postId, comment, onUpdate, onDelete }: CommentCardProps) 
             )}
           </button>
         </div>
+        )}
       </div>
 
       {/* Content — edit mode or read mode */}
@@ -236,6 +255,8 @@ function CommentCard({ postId, comment, onUpdate, onDelete }: CommentCardProps) 
           <CommentActionBar
             postId={postId}
             comment={comment}
+            viewer={viewer}
+            onAuthRequired={onAuthRequired}
             onUpdate={onUpdate}
           />
         </div>
@@ -249,15 +270,28 @@ function CommentCard({ postId, comment, onUpdate, onDelete }: CommentCardProps) 
 interface CommentActionBarProps {
   postId: string;
   comment: CommentRead;
+  viewer: UserRead | null;
+  onAuthRequired?: (action: string) => void;
   onUpdate: (updated: CommentRead) => void;
 }
 
-function CommentActionBar({ postId, comment, onUpdate }: CommentActionBarProps) {
+function CommentActionBar({
+  postId,
+  comment,
+  viewer,
+  onAuthRequired,
+  onUpdate,
+}: CommentActionBarProps) {
   const [liked, setLiked] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
 
   async function handleLike() {
+    if (!viewer) {
+      onAuthRequired?.("like comments");
+      return;
+    }
+
     const wasLiked = liked;
     setLiked(!wasLiked);
     onUpdate({
@@ -278,6 +312,11 @@ function CommentActionBar({ postId, comment, onUpdate }: CommentActionBarProps) 
   }
 
   async function handleShare() {
+    if (!viewer) {
+      onAuthRequired?.("share comments");
+      return;
+    }
+
     try {
       const res = await shareComment(postId, comment.id);
       if (res.data) {

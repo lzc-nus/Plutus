@@ -2,24 +2,35 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { PostRead } from "@/lib/api/generated";
-import { ContentBlockRenderer } from "@/components/dashboard/community/ContentBlockRenderer";
-import { PostActionBar } from "@/components/dashboard/community/PostActionBar";
-import { UserAvatar } from "@/components/dashboard/community/UserAvatar";
+import { useRouter } from "next/navigation";
+import type { PostRead, UserRead } from "@/lib/api/generated";
+import { ContentBlockRenderer } from "@/components/community/ContentBlockRenderer";
+import { PostActionBar } from "@/components/community/PostActionBar";
+import { UserAvatar } from "@/components/community/UserAvatar";
 import type { ContentBlock } from "@/lib/validations/community";
 
 interface PostCardProps {
   post: PostRead;
+  viewer: UserRead | null;
+  onAuthRequired?: (action: string) => void;
+  detailBasePath?: string;
   /** Hides the link-to-detail behaviour — used when already on PostDetail. */
   disableNavigation?: boolean;
 }
 
-export function PostCard({ post: initialPost, disableNavigation = false }: PostCardProps) {
+export function PostCard({
+  post: initialPost,
+  viewer,
+  onAuthRequired,
+  detailBasePath = "/community/posts",
+  disableNavigation = false,
+}: PostCardProps) {
+  const router = useRouter();
   // PostCard owns its own post copy so PostActionBar optimistic updates
   // stay local without requiring a parent refetch.
   const [post, setPost] = useState<PostRead>(initialPost);
 
-  const postUrl = `/dashboard/community/posts/${post.id}`;
+  const postUrl = `${detailBasePath}/${post.id}`;
 
   return (
     <article className="border-b border-[#d7c6a3]/30 px-4 py-4 transition-colors hover:bg-[#f0e8d8]/60">
@@ -50,7 +61,13 @@ export function PostCard({ post: initialPost, disableNavigation = false }: PostC
       )}
 
       {/* Action bar */}
-      <PostActionBar post={post} onUpdate={setPost} />
+      <PostActionBar
+        post={post}
+        viewer={viewer}
+        onAuthRequired={onAuthRequired}
+        onUpdate={setPost}
+        onCommentClick={() => router.push(postUrl)}
+      />
     </article>
   );
 }

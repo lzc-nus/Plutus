@@ -5,15 +5,19 @@ import { useParams, useRouter } from "next/navigation";
 import type { FollowRead, UserPublicRead } from "@/lib/api/generated";
 import { getFollowing } from "@/lib/api/community";
 import { getUserById } from "@/lib/api/users";
-import { FollowButton } from "@/components/dashboard/community/FollowButton";
+import { FollowButton } from "@/components/community/FollowButton";
+import { AuthRequiredDialog } from "@/components/community/AuthRequiredDialog";
+import { useOptionalViewer } from "@/lib/hooks/useOptionalViewer";
 import Link from "next/link";
 
 export default function FollowingPage() {
   const { userId } = useParams<{ userId: string }>();
   const router = useRouter();
+  const { viewer } = useOptionalViewer();
 
   const [follows, setFollows] = useState<FollowRead[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [authAction, setAuthAction] = useState<string | null>(null);
 
   useEffect(() => {
     getFollowing(userId)
@@ -66,9 +70,17 @@ export default function FollowingPage() {
             <UserRow
               key={follow.followee_id}
               userId={follow.followee_id}
+              viewer={viewer}
+              onAuthRequired={setAuthAction}
             />
           ))}
         </div>
+      )}
+      {authAction && (
+        <AuthRequiredDialog
+          action={authAction}
+          onClose={() => setAuthAction(null)}
+        />
       )}
     </div>
   );
@@ -76,7 +88,15 @@ export default function FollowingPage() {
 
 // ── UserRow ───────────────────────────────────────────────────────────────────
 
-function UserRow({ userId }: { userId: string }) {
+function UserRow({
+  userId,
+  viewer,
+  onAuthRequired,
+}: {
+  userId: string;
+  viewer: ReturnType<typeof useOptionalViewer>["viewer"];
+  onAuthRequired: (action: string) => void;
+}) {
   const [user, setUser] = useState<UserPublicRead | null>(null);
 
   useEffect(() => {
@@ -124,7 +144,11 @@ function UserRow({ userId }: { userId: string }) {
       </Link>
 
       <div className="ml-3 shrink-0">
-        <FollowButton userId={userId} />
+        <FollowButton
+          userId={userId}
+          viewer={viewer}
+          onAuthRequired={onAuthRequired}
+        />
       </div>
     </div>
   );

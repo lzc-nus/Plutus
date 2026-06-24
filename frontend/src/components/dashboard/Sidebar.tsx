@@ -2,15 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Great_Vibes } from "next/font/google";
 import { useSyncExternalStore, type ReactNode } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
-
-const logoFont = Great_Vibes({
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-});
 
 const STORAGE_KEY = "plutus_sidebar_collapsed";
 
@@ -244,7 +237,7 @@ export default function Sidebar() {
               className="flex min-w-0 flex-1 items-center"
             >
               <span className="grid min-w-0 leading-none">
-                <span className={`${logoFont.className} truncate text-4xl text-[#f2d88a]`}>
+                <span className="brand-script truncate text-4xl text-[#f2d88a]">
                   Plutus
                 </span>
                 <span className="truncate text-[0.64rem] font-semibold uppercase tracking-[0.22em] text-[#a99b82]">

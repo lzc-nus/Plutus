@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import type { UserRead } from "@/lib/api/generated";
 import { followUser, unfollowUser } from "@/lib/api/community";
 
 interface FollowButtonProps {
   userId: string;
+  viewer?: UserRead | null;
+  onAuthRequired?: (action: string) => void;
   /** Initial follow state — pass true if the current user already follows this user. */
   initialFollowing?: boolean;
   onToggle?: (following: boolean) => void;
@@ -12,6 +15,8 @@ interface FollowButtonProps {
 
 export function FollowButton({
   userId,
+  viewer,
+  onAuthRequired,
   initialFollowing = false,
   onToggle,
 }: FollowButtonProps) {
@@ -21,6 +26,11 @@ export function FollowButton({
 
   async function handleToggle() {
     if (status === "loading") return;
+    if (!viewer) {
+      onAuthRequired?.("follow people");
+      return;
+    }
+
     const wasFollowing = following;
     setFollowing(!wasFollowing);
     setStatus("loading");

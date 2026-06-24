@@ -79,9 +79,12 @@ export default function PasswordValidator({ value }: PasswordValidatorProps) {
           return (
             <li
               key={check.id}
-              className={passed ? "text-[#9fcd9a]" : "text-[#8a8173]"}
+              className={`flex items-center gap-2 ${passed ? "text-[#9fcd9a]" : "text-[#8a8173]"}`}
             >
-              <span className="mr-2 font-bold">{passed ? "✓" : "•"}</span>
+              <span
+                aria-hidden="true"
+                className={`h-2 w-2 rounded-full ${passed ? "bg-[#9fcd9a]" : "bg-[#5b554d]"}`}
+              />
               {check.label}
             </li>
           );

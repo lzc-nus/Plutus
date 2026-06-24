@@ -145,7 +145,6 @@ def update_current_user_password(
 )
 def read_user_by_id(
     user_id: uuid.UUID,
-    current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> UserPublicRead:
     """Return any user's public profile by ID."""

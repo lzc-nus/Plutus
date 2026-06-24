@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { PostRead } from "@/lib/api/generated";
+import type { PostRead, UserRead } from "@/lib/api/generated";
 import { getSavedPosts, unsavePost } from "@/lib/api/community";
-import { PostCard } from "@/components/dashboard/community/PostCard";
+import { PostCard } from "@/components/community/PostCard";
 
-export function SavedPostsGrid() {
+interface SavedPostsGridProps {
+  viewer: UserRead | null;
+}
+
+export function SavedPostsGrid({ viewer }: SavedPostsGridProps) {
   const [posts, setPosts] = useState<PostRead[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
@@ -77,6 +81,7 @@ export function SavedPostsGrid() {
         <SavedPostRow
           key={post.id}
           post={post}
+          viewer={viewer}
           onUnsave={() => handleUnsave(post.id)}
         />
       ))}
@@ -88,16 +93,22 @@ export function SavedPostsGrid() {
 
 function SavedPostRow({
   post,
+  viewer,
   onUnsave,
 }: {
   post: PostRead;
+  viewer: UserRead | null;
   onUnsave: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
 
   return (
     <div className="group relative">
-      <PostCard post={post} />
+      <PostCard
+        post={post}
+        viewer={viewer}
+        detailBasePath="/dashboard/community/posts"
+      />
       {/* Unsave button — appears on hover */}
       <div className="absolute right-4 top-4 opacity-0 transition-opacity group-hover:opacity-100">
         {confirming ? (

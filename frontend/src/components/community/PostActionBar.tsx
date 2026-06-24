@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { PostRead } from "@/lib/api/generated";
+import type { PostRead, UserRead } from "@/lib/api/generated";
 import {
   likePost,
   unlikePost,
@@ -10,11 +10,13 @@ import {
   sharePost,
   repostPost,
 } from "@/lib/api/community";
-import { RepostComposer } from "@/components/dashboard/community/RepostComposer";
-import { ShareModal } from "@/components/dashboard/community/ShareModal";
+import { RepostComposer } from "@/components/community/RepostComposer";
+import { ShareModal } from "@/components/community/ShareModal";
 
 interface PostActionBarProps {
   post: PostRead;
+  viewer: UserRead | null;
+  onAuthRequired?: (action: string) => void;
   onUpdate: (updated: PostRead) => void;
   /** When true, shows full count labels. Used in PostDetail. */
   expanded?: boolean;
@@ -26,7 +28,14 @@ interface PostActionBarProps {
   onCommentClick?: () => void;
 }
 
-export function PostActionBar({ post, onUpdate, expanded = false, onCommentClick }: PostActionBarProps) {
+export function PostActionBar({
+  post,
+  viewer,
+  onAuthRequired,
+  onUpdate,
+  expanded = false,
+  onCommentClick,
+}: PostActionBarProps) {
   const [liked, setLiked] = useState(post.is_liked_by_me ?? false);
   const [saved, setSaved] = useState(post.is_saved_by_me ?? false);
   const [repostOpen, setRepostOpen] = useState(false);
@@ -36,6 +45,11 @@ export function PostActionBar({ post, onUpdate, expanded = false, onCommentClick
   // ── Like ────────────────────────────────────────────────────────────────────
 
   async function handleLike() {
+    if (!viewer) {
+      onAuthRequired?.("like posts");
+      return;
+    }
+
     // Optimistic toggle
     const wasLiked = liked;
     setLiked(!wasLiked);
@@ -62,6 +76,11 @@ export function PostActionBar({ post, onUpdate, expanded = false, onCommentClick
   // ── Save ────────────────────────────────────────────────────────────────────
 
   async function handleSave() {
+    if (!viewer) {
+      onAuthRequired?.("save posts");
+      return;
+    }
+
     const wasSaved = saved;
     setSaved(!wasSaved);
     onUpdate({
@@ -86,6 +105,11 @@ export function PostActionBar({ post, onUpdate, expanded = false, onCommentClick
   // ── Share ───────────────────────────────────────────────────────────────────
 
   async function handleShare() {
+    if (!viewer) {
+      onAuthRequired?.("share posts");
+      return;
+    }
+
     try {
       const res = await sharePost(post.id);
       if (res.data) {
@@ -101,6 +125,11 @@ export function PostActionBar({ post, onUpdate, expanded = false, onCommentClick
   // ── Repost (simple, no composer) ────────────────────────────────────────────
 
   async function handleSimpleRepost() {
+    if (!viewer) {
+      onAuthRequired?.("repost");
+      return;
+    }
+
     try {
       await repostPost(post.id, { content_blocks: [] });
       onUpdate({ ...post, repost_count: post.repost_count + 1 });
@@ -121,7 +150,13 @@ export function PostActionBar({ post, onUpdate, expanded = false, onCommentClick
           count={post.comment_count}
           label="comments"
           expanded={expanded}
-          onClick={() => { onCommentClick?.(); }}
+          onClick={() => {
+            if (!viewer) {
+              onAuthRequired?.("comment");
+              return;
+            }
+            onCommentClick?.();
+          }}
           activeColor="text-sky-400"
         />
 
@@ -133,7 +168,13 @@ export function PostActionBar({ post, onUpdate, expanded = false, onCommentClick
             label="reposts"
             expanded={expanded}
             onClick={handleSimpleRepost}
-            onAltClick={() => setRepostOpen(true)}
+            onAltClick={() => {
+              if (!viewer) {
+                onAuthRequired?.("repost");
+                return;
+              }
+              setRepostOpen(true);
+            }}
             activeColor="text-emerald-400"
             title="Repost · Hold for quote repost"
           />

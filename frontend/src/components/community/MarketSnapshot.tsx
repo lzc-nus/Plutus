@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getMarketSnapshot, getCandles, type QuoteResult } from "@/lib/api/market";
-import { SparklineChart } from "@/components/dashboard/community/SparklineChart";
+import { SparklineChart } from "@/components/community/SparklineChart";
 
 const DEFAULT_SYMBOLS = ["SPY", "QQQ", "BTC-USD", "ETH-USD", "GLD"];
 const STORAGE_KEY = "plutus_watchlist";
@@ -10,7 +10,7 @@ const STORAGE_KEY = "plutus_watchlist";
 function loadWatchlist(): string[] {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : DEFAULT_SYMBOLS;
+    return normalizeWatchlist(stored ? JSON.parse(stored) : DEFAULT_SYMBOLS);
   } catch {
     return DEFAULT_SYMBOLS;
   }
@@ -37,10 +37,9 @@ export function MarketSnapshot() {
 
   const loadQuotes = useCallback(async (symbols: string[]) => {
     try {
-      const data = await getMarketSnapshot();
+      const data = await getMarketSnapshot(symbols);
       if (!mountedRef.current) return;
-      // Filter to only symbols in the current watchlist
-      setQuotes(data.filter((q) => symbols.includes(q.symbol)));
+      setQuotes(data);
       setLastUpdated(new Date());
       setStatus("ready");
     } catch {
@@ -84,7 +83,7 @@ export function MarketSnapshot() {
   }
 
   function handleAddSymbol() {
-    const symbol = addInput.trim().toUpperCase();
+    const symbol = normalizeSymbol(addInput);
     if (!symbol) return;
     if (watchlist.includes(symbol)) {
       setAddError("Already in watchlist.");
@@ -186,7 +185,7 @@ export function MarketSnapshot() {
           <p className="mt-1 text-[10px] text-rose-500">{addError}</p>
         )}
         <p className="mt-2 text-[10px] text-[#a99b82]">
-          Prices delayed · Yahoo Finance
+          Prices delayed by Yahoo Finance
         </p>
       </div>
     </div>
@@ -232,7 +231,7 @@ function QuoteRow({
           "text-[11px] font-medium tabular-nums",
           positive ? "text-emerald-600" : "text-rose-500",
         ].join(" ")}>
-          {positive ? "▲" : "▼"} {Math.abs(quote.changePercent).toFixed(2)}%
+          {positive ? "+" : "-"}{Math.abs(quote.changePercent).toFixed(2)}%
         </p>
       </div>
 
@@ -307,5 +306,22 @@ function formatPrice(price: number): string {
 }
 
 function truncateName(name: string): string {
-  return name.length > 18 ? name.slice(0, 18) + "…" : name;
+  return name.length > 18 ? `${name.slice(0, 18)}...` : name;
+}
+
+function normalizeSymbol(value: string): string {
+  return value.trim().toUpperCase().replace(/[^A-Z0-9._=\-]/g, "");
+}
+
+function normalizeWatchlist(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return DEFAULT_SYMBOLS;
+  }
+
+  const symbols = value
+    .map((item) => normalizeSymbol(String(item)))
+    .filter(Boolean);
+
+  const uniqueSymbols = Array.from(new Set(symbols)).slice(0, 10);
+  return uniqueSymbols.length > 0 ? uniqueSymbols : DEFAULT_SYMBOLS;
 }

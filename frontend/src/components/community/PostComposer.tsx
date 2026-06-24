@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { PostRead } from "@/lib/api/generated";
 import { createPost } from "@/lib/api/community";
-import { ContentBlockEditor } from "@/components/dashboard/community/ContentBlockEditor";
+import { ContentBlockEditor } from "@/components/community/ContentBlockEditor";
 import type { ContentBlock } from "@/lib/validations/community";
 
 interface PostComposerProps {

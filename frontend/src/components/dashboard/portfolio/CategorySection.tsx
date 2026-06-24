@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import type { AssetRead, LiabilityRead } from "@/lib/api/generated";
 
 const CURRENCY = new Intl.NumberFormat("en-US", {
@@ -21,6 +21,127 @@ const LIQUIDITY_STYLES: Record<string, string> = {
   medium: "text-[#854f0b]",
   low: "text-[#993c1d]",
 };
+
+const CATEGORY_ICON_PATHS: Record<string, ReactNode> = {
+  "ti-trending-up": (
+    <>
+      <path d="M3 17l6-6 4 4 7-8" />
+      <path d="M14 7h6v6" />
+    </>
+  ),
+  "ti-file-invoice": (
+    <>
+      <path d="M7 3h7l5 5v13H7z" />
+      <path d="M14 3v5h5" />
+      <path d="M10 12h6M10 16h4" />
+    </>
+  ),
+  "ti-building-estate": (
+    <>
+      <path d="M4 21h16" />
+      <path d="M6 21V8l6-4 6 4v13" />
+      <path d="M9 21v-6h6v6" />
+      <path d="M9 10h.01M15 10h.01" />
+    </>
+  ),
+  "ti-cash": (
+    <>
+      <rect x="3" y="7" width="18" height="10" rx="2" />
+      <circle cx="12" cy="12" r="2" />
+      <path d="M6 10v4M18 10v4" />
+    </>
+  ),
+  "ti-currency-bitcoin": (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M10 8h3a2 2 0 0 1 0 4h-3z" />
+      <path d="M10 12h4a2 2 0 0 1 0 4h-4z" />
+      <path d="M10 6v12M14 6v2M14 16v2" />
+    </>
+  ),
+  "ti-tools": (
+    <>
+      <path d="M14 7l3-3 3 3-3 3z" />
+      <path d="M5 19l8-8" />
+      <path d="M3 7l4-4 4 4-4 4z" />
+      <path d="M13 13l6 6" />
+    </>
+  ),
+  "ti-briefcase": (
+    <>
+      <rect x="3" y="7" width="18" height="12" rx="2" />
+      <path d="M9 7V5h6v2M3 12h18" />
+    </>
+  ),
+  "ti-home": (
+    <>
+      <path d="M4 11l8-7 8 7" />
+      <path d="M6 10v10h12V10" />
+      <path d="M10 20v-6h4v6" />
+    </>
+  ),
+  "ti-car": (
+    <>
+      <path d="M5 12l2-5h10l2 5" />
+      <rect x="4" y="12" width="16" height="6" rx="2" />
+      <path d="M7 18v2M17 18v2" />
+      <path d="M7 15h.01M17 15h.01" />
+    </>
+  ),
+  "ti-school": (
+    <>
+      <path d="M3 9l9-5 9 5-9 5z" />
+      <path d="M7 12v5c3 2 7 2 10 0v-5" />
+      <path d="M21 9v6" />
+    </>
+  ),
+  "ti-credit-card": (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3 10h18M7 15h4" />
+    </>
+  ),
+  "ti-user": (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M5 21a7 7 0 0 1 14 0" />
+    </>
+  ),
+  "ti-receipt-tax": (
+    <>
+      <path d="M6 3h12v18l-2-1-2 1-2-1-2 1-2-1-2 1z" />
+      <path d="M9 8h6M9 12h6M10 16l4-8" />
+    </>
+  ),
+  "ti-dots": (
+    <>
+      <circle cx="5" cy="12" r="1" />
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+    </>
+  ),
+};
+
+function CategoryIcon({ name }: { name: string }) {
+  return (
+    <span
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#e4dece] bg-[#f4ede0] text-[#7a6332]"
+      aria-hidden="true"
+    >
+      <svg
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.8}
+        viewBox="0 0 24 24"
+      >
+        {CATEGORY_ICON_PATHS[name] ?? CATEGORY_ICON_PATHS["ti-dots"]}
+      </svg>
+    </span>
+  );
+}
 
 // ── Shared row action buttons ─────────────────────────────────────────────
 function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
@@ -169,9 +290,7 @@ function CategoryShell({
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center gap-3 p-5 text-left transition-colors hover:bg-[#f4ede0]"
       >
-        <span className="text-lg" aria-hidden>
-          {icon}
-        </span>
+        <CategoryIcon name={icon} />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-[#1d211c]">{label}</p>
           <p className="text-xs text-[#9a8f7a]">{count} {count === 1 ? "item" : "items"}</p>
