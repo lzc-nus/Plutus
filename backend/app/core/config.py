@@ -3,8 +3,9 @@ from __future__ import annotations
 import ast
 from functools import lru_cache
 from typing import Literal
+from urllib.parse import urlparse
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -37,6 +38,21 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
     ]
 
+    @staticmethod
+    def _normalize_origin(value: str, field_name: str) -> str:
+        origin = value.strip().rstrip("/")
+        parsed = urlparse(origin)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            raise ValueError(f"{field_name} must be a full http(s) origin.")
+        if parsed.path or parsed.params or parsed.query or parsed.fragment:
+            raise ValueError(f"{field_name} must not include a path, query, or fragment.")
+        return origin
+
+    @staticmethod
+    def _is_loopback_origin(origin: str) -> bool:
+        hostname = urlparse(origin).hostname
+        return hostname in {"localhost", "127.0.0.1", "::1"}
+
     @property
     def resolved_auth_cookie_secure(self) -> bool:
         if self.auth_cookie_secure is not None:
@@ -68,10 +84,7 @@ class Settings(BaseSettings):
     @field_validator("frontend_origin")
     @classmethod
     def validate_frontend_origin(cls, value: str) -> str:
-        value = value.strip().rstrip("/")
-        if not value:
-            raise ValueError("FRONTEND_ORIGIN must not be empty.")
-        return value
+        return cls._normalize_origin(value, "FRONTEND_ORIGIN")
 
     @field_validator("allowed_origins", mode="before")
     @classmethod
@@ -93,7 +106,44 @@ class Settings(BaseSettings):
     def validate_allowed_origins(cls, value: list[str]) -> list[str]:
         if not value:
             raise ValueError("ALLOWED_ORIGINS must contain at least one origin.")
-        return value
+        if any(origin.strip() == "*" for origin in value):
+            raise ValueError("ALLOWED_ORIGINS cannot contain '*' when credentials are enabled.")
+
+        normalized: list[str] = []
+        seen: set[str] = set()
+        for origin in value:
+            normalized_origin = cls._normalize_origin(origin, "ALLOWED_ORIGINS")
+            if normalized_origin not in seen:
+                normalized.append(normalized_origin)
+                seen.add(normalized_origin)
+        return normalized
+
+    @model_validator(mode="after")
+    def validate_production_security(self) -> Settings:
+        secure_cookie = self.resolved_auth_cookie_secure
+
+        if self.auth_cookie_samesite == "none" and not secure_cookie:
+            raise ValueError("AUTH_COOKIE_SAMESITE=none requires AUTH_COOKIE_SECURE=true.")
+
+        if self.environment == "production":
+            if not secure_cookie:
+                raise ValueError("Production requires secure auth cookies.")
+            if urlparse(self.frontend_origin).scheme != "https":
+                raise ValueError("Production FRONTEND_ORIGIN must use https.")
+
+            insecure_origins = [
+                origin for origin in self.allowed_origins if urlparse(origin).scheme != "https"
+            ]
+            if insecure_origins:
+                raise ValueError("Production ALLOWED_ORIGINS must all use https.")
+
+            loopback_origins = [
+                origin for origin in self.allowed_origins if self._is_loopback_origin(origin)
+            ]
+            if loopback_origins or self._is_loopback_origin(self.frontend_origin):
+                raise ValueError("Production origins must not use localhost or loopback hosts.")
+
+        return self
 
 
 @lru_cache
