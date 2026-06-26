@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { CommentRead, UserRead } from "@/lib/api/generated";
 import { createComment } from "@/lib/api/community";
 import { ContentBlockEditor } from "@/components/community/ContentBlockEditor";
-import type { ContentBlock } from "@/lib/validations/community";
+import { commentFormSchema, type ContentBlock } from "@/lib/validations/community";
 
 interface CommentComposerProps {
   postId: string;
@@ -22,6 +22,7 @@ export function CommentComposer({
   const [blocks, setBlocks] = useState<ContentBlock[]>([]);
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [expanded, setExpanded] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const textBlock = blocks.find((b) => b.type === "text");
   const textLength = textBlock?.type === "text" ? textBlock.value.length : 0;
@@ -34,9 +35,17 @@ export function CommentComposer({
     }
 
     if (!canSubmit) return;
+
+    const parsed = commentFormSchema.safeParse({ content_blocks: blocks });
+    if (!parsed.success) {
+      setValidationError(parsed.error.issues[0]?.message ?? "Check the comment content.");
+      return;
+    }
+
+    setValidationError(null);
     setStatus("submitting");
     try {
-      const res = await createComment(postId, { content_blocks: blocks });
+      const res = await createComment(postId, parsed.data);
       if (res.data) {
         onCreated(res.data);
         setBlocks([]);
@@ -52,6 +61,7 @@ export function CommentComposer({
     setBlocks([]);
     setExpanded(false);
     setStatus("idle");
+    setValidationError(null);
   }
 
   // ── Collapsed state — single-line prompt ───────────────────────────────────
@@ -79,10 +89,19 @@ export function CommentComposer({
     <div className="flex flex-col gap-3 rounded-xl border border-[#d7c6a3]/50 bg-white px-4 py-3">
       <ContentBlockEditor
         blocks={blocks}
-        onChange={setBlocks}
+        onChange={(nextBlocks) => {
+          setBlocks(nextBlocks);
+          setValidationError(null);
+        }}
         placeholder="Write a comment…"
         autoFocus
       />
+
+      {validationError && (
+        <p className="text-xs text-rose-400">
+          {validationError}
+        </p>
+      )}
 
       {status === "error" && (
         <p className="text-xs text-rose-400">

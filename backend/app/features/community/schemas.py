@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 import uuid
 from typing import Annotated, Any, Literal
+from urllib.parse import urlparse
 
 from pydantic import ConfigDict, field_validator, model_validator
 from sqlmodel import Field, SQLModel
@@ -14,6 +15,22 @@ from sqlmodel import Field, SQLModel
 BlockType = Literal["text", "image", "video", "audio", "gif", "sticker", "link"]
 
 VALID_BLOCK_TYPES: set[str] = {"text", "image", "video", "audio", "gif", "sticker", "link"}
+MAX_BLOCK_URL_LENGTH = 2048
+
+
+def _validate_http_url(value: Any, *, block_index: int, block_type: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"Block {block_index} ({block_type}) must have a non-empty 'url'.")
+
+    url = value.strip()
+    if len(url) > MAX_BLOCK_URL_LENGTH:
+        raise ValueError(f"Block {block_index} ({block_type}) 'url' exceeds 2048 characters.")
+
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ValueError(f"Block {block_index} ({block_type}) 'url' must be a valid http(s) URL.")
+
+    return url
 
 
 def _validate_blocks(blocks: list[Any]) -> list[Any]:
@@ -38,12 +55,10 @@ def _validate_blocks(blocks: list[Any]) -> list[Any]:
             if len(block["value"]) > 5000:
                 raise ValueError(f"Block {i} (text) 'value' exceeds 5000 characters.")
         elif block_type == "link":
-            if not isinstance(block.get("url"), str) or not block["url"].strip():
-                raise ValueError(f"Block {i} (link) must have a non-empty 'url'.")
+            block["url"] = _validate_http_url(block.get("url"), block_index=i, block_type="link")
         else:
             # image, video, audio, gif, sticker — all require a url
-            if not isinstance(block.get("url"), str) or not block["url"].strip():
-                raise ValueError(f"Block {i} ({block_type}) must have a non-empty 'url'.")
+            block["url"] = _validate_http_url(block.get("url"), block_index=i, block_type=block_type)
 
     return blocks
 

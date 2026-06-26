@@ -118,6 +118,20 @@ def test_post_rejects_invalid_block_type(client: TestClient) -> None:
     assert response.status_code == 422
 
 
+def test_post_rejects_non_http_url_block(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="post-author", email="post-author@example.com"
+    )
+
+    response = client.post(
+        "/api/v1/community/posts",
+        headers=_auth_headers(token),
+        json={"content_blocks": [{"type": "link", "url": "javascript:alert(1)"}]},
+    )
+
+    assert response.status_code == 422
+
+
 def test_update_post(client: TestClient) -> None:
     token = _register_and_login(
         client, username="post-author", email="post-author@example.com"
@@ -169,6 +183,54 @@ def test_delete_post(client: TestClient) -> None:
         headers=_auth_headers(token),
     )
     assert get_response.status_code == 404
+
+
+def test_delete_post_with_related_activity(client: TestClient) -> None:
+    author_token = _register_and_login(
+        client, username="post-author", email="post-author@example.com"
+    )
+    actor_token = _register_and_login(
+        client, username="post-actor", email="post-actor@example.com"
+    )
+    post = _create_post(client, author_token)
+    comment = _create_comment(client, actor_token, post_id=str(post["id"]))
+
+    activity_responses = [
+        client.post(
+            f"/api/v1/community/posts/{post['id']}/like",
+            headers=_auth_headers(actor_token),
+        ),
+        client.post(
+            f"/api/v1/community/posts/{post['id']}/save",
+            headers=_auth_headers(actor_token),
+        ),
+        client.post(
+            f"/api/v1/community/posts/{post['id']}/share",
+            headers=_auth_headers(actor_token),
+        ),
+        client.post(
+            f"/api/v1/community/posts/{post['id']}/repost",
+            headers=_auth_headers(actor_token),
+            json={"content_blocks": []},
+        ),
+        client.post(
+            f"/api/v1/community/posts/{post['id']}/comments/{comment['id']}/like",
+            headers=_auth_headers(author_token),
+        ),
+        client.post(
+            f"/api/v1/community/posts/{post['id']}/comments/{comment['id']}/share",
+            headers=_auth_headers(author_token),
+        ),
+    ]
+    assert [response.status_code for response in activity_responses] == [201] * 6
+
+    delete_response = client.delete(
+        f"/api/v1/community/posts/{post['id']}",
+        headers=_auth_headers(author_token),
+    )
+
+    assert delete_response.status_code == 204
+    assert client.get(f"/api/v1/community/posts/{post['id']}").status_code == 404
 
 
 def test_delete_post_by_non_author_returns_404(client: TestClient) -> None:
@@ -358,6 +420,37 @@ def test_delete_comment_decrements_post_comment_count(client: TestClient) -> Non
         headers=_auth_headers(token),
     )
     assert response.json()["comment_count"] == 0
+
+
+def test_delete_comment_with_related_activity(client: TestClient) -> None:
+    author_token = _register_and_login(
+        client, username="comment-author", email="comment-author@example.com"
+    )
+    actor_token = _register_and_login(
+        client, username="comment-actor", email="comment-actor@example.com"
+    )
+    post = _create_post(client, author_token)
+    comment = _create_comment(client, author_token, post_id=post["id"])
+
+    like_response = client.post(
+        f"/api/v1/community/posts/{post['id']}/comments/{comment['id']}/like",
+        headers=_auth_headers(actor_token),
+    )
+    share_response = client.post(
+        f"/api/v1/community/posts/{post['id']}/comments/{comment['id']}/share",
+        headers=_auth_headers(actor_token),
+    )
+    assert like_response.status_code == 201
+    assert share_response.status_code == 201
+
+    delete_response = client.delete(
+        f"/api/v1/community/posts/{post['id']}/comments/{comment['id']}",
+        headers=_auth_headers(author_token),
+    )
+
+    assert delete_response.status_code == 204
+    comments_response = client.get(f"/api/v1/community/posts/{post['id']}/comments")
+    assert comments_response.json() == []
 
 
 def test_update_comment_by_non_author_returns_404(client: TestClient) -> None:

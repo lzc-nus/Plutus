@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { PostRead } from "@/lib/api/generated";
 import { createPost } from "@/lib/api/community";
 import { ContentBlockEditor } from "@/components/community/ContentBlockEditor";
-import type { ContentBlock } from "@/lib/validations/community";
+import { postFormSchema, type ContentBlock } from "@/lib/validations/community";
 
 interface PostComposerProps {
   onClose: () => void;
@@ -14,6 +14,7 @@ interface PostComposerProps {
 export function PostComposer({ onClose, onCreated }: PostComposerProps) {
   const [blocks, setBlocks] = useState<ContentBlock[]>([]);
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
+  const [validationError, setValidationError] = useState<string | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   // Close on Escape
@@ -37,9 +38,17 @@ export function PostComposer({ onClose, onCreated }: PostComposerProps) {
 
   async function handleSubmit() {
     if (!canSubmit) return;
+
+    const parsed = postFormSchema.safeParse({ content_blocks: blocks });
+    if (!parsed.success) {
+      setValidationError(parsed.error.issues[0]?.message ?? "Check the post content.");
+      return;
+    }
+
+    setValidationError(null);
     setStatus("submitting");
     try {
-      const res = await createPost({ content_blocks: blocks });
+      const res = await createPost(parsed.data);
       if (res.data) {
         onCreated(res.data);
         onClose();
@@ -77,13 +86,21 @@ export function PostComposer({ onClose, onCreated }: PostComposerProps) {
         <div className="px-4 py-4">
           <ContentBlockEditor
             blocks={blocks}
-            onChange={setBlocks}
+            onChange={(nextBlocks) => {
+              setBlocks(nextBlocks);
+              setValidationError(null);
+            }}
             placeholder="What's on your mind?"
             autoFocus
           />
         </div>
 
         {/* Error */}
+        {validationError && (
+          <p className="px-4 pb-2 text-xs text-rose-400">
+            {validationError}
+          </p>
+        )}
         {status === "error" && (
           <p className="px-4 pb-2 text-xs text-rose-400">
             Failed to post. Try again.

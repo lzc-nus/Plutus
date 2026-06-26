@@ -58,19 +58,24 @@ export function FollowButton({
     label = "Follow";
   }
 
+  if (viewer?.id === userId) {
+    return null;
+  }
+
   return (
     <button
+      type="button"
       onClick={handleToggle}
       disabled={status === "loading"}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={[
-        "min-w-[96px] rounded-full px-4 py-1.5 text-sm font-medium transition-all",
+        "h-9 min-w-[96px] rounded-md px-4 text-sm font-semibold transition",
         following
           ? hovered
-            ? "border border-rose-500/50 bg-rose-500/10 text-rose-400"
-            : "border border-zinc-600 bg-transparent text-zinc-300"
-          : "bg-emerald-500 text-white hover:bg-emerald-400",
+            ? "border border-rose-300 bg-rose-50 text-rose-600"
+            : "border border-[#d7c6a3]/70 bg-white/70 text-[#6b6252] hover:bg-white"
+          : "bg-[#1c2018] text-[#fbf7ef] hover:bg-[#343a2e]",
         status === "loading" ? "opacity-60" : "",
       ].join(" ")}
     >

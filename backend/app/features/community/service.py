@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 import uuid
 
-from sqlalchemy import func
+from sqlalchemy import delete as sqlalchemy_delete
 from sqlmodel import Session, select
 
 from app.features.community.models import (
@@ -215,6 +215,28 @@ def delete_post(
     post = _get_author_post(db, post_id=post_id, author_id=author_id)
     if not post:
         return False
+
+    comment_ids = list(
+        db.exec(select(Comment.id).where(Comment.post_id == post_id)).all()
+    )
+    if comment_ids:
+        db.exec(
+            sqlalchemy_delete(CommentLike).where(
+                CommentLike.comment_id.in_(comment_ids)  # type: ignore[attr-defined]
+            )
+        )
+        db.exec(
+            sqlalchemy_delete(CommentShare).where(
+                CommentShare.comment_id.in_(comment_ids)  # type: ignore[attr-defined]
+            )
+        )
+        db.exec(sqlalchemy_delete(Comment).where(Comment.post_id == post_id))
+
+    db.exec(sqlalchemy_delete(Repost).where(Repost.original_post_id == post_id))
+    db.exec(sqlalchemy_delete(PostLike).where(PostLike.post_id == post_id))
+    db.exec(sqlalchemy_delete(PostSave).where(PostSave.post_id == post_id))
+    db.exec(sqlalchemy_delete(PostShare).where(PostShare.post_id == post_id))
+
     db.delete(post)
     db.commit()
     return True
@@ -310,6 +332,8 @@ def delete_comment(
         return False
 
     post = db.get(Post, comment.post_id)
+    db.exec(sqlalchemy_delete(CommentLike).where(CommentLike.comment_id == comment_id))
+    db.exec(sqlalchemy_delete(CommentShare).where(CommentShare.comment_id == comment_id))
     db.delete(comment)
     if post and post.comment_count > 0:
         post.comment_count -= 1

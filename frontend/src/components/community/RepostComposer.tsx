@@ -6,7 +6,7 @@ import { repostPost } from "@/lib/api/community";
 import { ContentBlockEditor } from "@/components/community/ContentBlockEditor";
 import { ContentBlockRenderer } from "@/components/community/ContentBlockRenderer";
 import { UserAvatar } from "@/components/community/UserAvatar";
-import type { ContentBlock } from "@/lib/validations/community";
+import { repostFormSchema, type ContentBlock } from "@/lib/validations/community";
 
 interface RepostComposerProps {
   post: PostRead;
@@ -20,6 +20,7 @@ export function RepostComposer({ post, onClose, onReposted }: RepostComposerProp
   const [mode, setMode] = useState<Mode>("simple");
   const [blocks, setBlocks] = useState<ContentBlock[]>([]);
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
+  const [validationError, setValidationError] = useState<string | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   // Close on Escape
@@ -40,11 +41,19 @@ export function RepostComposer({ post, onClose, onReposted }: RepostComposerProp
 
   async function handleSubmit() {
     if (mode === "quote" && blocks.length === 0) return;
+
+    const parsed = repostFormSchema.safeParse({
+      content_blocks: mode === "simple" ? [] : blocks,
+    });
+    if (!parsed.success) {
+      setValidationError(parsed.error.issues[0]?.message ?? "Check the repost content.");
+      return;
+    }
+
+    setValidationError(null);
     setStatus("submitting");
     try {
-      await repostPost(post.id, {
-        content_blocks: mode === "simple" ? [] : blocks,
-      });
+      await repostPost(post.id, parsed.data);
       onReposted();
     } catch {
       setStatus("error");
@@ -107,7 +116,10 @@ export function RepostComposer({ post, onClose, onReposted }: RepostComposerProp
             <div className="flex flex-col gap-3">
               <ContentBlockEditor
                 blocks={blocks}
-                onChange={setBlocks}
+                onChange={(nextBlocks) => {
+                  setBlocks(nextBlocks);
+                  setValidationError(null);
+                }}
                 placeholder="Add your thoughts…"
                 autoFocus
               />
@@ -134,6 +146,11 @@ export function RepostComposer({ post, onClose, onReposted }: RepostComposerProp
           {status === "error" && (
             <p className="text-xs text-rose-400">
               Something went wrong. Please try again.
+            </p>
+          )}
+          {validationError && (
+            <p className="text-xs text-rose-400">
+              {validationError}
             </p>
           )}
         </div>

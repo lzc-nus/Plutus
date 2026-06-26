@@ -198,7 +198,9 @@ export default function Sidebar() {
       label: "Social",
       items: [
         { label: "Community", href: "/dashboard/community", icon: "community" },
-        { label: "Profile", href: user ? `/profile/${user.id}` : "#", icon: "profile" },
+        ...(user
+          ? [{ label: "Public profile", href: `/profile/${user.id}`, icon: "profile" as const }]
+          : []),
       ],
     },
     {

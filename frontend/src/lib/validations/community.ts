@@ -2,6 +2,19 @@ import { z } from "zod";
 
 // ── Content blocks ────────────────────────────────────────────────────────────
 
+const httpUrlSchema = z
+  .string()
+  .trim()
+  .url("URL must be valid.")
+  .refine((value) => {
+    try {
+      const protocol = new URL(value).protocol;
+      return protocol === "http:" || protocol === "https:";
+    } catch {
+      return false;
+    }
+  }, "URL must start with http:// or https://.");
+
 const textBlockSchema = z.object({
   type: z.literal("text"),
   value: z
@@ -14,12 +27,12 @@ const textBlockSchema = z.object({
 const urlBlockSchema = (type: "image" | "video" | "audio" | "gif" | "sticker") =>
   z.object({
     type: z.literal(type),
-    url: z.string().trim().min(1, `${type} block must have a URL.`),
+    url: httpUrlSchema,
   });
 
 const linkBlockSchema = z.object({
   type: z.literal("link"),
-  url: z.string().trim().min(1, "Link block must have a URL."),
+  url: httpUrlSchema,
   title: z.string().trim().optional(),
   description: z.string().trim().optional(),
 });

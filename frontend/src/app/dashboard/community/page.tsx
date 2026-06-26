@@ -139,11 +139,16 @@ function CommunityRail({ user }: { user: UserRead | null }) {
           </div>
 
           <div className="mt-4 grid gap-2">
-            <RailLink href={user ? `/profile/${user.id}` : "/dashboard/settings"} icon={<ProfileIcon />}>
-              Profile
-            </RailLink>
+            {user ? (
+              <RailLink href={`/profile/${user.id}`} icon={<ProfileIcon />}>
+                View public profile
+              </RailLink>
+            ) : null}
             <RailLink href="/dashboard/community/saved" icon={<BookmarkIcon />}>
               Saved posts
+            </RailLink>
+            <RailLink href="/dashboard/settings" icon={<SettingsIcon />}>
+              Account settings
             </RailLink>
           </div>
         </section>
@@ -227,6 +232,19 @@ function ProfileIcon() {
     <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <circle cx="12" cy="8" r="4" />
       <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+    </svg>
+  );
+}
+
+function SettingsIcon() {
+  return (
+    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 7h9" />
+      <path d="M17 7h3" />
+      <circle cx="15" cy="7" r="2" />
+      <path d="M4 17h3" />
+      <path d="M11 17h9" />
+      <circle cx="9" cy="17" r="2" />
     </svg>
   );
 }
