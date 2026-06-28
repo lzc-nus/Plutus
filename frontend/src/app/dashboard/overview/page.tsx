@@ -16,7 +16,7 @@ import {
   portfolioLiabilitiesList,
   transactionsList,
 } from "@/lib/api/generated";
-import { useLatestAiInsight } from "@/lib/aiInsightStorage";
+import { useLatestInsight } from "@/lib/insightStorage";
 import { formatCurrency, formatCurrencyWithCents } from "@/lib/format";
 
 const TOP_CATEGORY_COUNT = 5;
@@ -78,7 +78,7 @@ const INITIAL_STATE: OverviewState = {
 
 export default function OverviewPage() {
   const [state, setState] = useState<OverviewState>(INITIAL_STATE);
-  const latestInsight = useLatestAiInsight()?.insight ?? null;
+  const latestInsight = useLatestInsight()?.insight ?? null;
 
   useEffect(() => {
     async function loadOverview() {
@@ -228,8 +228,8 @@ export default function OverviewPage() {
       ) : (
         <section className="rounded-lg border border-dashed border-[#d0c5b3] bg-[#f4efe6] p-6">
           <SectionHeader
-            description="Generate an AI memo to bring the latest risk score into this overview."
-            eyebrow="AI risk score"
+            description="Generate an insight report to bring the latest risk score into this overview."
+            eyebrow="Risk score"
             title="No saved insight"
           />
         </section>

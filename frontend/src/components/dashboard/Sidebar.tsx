@@ -190,7 +190,7 @@ export default function Sidebar() {
     {
       label: "Intelligence",
       items: [
-        { label: "AI Insights", href: "/dashboard/ai", icon: "insights" },
+        { label: "Insights", href: "/dashboard/insights", icon: "insights" },
         { label: "Strategy", href: "/dashboard/strategy", icon: "strategy" },
       ],
     },

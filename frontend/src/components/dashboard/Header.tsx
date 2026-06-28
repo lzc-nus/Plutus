@@ -46,10 +46,10 @@ const routeMeta: Array<{ path: string; meta: HeaderMeta }> = [
     },
   },
   {
-    path: "/dashboard/ai",
+    path: "/dashboard/insights",
     meta: {
-      title: "AI Insights",
-      description: "Surface patterns, risks, and explanations from your financial record.",
+      title: "Insights",
+      description: "Generate the risk score and explanations shown on your overview.",
     },
   },
   {

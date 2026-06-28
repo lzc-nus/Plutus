@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AiInsightsGenerateData, AiInsightsGenerateErrors, AiInsightsGenerateResponses, AuthLoginData, AuthLoginErrors, AuthLoginResponses, AuthLogoutData, AuthLogoutResponses, AuthRegisterData, AuthRegisterErrors, AuthRegisterResponses, CalendarEventsCreateData, CalendarEventsCreateErrors, CalendarEventsCreateResponses, CalendarEventsDeleteData, CalendarEventsDeleteErrors, CalendarEventsDeleteResponses, CalendarEventsListData, CalendarEventsListErrors, CalendarEventsListResponses, CalendarEventsUpdateData, CalendarEventsUpdateErrors, CalendarEventsUpdateResponses, CommunityCommentsCreateData, CommunityCommentsCreateErrors, CommunityCommentsCreateResponses, CommunityCommentsDeleteData, CommunityCommentsDeleteErrors, CommunityCommentsDeleteResponses, CommunityCommentsLikeData, CommunityCommentsLikeErrors, CommunityCommentsLikeResponses, CommunityCommentsListData, CommunityCommentsListErrors, CommunityCommentsListResponses, CommunityCommentsShareData, CommunityCommentsShareErrors, CommunityCommentsShareResponses, CommunityCommentsUnlikeData, CommunityCommentsUnlikeErrors, CommunityCommentsUnlikeResponses, CommunityCommentsUpdateData, CommunityCommentsUpdateErrors, CommunityCommentsUpdateResponses, CommunityFeedData, CommunityFeedErrors, CommunityFeedGlobalData, CommunityFeedGlobalErrors, CommunityFeedGlobalResponses, CommunityFeedResponses, CommunityFollowData, CommunityFollowErrors, CommunityFollowersListData, CommunityFollowersListErrors, CommunityFollowersListResponses, CommunityFollowingListData, CommunityFollowingListErrors, CommunityFollowingListResponses, CommunityFollowResponses, CommunityPostsCreateData, CommunityPostsCreateErrors, CommunityPostsCreateResponses, CommunityPostsDeleteData, CommunityPostsDeleteErrors, CommunityPostsDeleteResponses, CommunityPostsGetData, CommunityPostsGetErrors, CommunityPostsGetResponses, CommunityPostsLikeData, CommunityPostsLikeErrors, CommunityPostsLikeResponses, CommunityPostsRepostData, CommunityPostsRepostErrors, CommunityPostsRepostResponses, CommunityPostsSaveData, CommunityPostsSavedListData, CommunityPostsSavedListErrors, CommunityPostsSavedListResponses, CommunityPostsSaveErrors, CommunityPostsSaveResponses, CommunityPostsShareData, CommunityPostsShareErrors, CommunityPostsShareResponses, CommunityPostsUnlikeData, CommunityPostsUnlikeErrors, CommunityPostsUnlikeResponses, CommunityPostsUnsaveData, CommunityPostsUnsaveErrors, CommunityPostsUnsaveResponses, CommunityPostsUpdateData, CommunityPostsUpdateErrors, CommunityPostsUpdateResponses, CommunityRepostsDeleteData, CommunityRepostsDeleteErrors, CommunityRepostsDeleteResponses, CommunityUnfollowData, CommunityUnfollowErrors, CommunityUnfollowResponses, CommunityUserPostsListData, CommunityUserPostsListErrors, CommunityUserPostsListResponses, HealthCheckHealthGetData, HealthCheckHealthGetResponses, MarketCandlesData, MarketCandlesErrors, MarketCandlesResponses, MarketSnapshotData, MarketSnapshotErrors, MarketSnapshotResponses, PortfolioAssetsCreateData, PortfolioAssetsCreateErrors, PortfolioAssetsCreateResponses, PortfolioAssetsDeleteData, PortfolioAssetsDeleteErrors, PortfolioAssetsDeleteResponses, PortfolioAssetsListData, PortfolioAssetsListErrors, PortfolioAssetsListResponses, PortfolioAssetsUpdateData, PortfolioAssetsUpdateErrors, PortfolioAssetsUpdateResponses, PortfolioLiabilitiesCreateData, PortfolioLiabilitiesCreateErrors, PortfolioLiabilitiesCreateResponses, PortfolioLiabilitiesDeleteData, PortfolioLiabilitiesDeleteErrors, PortfolioLiabilitiesDeleteResponses, PortfolioLiabilitiesListData, PortfolioLiabilitiesListErrors, PortfolioLiabilitiesListResponses, PortfolioLiabilitiesUpdateData, PortfolioLiabilitiesUpdateErrors, PortfolioLiabilitiesUpdateResponses, RootGetData, RootGetResponses, TransactionsCreateData, TransactionsCreateErrors, TransactionsCreateResponses, TransactionsListData, TransactionsListErrors, TransactionsListResponses, UsersGetByIdData, UsersGetByIdErrors, UsersGetByIdResponses, UsersMeData, UsersMeErrors, UsersMePasswordUpdateData, UsersMePasswordUpdateErrors, UsersMePasswordUpdateResponses, UsersMeResponses, UsersMeSettingsUpdateData, UsersMeSettingsUpdateErrors, UsersMeSettingsUpdateResponses, UsersMeUpdateData, UsersMeUpdateErrors, UsersMeUpdateResponses } from './types.gen';
+import type { AuthLoginData, AuthLoginErrors, AuthLoginResponses, AuthLogoutData, AuthLogoutResponses, AuthRegisterData, AuthRegisterErrors, AuthRegisterResponses, CalendarEventsCreateData, CalendarEventsCreateErrors, CalendarEventsCreateResponses, CalendarEventsDeleteData, CalendarEventsDeleteErrors, CalendarEventsDeleteResponses, CalendarEventsListData, CalendarEventsListErrors, CalendarEventsListResponses, CalendarEventsUpdateData, CalendarEventsUpdateErrors, CalendarEventsUpdateResponses, CommunityCommentsCreateData, CommunityCommentsCreateErrors, CommunityCommentsCreateResponses, CommunityCommentsDeleteData, CommunityCommentsDeleteErrors, CommunityCommentsDeleteResponses, CommunityCommentsLikeData, CommunityCommentsLikeErrors, CommunityCommentsLikeResponses, CommunityCommentsListData, CommunityCommentsListErrors, CommunityCommentsListResponses, CommunityCommentsShareData, CommunityCommentsShareErrors, CommunityCommentsShareResponses, CommunityCommentsUnlikeData, CommunityCommentsUnlikeErrors, CommunityCommentsUnlikeResponses, CommunityCommentsUpdateData, CommunityCommentsUpdateErrors, CommunityCommentsUpdateResponses, CommunityFeedData, CommunityFeedErrors, CommunityFeedGlobalData, CommunityFeedGlobalErrors, CommunityFeedGlobalResponses, CommunityFeedResponses, CommunityFollowData, CommunityFollowErrors, CommunityFollowersListData, CommunityFollowersListErrors, CommunityFollowersListResponses, CommunityFollowingListData, CommunityFollowingListErrors, CommunityFollowingListResponses, CommunityFollowResponses, CommunityPostsCreateData, CommunityPostsCreateErrors, CommunityPostsCreateResponses, CommunityPostsDeleteData, CommunityPostsDeleteErrors, CommunityPostsDeleteResponses, CommunityPostsGetData, CommunityPostsGetErrors, CommunityPostsGetResponses, CommunityPostsLikeData, CommunityPostsLikeErrors, CommunityPostsLikeResponses, CommunityPostsRepostData, CommunityPostsRepostErrors, CommunityPostsRepostResponses, CommunityPostsSaveData, CommunityPostsSavedListData, CommunityPostsSavedListErrors, CommunityPostsSavedListResponses, CommunityPostsSaveErrors, CommunityPostsSaveResponses, CommunityPostsShareData, CommunityPostsShareErrors, CommunityPostsShareResponses, CommunityPostsUnlikeData, CommunityPostsUnlikeErrors, CommunityPostsUnlikeResponses, CommunityPostsUnsaveData, CommunityPostsUnsaveErrors, CommunityPostsUnsaveResponses, CommunityPostsUpdateData, CommunityPostsUpdateErrors, CommunityPostsUpdateResponses, CommunityRepostsDeleteData, CommunityRepostsDeleteErrors, CommunityRepostsDeleteResponses, CommunityUnfollowData, CommunityUnfollowErrors, CommunityUnfollowResponses, CommunityUserPostsListData, CommunityUserPostsListErrors, CommunityUserPostsListResponses, HealthCheckHealthGetData, HealthCheckHealthGetResponses, InsightsGenerateData, InsightsGenerateErrors, InsightsGenerateResponses, MarketCandlesData, MarketCandlesErrors, MarketCandlesResponses, MarketSnapshotData, MarketSnapshotErrors, MarketSnapshotResponses, PortfolioAssetsCreateData, PortfolioAssetsCreateErrors, PortfolioAssetsCreateResponses, PortfolioAssetsDeleteData, PortfolioAssetsDeleteErrors, PortfolioAssetsDeleteResponses, PortfolioAssetsListData, PortfolioAssetsListErrors, PortfolioAssetsListResponses, PortfolioAssetsUpdateData, PortfolioAssetsUpdateErrors, PortfolioAssetsUpdateResponses, PortfolioLiabilitiesCreateData, PortfolioLiabilitiesCreateErrors, PortfolioLiabilitiesCreateResponses, PortfolioLiabilitiesDeleteData, PortfolioLiabilitiesDeleteErrors, PortfolioLiabilitiesDeleteResponses, PortfolioLiabilitiesListData, PortfolioLiabilitiesListErrors, PortfolioLiabilitiesListResponses, PortfolioLiabilitiesUpdateData, PortfolioLiabilitiesUpdateErrors, PortfolioLiabilitiesUpdateResponses, RootGetData, RootGetResponses, StrategyGoalsCreateData, StrategyGoalsCreateErrors, StrategyGoalsCreateResponses, StrategyGoalsDeleteData, StrategyGoalsDeleteErrors, StrategyGoalsDeleteResponses, StrategyGoalsListData, StrategyGoalsListErrors, StrategyGoalsListResponses, StrategyGoalsUpdateData, StrategyGoalsUpdateErrors, StrategyGoalsUpdateResponses, StrategyMemoGenerateData, StrategyMemoGenerateErrors, StrategyMemoGenerateResponses, TransactionsCreateData, TransactionsCreateErrors, TransactionsCreateResponses, TransactionsListData, TransactionsListErrors, TransactionsListResponses, UsersGetByIdData, UsersGetByIdErrors, UsersGetByIdResponses, UsersMeData, UsersMeErrors, UsersMePasswordUpdateData, UsersMePasswordUpdateErrors, UsersMePasswordUpdateResponses, UsersMeResponses, UsersMeSettingsUpdateData, UsersMeSettingsUpdateErrors, UsersMeSettingsUpdateResponses, UsersMeUpdateData, UsersMeUpdateErrors, UsersMeUpdateResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -543,11 +543,68 @@ export const marketSnapshot = <ThrowOnError extends boolean = false>(options?: O
 export const marketCandles = <ThrowOnError extends boolean = false>(options: Options<MarketCandlesData, ThrowOnError>) => (options.client ?? client).get<MarketCandlesResponses, MarketCandlesErrors, ThrowOnError>({ url: '/api/v1/market/snapshot/{symbol}/candles', ...options });
 
 /**
- * Generate Insight
+ * Generate Insight Endpoint
  */
-export const aiInsightsGenerate = <ThrowOnError extends boolean = false>(options: Options<AiInsightsGenerateData, ThrowOnError>) => (options.client ?? client).post<AiInsightsGenerateResponses, AiInsightsGenerateErrors, ThrowOnError>({
+export const insightsGenerate = <ThrowOnError extends boolean = false>(options: Options<InsightsGenerateData, ThrowOnError>) => (options.client ?? client).post<InsightsGenerateResponses, InsightsGenerateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/ai/insights',
+    url: '/api/v1/insights',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get Strategy Goals
+ */
+export const strategyGoalsList = <ThrowOnError extends boolean = false>(options?: Options<StrategyGoalsListData, ThrowOnError>) => (options?.client ?? client).get<StrategyGoalsListResponses, StrategyGoalsListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/strategy/goals',
+    ...options
+});
+
+/**
+ * Create Strategy Goal Endpoint
+ */
+export const strategyGoalsCreate = <ThrowOnError extends boolean = false>(options: Options<StrategyGoalsCreateData, ThrowOnError>) => (options.client ?? client).post<StrategyGoalsCreateResponses, StrategyGoalsCreateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/strategy/goals',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete Strategy Goal Endpoint
+ */
+export const strategyGoalsDelete = <ThrowOnError extends boolean = false>(options: Options<StrategyGoalsDeleteData, ThrowOnError>) => (options.client ?? client).delete<StrategyGoalsDeleteResponses, StrategyGoalsDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/strategy/goals/{goal_id}',
+    ...options
+});
+
+/**
+ * Update Strategy Goal Endpoint
+ */
+export const strategyGoalsUpdate = <ThrowOnError extends boolean = false>(options: Options<StrategyGoalsUpdateData, ThrowOnError>) => (options.client ?? client).patch<StrategyGoalsUpdateResponses, StrategyGoalsUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/strategy/goals/{goal_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Generate Strategy Memo Endpoint
+ */
+export const strategyMemoGenerate = <ThrowOnError extends boolean = false>(options: Options<StrategyMemoGenerateData, ThrowOnError>) => (options.client ?? client).post<StrategyMemoGenerateResponses, StrategyMemoGenerateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/strategy/memo',
     ...options,
     headers: {
         'Content-Type': 'application/json',
