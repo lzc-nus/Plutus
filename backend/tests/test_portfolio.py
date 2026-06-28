@@ -154,6 +154,34 @@ def test_update_asset(client: TestClient) -> None:
     assert body["name"] == "Apple Inc."
 
 
+def test_update_asset_can_clear_nullable_fields(client: TestClient) -> None:
+    token = _register_and_login(
+        client,
+        username="portfolio-owner",
+        email="portfolio-owner@example.com",
+    )
+
+    asset = _create_asset(
+        client,
+        token,
+        name="Apple Inc.",
+        value=10000.0,
+        cost_basis=8000.0,
+        notes="Core position",
+    )
+
+    response = client.patch(
+        f"/api/v1/portfolio/assets/{asset['id']}",
+        headers=_auth_headers(token),
+        json={"cost_basis": None, "notes": None},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["cost_basis"] is None
+    assert body["notes"] is None
+
+
 def test_update_asset_category(client: TestClient) -> None:
     token = _register_and_login(
         client,
@@ -171,6 +199,33 @@ def test_update_asset_category(client: TestClient) -> None:
 
     assert response.status_code == 200
     assert response.json()["category"] == "commodities"
+
+
+def test_update_asset_category_away_from_other_clears_custom_category(client: TestClient) -> None:
+    token = _register_and_login(
+        client,
+        username="portfolio-owner",
+        email="portfolio-owner@example.com",
+    )
+
+    asset = _create_asset(
+        client,
+        token,
+        name="Rare watches",
+        category="other",
+        custom_category="Collectibles",
+    )
+
+    response = client.patch(
+        f"/api/v1/portfolio/assets/{asset['id']}",
+        headers=_auth_headers(token),
+        json={"category": "commodities"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["category"] == "commodities"
+    assert body["custom_category"] is None
 
 
 def test_delete_asset(client: TestClient) -> None:
@@ -393,6 +448,42 @@ def test_update_liability(client: TestClient) -> None:
     assert body["name"] == "Home Mortgage"
 
 
+def test_update_liability_can_clear_nullable_fields(client: TestClient) -> None:
+    token = _register_and_login(
+        client,
+        username="portfolio-owner",
+        email="portfolio-owner@example.com",
+    )
+
+    liability = _create_liability(
+        client,
+        token,
+        balance=250000.0,
+        original_amount=300000.0,
+        interest_rate=3.5,
+        monthly_payment=1500.0,
+        notes="Primary mortgage",
+    )
+
+    response = client.patch(
+        f"/api/v1/portfolio/liabilities/{liability['id']}",
+        headers=_auth_headers(token),
+        json={
+            "original_amount": None,
+            "interest_rate": None,
+            "monthly_payment": None,
+            "notes": None,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["original_amount"] is None
+    assert body["interest_rate"] is None
+    assert body["monthly_payment"] is None
+    assert body["notes"] is None
+
+
 def test_update_liability_interest_rate(client: TestClient) -> None:
     token = _register_and_login(
         client,
@@ -410,6 +501,33 @@ def test_update_liability_interest_rate(client: TestClient) -> None:
 
     assert response.status_code == 200
     assert float(response.json()["interest_rate"]) == 2.9
+
+
+def test_update_liability_category_away_from_other_clears_custom_category(client: TestClient) -> None:
+    token = _register_and_login(
+        client,
+        username="portfolio-owner",
+        email="portfolio-owner@example.com",
+    )
+
+    liability = _create_liability(
+        client,
+        token,
+        name="Family loan",
+        category="other",
+        custom_category="Informal Loans",
+    )
+
+    response = client.patch(
+        f"/api/v1/portfolio/liabilities/{liability['id']}",
+        headers=_auth_headers(token),
+        json={"category": "personal_loan"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["category"] == "personal_loan"
+    assert body["custom_category"] is None
 
 
 def test_delete_liability(client: TestClient) -> None:

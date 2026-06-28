@@ -1,13 +1,7 @@
 import Link from "next/link";
-import { Great_Vibes } from "next/font/google";
-
-const logoFont = Great_Vibes({
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-});
 
 const footerLinks = [
+  { href: "/community", label: "Community" },
   { href: "/login", label: "Sign in" },
   { href: "/register", label: "Create account" },
 ];
@@ -20,7 +14,7 @@ export default function Footer() {
           <Link
             href="/"
             aria-label="Plutus home"
-            className={`${logoFont.className} text-5xl leading-none text-[#d8bd75]`}
+            className="brand-script text-5xl leading-none text-[#d8bd75]"
           >
             Plutus
           </Link>
@@ -52,7 +46,7 @@ export default function Footer() {
 
       <div className="border-t border-white/10 px-6 py-5 lg:px-10">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 text-xs text-[#bdb4a4] sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} Two Sicilies. All rights reserved.</p>
+          <p>Copyright {new Date().getFullYear()} Two Sicilies. All rights reserved.</p>
           <p>Private wealth intelligence platform.</p>
         </div>
       </div>

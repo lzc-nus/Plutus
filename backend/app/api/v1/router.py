@@ -6,6 +6,8 @@ from app.features.calendar.router import router as calendar_router
 from app.features.portfolio.router import router as portfolio_router
 from app.features.community.router import router as community_router
 from app.features.market.router import router as market_router
+from app.features.insights.router import router as insights_router
+from app.features.strategy.router import router as strategy_router
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(auth_router)
@@ -15,3 +17,5 @@ api_router.include_router(calendar_router)
 api_router.include_router(portfolio_router)
 api_router.include_router(community_router)
 api_router.include_router(market_router)
+api_router.include_router(insights_router)
+api_router.include_router(strategy_router)

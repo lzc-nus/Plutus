@@ -384,9 +384,6 @@ def test_get_user_by_id_returns_public_profile(client: TestClient) -> None:
     target_token = _register_and_login(
         client, username="public-user", email="public-user@example.com"
     )
-    viewer_token = _register_and_login(
-        client, username="viewer", email="viewer@example.com"
-    )
     client.patch(
         "/api/v1/users/me",
         headers=_auth_headers(target_token),
@@ -396,10 +393,7 @@ def test_get_user_by_id_returns_public_profile(client: TestClient) -> None:
         "/api/v1/users/me", headers=_auth_headers(target_token)
     ).json()["id"]
 
-    response = client.get(
-        f"/api/v1/users/{target_id}",
-        headers=_auth_headers(viewer_token),
-    )
+    response = client.get(f"/api/v1/users/{target_id}")
 
     assert response.status_code == 200
     body = response.json()
@@ -412,36 +406,32 @@ def test_get_user_by_id_does_not_expose_email(client: TestClient) -> None:
     target_token = _register_and_login(
         client, username="public-user", email="public-user@example.com"
     )
-    viewer_token = _register_and_login(
-        client, username="viewer", email="viewer@example.com"
-    )
     target_id = client.get(
         "/api/v1/users/me", headers=_auth_headers(target_token)
     ).json()["id"]
 
-    response = client.get(
-        f"/api/v1/users/{target_id}",
-        headers=_auth_headers(viewer_token),
-    )
+    response = client.get(f"/api/v1/users/{target_id}")
 
     assert "email" not in response.json()
 
 
 def test_get_user_by_id_nonexistent_returns_404(client: TestClient) -> None:
-    token = _register_and_login(
-        client, username="viewer", email="viewer@example.com"
-    )
     fake_id = "00000000-0000-0000-0000-000000000000"
 
-    response = client.get(
-        f"/api/v1/users/{fake_id}",
-        headers=_auth_headers(token),
-    )
+    response = client.get(f"/api/v1/users/{fake_id}")
 
     assert response.status_code == 404
 
 
-def test_get_user_by_id_requires_authentication(client: TestClient) -> None:
-    response = client.get("/api/v1/users/00000000-0000-0000-0000-000000000000")
+def test_get_user_by_id_allows_guest_viewer(client: TestClient) -> None:
+    target_token = _register_and_login(
+        client, username="guest-visible", email="guest-visible@example.com"
+    )
+    target_id = client.get(
+        "/api/v1/users/me", headers=_auth_headers(target_token)
+    ).json()["id"]
 
-    assert response.status_code == 401
+    response = client.get(f"/api/v1/users/{target_id}")
+
+    assert response.status_code == 200
+    assert response.json()["username"] == "guest-visible"

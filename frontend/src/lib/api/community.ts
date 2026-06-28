@@ -22,6 +22,7 @@ import {
   communityCommentsShare,
   communityFollow,
   communityUnfollow,
+  communityUserPostsList,
   communityFollowingList,
   communityFollowersList,
 } from "@/lib/api/generated";
@@ -55,6 +56,14 @@ export async function getFeed(limit?: number, before?: string | null) {
 export async function getGlobalFeed(limit?: number, before?: string | null) {
   configureApiClient();
   return communityFeedGlobal({
+    query: { limit, before },
+  });
+}
+
+export async function getUserPosts(userId: string, limit?: number, before?: string | null) {
+  configureApiClient();
+  return communityUserPostsList({
+    path: { user_id: userId },
     query: { limit, before },
   });
 }

@@ -15,6 +15,7 @@ def import_models() -> None:
     from app.features.transactions.models import Transaction  # noqa: F401
     from app.features.users.models import User  # noqa: F401
     from app.features.portfolio.models import PortfolioAsset, PortfolioLiability
+    from app.features.strategy.models import StrategyGoal  # noqa: F401
     from app.features.community.models import Post, Comment, Repost, UserFollow, PostLike, CommentLike, PostSave, PostShare, CommentShare
 
 def init_db_metadata() -> None:

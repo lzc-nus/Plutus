@@ -11,7 +11,7 @@ from app.features.portfolio.schemas import AssetCreate, AssetUpdate, LiabilityCr
 UTC = datetime.timezone.utc
 
 
-# ── Assets ────────────────────────────────────────────────────────────────────
+# Assets
 
 def list_assets(db: Session, *, user_id: uuid.UUID) -> list[PortfolioAsset]:
     statement = (
@@ -57,24 +57,30 @@ def update_asset(
     if not asset:
         return None
 
-    if payload.name is not None:
-        asset.name = payload.name
-    if payload.category is not None:
-        asset.category = payload.category
-    if payload.custom_category is not None:
-        asset.custom_category = payload.custom_category or None
-    if payload.value is not None:
-        asset.value = payload.value
-    if payload.cost_basis is not None:
-        asset.cost_basis = payload.cost_basis
-    if payload.liquidity is not None:
-        asset.liquidity = payload.liquidity
-    if payload.risk is not None:
-        asset.risk = payload.risk
-    if payload.notes is not None:
-        asset.notes = payload.notes or None
-    if payload.acquired_at is not None:
-        asset.acquired_at = payload.acquired_at
+    values = payload.model_dump(exclude_unset=True)
+
+    if values.get("name") is not None:
+        asset.name = values["name"]
+    if values.get("category") is not None:
+        asset.category = values["category"]
+    if values.get("value") is not None:
+        asset.value = values["value"]
+    if "cost_basis" in values:
+        asset.cost_basis = values["cost_basis"]
+    if values.get("liquidity") is not None:
+        asset.liquidity = values["liquidity"]
+    if values.get("risk") is not None:
+        asset.risk = values["risk"]
+    if "notes" in values:
+        asset.notes = values["notes"] or None
+    if "acquired_at" in values:
+        asset.acquired_at = values["acquired_at"]
+
+    if asset.category == "other":
+        if "custom_category" in values:
+            asset.custom_category = values["custom_category"] or None
+    else:
+        asset.custom_category = None
 
     asset.updated_at = datetime.datetime.now(UTC)
     db.add(asset)
@@ -110,7 +116,7 @@ def _get_user_asset(
     return db.exec(statement).first()
 
 
-# ── Liabilities ───────────────────────────────────────────────────────────────
+# Liabilities
 
 def list_liabilities(db: Session, *, user_id: uuid.UUID) -> list[PortfolioLiability]:
     statement = (
@@ -156,24 +162,30 @@ def update_liability(
     if not liability:
         return None
 
-    if payload.name is not None:
-        liability.name = payload.name
-    if payload.category is not None:
-        liability.category = payload.category
-    if payload.custom_category is not None:
-        liability.custom_category = payload.custom_category or None
-    if payload.balance is not None:
-        liability.balance = payload.balance
-    if payload.original_amount is not None:
-        liability.original_amount = payload.original_amount
-    if payload.interest_rate is not None:
-        liability.interest_rate = payload.interest_rate
-    if payload.monthly_payment is not None:
-        liability.monthly_payment = payload.monthly_payment
-    if payload.maturity_date is not None:
-        liability.maturity_date = payload.maturity_date
-    if payload.notes is not None:
-        liability.notes = payload.notes or None
+    values = payload.model_dump(exclude_unset=True)
+
+    if values.get("name") is not None:
+        liability.name = values["name"]
+    if values.get("category") is not None:
+        liability.category = values["category"]
+    if values.get("balance") is not None:
+        liability.balance = values["balance"]
+    if "original_amount" in values:
+        liability.original_amount = values["original_amount"]
+    if "interest_rate" in values:
+        liability.interest_rate = values["interest_rate"]
+    if "monthly_payment" in values:
+        liability.monthly_payment = values["monthly_payment"]
+    if "maturity_date" in values:
+        liability.maturity_date = values["maturity_date"]
+    if "notes" in values:
+        liability.notes = values["notes"] or None
+
+    if liability.category == "other":
+        if "custom_category" in values:
+            liability.custom_category = values["custom_category"] or None
+    else:
+        liability.custom_category = None
 
     liability.updated_at = datetime.datetime.now(UTC)
     db.add(liability)

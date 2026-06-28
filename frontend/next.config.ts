@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   devIndicators: false,
-  reactCompiler: true,
+  outputFileTracingRoot: process.cwd(),
 };
 
 export default nextConfig;

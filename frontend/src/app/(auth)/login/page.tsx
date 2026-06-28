@@ -84,7 +84,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="h-12 rounded-md bg-[#d8bd75] px-5 text-sm font-bold text-[#151811] transition hover:bg-[#f0d98c] disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-12 rounded-md bg-[#d8bd75] px-5 text-sm font-bold text-[#151811] shadow-[0_10px_24px_rgba(216,189,117,0.18)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#f0d98c] hover:shadow-[0_14px_30px_rgba(216,189,117,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0d98c] focus-visible:ring-offset-2 focus-visible:ring-offset-[#151811] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:bg-[#d8bd75] disabled:hover:shadow-[0_10px_24px_rgba(216,189,117,0.18)]"
         >
           {isSubmitting ? "Signing in..." : "Sign in"}
         </button>

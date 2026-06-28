@@ -1,0 +1,26 @@
+# Keep text files consistent across Windows, macOS, and Linux.
+* text=auto eol=lf
+
+# Windows scripts should keep Windows line endings when checked out.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Images and other binary assets must never be line-ending normalized.
+*.avif binary
+*.gif binary
+*.ico binary
+*.jpeg binary
+*.jpg binary
+*.pdf binary
+*.png binary
+*.webp binary
+
+# Archives and compiled/package artifacts.
+*.7z binary
+*.br binary
+*.gz binary
+*.jar binary
+*.tar binary
+*.tgz binary
+*.zip binary

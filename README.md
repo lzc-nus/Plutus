@@ -119,16 +119,24 @@ AUTH_COOKIE_NAME=plutus_access_token
 AUTH_COOKIE_SECURE=false
 AUTH_COOKIE_SAMESITE=lax
 
+FRONTEND_ORIGIN=http://localhost:3000
 ALLOWED_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000","http://localhost:3001","http://127.0.0.1:3001"]
+
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-5.4-mini
+OPENAI_REASONING_EFFORT=low
+OPENAI_MAX_OUTPUT_TOKENS=1200
+OPENAI_REQUEST_TIMEOUT_SECONDS=30
+OPENAI_STORE_RESPONSES=false
 ```
 
-Create `frontend/.env` only when you need to override the backend URL:
+Create `frontend/.env.local` for browser-safe frontend configuration:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-If this variable is missing, frontend API helpers fall back to `http://localhost:8000`. Keep the frontend URL and backend API URL on the same host family during local development; for example, use `localhost` for both instead of mixing `localhost` and `127.0.0.1`. Only use `NEXT_PUBLIC_` variables for values that are safe to expose in browser code.
+The frontend requires this value for API calls and OpenAPI client generation. Keep the frontend URL and backend API URL on the same host family during local development; for example, use `localhost` for both instead of mixing `localhost` and `127.0.0.1`. Only use `NEXT_PUBLIC_` variables for values that are safe to expose in browser code.
 
 Install frontend dependencies:
 
@@ -186,17 +194,16 @@ Open the backend docs:
 http://localhost:8000/docs
 ```
 
+For production deployment, use [DEPLOYMENT.md](DEPLOYMENT.md).
+
 Check backend and database health:
 
 ```text
 http://localhost:8000/health
 ```
 
-`/health` returns `200` when the API can reach PostgreSQL and `503` when the database is unavailable.
-
 ## Database Workflow
 
-The local database is PostgreSQL running in Docker. The default local connection is:
 
 ```text
 postgresql+psycopg2://plutus:plutus@localhost:5432/plutus
@@ -313,7 +320,7 @@ The auth tests use an in-memory SQLite database and override FastAPI's database 
 FastAPI exposes the backend contract at:
 
 ```text
-http://localhost:8000/openapi.json
+${NEXT_PUBLIC_API_URL}/openapi.json
 ```
 
 The frontend uses that OpenAPI contract to generate typed API functions and types under:
@@ -323,11 +330,7 @@ frontend/src/lib/api/generated
 ```
 
 Regenerate the frontend API client whenever backend endpoint paths, request bodies, response models, status codes, or `operation_id` values change:
-
-```bash
-cd frontend
 npm run api:generate
-```
 
 Application code should call hand-written API wrappers such as `frontend/src/lib/api/auth.ts`, not generated files directly. Generated files should be treated as build artifacts produced from the backend API contract.
 

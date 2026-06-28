@@ -3,9 +3,15 @@
 import { useEffect, useState } from "react";
 
 import {
+<<<<<<< HEAD
   CashflowBreakdownChart,
   CashflowButterflyChart,
   MetricCard,
+=======
+  CashflowButterflyChart,
+  MetricCard,
+  RiskScoreCard,
+>>>>>>> 960af32b2963319ba21f279510541e91d5049988
   SectionHeader,
   UpcomingEventsCard,
 } from "@/components/WealthComponents";
@@ -16,6 +22,10 @@ import {
   portfolioLiabilitiesList,
   transactionsList,
 } from "@/lib/api/generated";
+<<<<<<< HEAD
+=======
+import { useLatestInsight } from "@/lib/insightStorage";
+>>>>>>> 960af32b2963319ba21f279510541e91d5049988
 import { formatCurrency, formatCurrencyWithCents } from "@/lib/format";
 
 const TOP_CATEGORY_COUNT = 5;
@@ -77,6 +87,7 @@ const INITIAL_STATE: OverviewState = {
 
 export default function OverviewPage() {
   const [state, setState] = useState<OverviewState>(INITIAL_STATE);
+  const latestInsight = useLatestInsight()?.insight ?? null;
 
   useEffect(() => {
     async function loadOverview() {
@@ -144,7 +155,7 @@ export default function OverviewPage() {
         const inflowBreakdown = assignPercentages(rawInflow.items, grandTotal);
         const outflowBreakdown = assignPercentages(rawOutflow.items, grandTotal);
 
-        // Top 5 latest transactions, not top 5 by amount — the API already
+        // Top 5 latest transactions, not top 5 by amount; the API already
         // returns the list sorted by occurred_at desc, so this is a plain slice.
         const recentMovements: TransactionRow[] = transactions
           .slice(0, 5)
@@ -198,17 +209,17 @@ export default function OverviewPage() {
           dominant
           label="Net Worth"
           sublabel="Total assets less total liabilities"
-          value={state.loading ? "—" : formatCurrency(state.netWorth)}
+          value={state.loading ? "-" : formatCurrency(state.netWorth)}
         />
         <MetricCard
           label="Total Liabilities"
           sublabel="Outstanding balance across all obligations"
-          value={state.loading ? "—" : formatCurrency(state.totalLiabilities)}
+          value={state.loading ? "-" : formatCurrency(state.totalLiabilities)}
         />
         <MetricCard
           label="Monthly Repayment"
           sublabel="Committed monthly debt service"
-          value={state.loading ? "—" : formatCurrency(state.monthlyRepayment)}
+          value={state.loading ? "-" : formatCurrency(state.monthlyRepayment)}
         />
       </section>
 
@@ -216,6 +227,22 @@ export default function OverviewPage() {
         events={state.upcomingEvents}
         loading={state.loading}
       />
+
+      {latestInsight ? (
+        <RiskScoreCard
+          label={latestInsight.label}
+          score={latestInsight.score}
+          summary={latestInsight.executive_summary}
+        />
+      ) : (
+        <section className="rounded-lg border border-dashed border-[#d0c5b3] bg-[#f4efe6] p-6">
+          <SectionHeader
+            description="Generate an insight report to bring the latest risk score into this overview."
+            eyebrow="Risk score"
+            title="No saved insight"
+          />
+        </section>
+      )}
 
       <CashflowButterflyChart
         outflowItems={state.outflowBreakdown}
@@ -231,13 +258,13 @@ export default function OverviewPage() {
           <SectionHeader
             description="Liabilities are treated as commitments, not alarms. The goal is to preserve optionality and avoid expensive debt drag."
             eyebrow="Liabilities"
-            title={state.loading ? "—" : formatCurrency(state.totalLiabilities)}
+            title={state.loading ? "-" : formatCurrency(state.totalLiabilities)}
           />
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div>
               <p className="text-sm text-[#756d60]">Monthly repayment</p>
               <p className="mt-1 text-2xl font-semibold">
-                {state.loading ? "—" : formatCurrency(state.monthlyRepayment)}
+                {state.loading ? "-" : formatCurrency(state.monthlyRepayment)}
               </p>
             </div>
             <div>
@@ -258,7 +285,7 @@ export default function OverviewPage() {
                   <p className="mt-1 text-[#756d60]">
                     {formatCategoryLabel(liability.category)}
                     {liability.interestRate !== null
-                      ? ` · ${liability.interestRate}% APR`
+                      ? ` - ${liability.interestRate}% APR`
                       : ""}
                   </p>
                 </div>
@@ -286,7 +313,7 @@ export default function OverviewPage() {
                 <div>
                   <p className="font-semibold">{movement.description}</p>
                   <p className="mt-1 text-[#756d60]">
-                    {movement.date} · {movement.category} · {movement.account}
+                    {movement.date} - {movement.category} - {movement.account}
                   </p>
                 </div>
                 <p

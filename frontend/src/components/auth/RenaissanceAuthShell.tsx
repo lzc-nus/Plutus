@@ -7,18 +7,11 @@
 "use client";
 
 import Link from "next/link";
-import { Great_Vibes } from "next/font/google";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import Draggable from "gsap/Draggable";
 import "./renaissance-auth-shell.css";
-
-const logoFont = Great_Vibes({
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-});
 
 type RenaissanceAuthShellProps = {
   eyebrow: string;
@@ -66,13 +59,11 @@ export default function RenaissanceAuthShell({
     function toggleLamp() {
       if (!shell || !loginForm) return;
 
+      clickSound.currentTime = 0;
+      void clickSound.play().catch(() => undefined);
+
       isOnRef.current = !isOnRef.current;
       setIsOn(isOnRef.current);
-
-      clickSound.currentTime = 0;
-      void clickSound.play().catch(() => {
-        // Browser may block sound before user interaction. Ignore safely.
-      });
 
       shell.setAttribute("data-on", String(isOnRef.current));
       shell.style.setProperty("--on", isOnRef.current ? "1" : "0");
@@ -145,7 +136,7 @@ export default function RenaissanceAuthShell({
       data-on={isOn}
       className="auth-shell"
     >
-      <div className="container">
+      <div className="auth-shell-container">
         <div className="lamp-wrapper">
           <svg
             className="lamp-svg"
@@ -227,7 +218,7 @@ export default function RenaissanceAuthShell({
         </div>
 
         <div ref={loginFormRef} className="login-form">
-          <Link href="/" className={`${logoFont.className} brand-link`}>
+          <Link href="/" className="brand-link">
             Plutus
           </Link>
 

@@ -46,10 +46,10 @@ const routeMeta: Array<{ path: string; meta: HeaderMeta }> = [
     },
   },
   {
-    path: "/dashboard/ai",
+    path: "/dashboard/insights",
     meta: {
-      title: "AI Insights",
-      description: "Surface patterns, risks, and explanations from your financial record.",
+      title: "Insights",
+      description: "Generate the risk score and explanations shown on your overview.",
     },
   },
   {
@@ -63,7 +63,7 @@ const routeMeta: Array<{ path: string; meta: HeaderMeta }> = [
     path: "/dashboard/community",
     meta: {
       title: "Community",
-      description: "Communicate with the world.",
+      description: "Follow discussions, publish market notes, and save the ideas worth revisiting.",
     },
   },
   {
@@ -151,7 +151,7 @@ export default function Header({ currentUser }: HeaderProps) {
 
   async function handleLogout() {
     await logoutAccount();
-    localStorage.removeItem("plutus_access_token");
+    window.dispatchEvent(new Event("plutus-auth-refresh"));
     router.replace("/login");
   }
 

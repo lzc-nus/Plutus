@@ -301,7 +301,7 @@ export function RiskScoreCard({
   return (
     <article className="rounded-lg bg-[#1d211c] p-6 text-[#fbf7ef] sm:p-7">
       <p className="text-sm font-semibold uppercase text-[#c3a35d]">
-        AI risk score
+        Risk score
       </p>
       <div className="mt-5 flex items-end gap-3">
         <p className="text-6xl font-semibold">{score}</p>
@@ -315,7 +315,7 @@ export function RiskScoreCard({
 
 export function RiskItemCard({
   item,
-  href = "/dashboard/ai",
+  href = "/dashboard/insights",
 }: {
   item: RiskItem;
   href?: string;
@@ -333,7 +333,7 @@ export function RiskItemCard({
         className="mt-4 text-sm font-semibold text-[#8f6f2d] underline-offset-4 hover:underline"
         href={href}
       >
-        View in AI Insight
+        View in Insights
       </Link>
     </article>
   );

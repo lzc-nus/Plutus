@@ -74,6 +74,22 @@ def test_create_and_get_post(client: TestClient) -> None:
     assert body["comment_count"] == 0
 
 
+def test_guest_can_get_post_without_user_state(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="public-post-author", email="public-post-author@example.com"
+    )
+    post = _create_post(client, token, content="Public research note.")
+
+    response = client.get(f"/api/v1/community/posts/{post['id']}")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == post["id"]
+    assert body["content_blocks"][0]["value"] == "Public research note."
+    assert body["is_liked_by_me"] is False
+    assert body["is_saved_by_me"] is False
+
+
 def test_post_requires_at_least_one_content_block(client: TestClient) -> None:
     token = _register_and_login(
         client, username="post-author", email="post-author@example.com"
@@ -97,6 +113,20 @@ def test_post_rejects_invalid_block_type(client: TestClient) -> None:
         "/api/v1/community/posts",
         headers=_auth_headers(token),
         json={"content_blocks": [{"type": "unknown_type", "value": "hello"}]},
+    )
+
+    assert response.status_code == 422
+
+
+def test_post_rejects_non_http_url_block(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="post-author", email="post-author@example.com"
+    )
+
+    response = client.post(
+        "/api/v1/community/posts",
+        headers=_auth_headers(token),
+        json={"content_blocks": [{"type": "link", "url": "javascript:alert(1)"}]},
     )
 
     assert response.status_code == 422
@@ -155,6 +185,54 @@ def test_delete_post(client: TestClient) -> None:
     assert get_response.status_code == 404
 
 
+def test_delete_post_with_related_activity(client: TestClient) -> None:
+    author_token = _register_and_login(
+        client, username="post-author", email="post-author@example.com"
+    )
+    actor_token = _register_and_login(
+        client, username="post-actor", email="post-actor@example.com"
+    )
+    post = _create_post(client, author_token)
+    comment = _create_comment(client, actor_token, post_id=str(post["id"]))
+
+    activity_responses = [
+        client.post(
+            f"/api/v1/community/posts/{post['id']}/like",
+            headers=_auth_headers(actor_token),
+        ),
+        client.post(
+            f"/api/v1/community/posts/{post['id']}/save",
+            headers=_auth_headers(actor_token),
+        ),
+        client.post(
+            f"/api/v1/community/posts/{post['id']}/share",
+            headers=_auth_headers(actor_token),
+        ),
+        client.post(
+            f"/api/v1/community/posts/{post['id']}/repost",
+            headers=_auth_headers(actor_token),
+            json={"content_blocks": []},
+        ),
+        client.post(
+            f"/api/v1/community/posts/{post['id']}/comments/{comment['id']}/like",
+            headers=_auth_headers(author_token),
+        ),
+        client.post(
+            f"/api/v1/community/posts/{post['id']}/comments/{comment['id']}/share",
+            headers=_auth_headers(author_token),
+        ),
+    ]
+    assert [response.status_code for response in activity_responses] == [201] * 6
+
+    delete_response = client.delete(
+        f"/api/v1/community/posts/{post['id']}",
+        headers=_auth_headers(author_token),
+    )
+
+    assert delete_response.status_code == 204
+    assert client.get(f"/api/v1/community/posts/{post['id']}").status_code == 404
+
+
 def test_delete_post_by_non_author_returns_404(client: TestClient) -> None:
     author_token = _register_and_login(
         client, username="post-author", email="post-author@example.com"
@@ -202,6 +280,21 @@ def test_global_feed_returns_all_posts(client: TestClient) -> None:
     contents = [b["content_blocks"][0]["value"] for b in response.json()]
     assert "Post from A." in contents
     assert "Post from B." in contents
+
+
+def test_guest_can_read_global_feed(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="guest-feed-author", email="guest-feed-author@example.com"
+    )
+    post = _create_post(client, token, content="Visible to guests.")
+
+    response = client.get("/api/v1/community/feed/global")
+
+    assert response.status_code == 200
+    visible_post = next(p for p in response.json() if p["id"] == post["id"])
+    assert visible_post["content_blocks"][0]["value"] == "Visible to guests."
+    assert visible_post["is_liked_by_me"] is False
+    assert visible_post["is_saved_by_me"] is False
 
 
 def test_following_feed_only_returns_followed_users_posts(client: TestClient) -> None:
@@ -280,6 +373,21 @@ def test_create_and_list_comments(client: TestClient) -> None:
     assert body[0]["content_blocks"][0]["value"] == "Agreed, rebalancing now."
 
 
+def test_guest_can_list_comments(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="public-commenter", email="public-commenter@example.com"
+    )
+    post = _create_post(client, token)
+    _create_comment(client, token, post_id=post["id"], content="Public comment.")
+
+    response = client.get(f"/api/v1/community/posts/{post['id']}/comments")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["content_blocks"][0]["value"] == "Public comment."
+
+
 def test_comment_increments_post_comment_count(client: TestClient) -> None:
     token = _register_and_login(
         client, username="commenter", email="commenter@example.com"
@@ -312,6 +420,37 @@ def test_delete_comment_decrements_post_comment_count(client: TestClient) -> Non
         headers=_auth_headers(token),
     )
     assert response.json()["comment_count"] == 0
+
+
+def test_delete_comment_with_related_activity(client: TestClient) -> None:
+    author_token = _register_and_login(
+        client, username="comment-author", email="comment-author@example.com"
+    )
+    actor_token = _register_and_login(
+        client, username="comment-actor", email="comment-actor@example.com"
+    )
+    post = _create_post(client, author_token)
+    comment = _create_comment(client, author_token, post_id=post["id"])
+
+    like_response = client.post(
+        f"/api/v1/community/posts/{post['id']}/comments/{comment['id']}/like",
+        headers=_auth_headers(actor_token),
+    )
+    share_response = client.post(
+        f"/api/v1/community/posts/{post['id']}/comments/{comment['id']}/share",
+        headers=_auth_headers(actor_token),
+    )
+    assert like_response.status_code == 201
+    assert share_response.status_code == 201
+
+    delete_response = client.delete(
+        f"/api/v1/community/posts/{post['id']}/comments/{comment['id']}",
+        headers=_auth_headers(author_token),
+    )
+
+    assert delete_response.status_code == 204
+    comments_response = client.get(f"/api/v1/community/posts/{post['id']}/comments")
+    assert comments_response.json() == []
 
 
 def test_update_comment_by_non_author_returns_404(client: TestClient) -> None:
@@ -467,6 +606,29 @@ def test_feed_marks_post_liked_and_saved_by_current_user(client: TestClient) -> 
     assert other_post["is_saved_by_me"] is False
 
 
+def test_user_posts_returns_only_that_users_posts_for_guests(client: TestClient) -> None:
+    target_token = _register_and_login(
+        client, username="target-poster", email="target-poster@example.com"
+    )
+    other_token = _register_and_login(
+        client, username="other-poster", email="other-poster@example.com"
+    )
+    target_id = client.get(
+        "/api/v1/users/me", headers=_auth_headers(target_token)
+    ).json()["id"]
+    target_post = _create_post(client, target_token, content="Target post.")
+    _create_post(client, other_token, content="Other post.")
+
+    response = client.get(f"/api/v1/community/users/{target_id}/posts")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert any(p["id"] == target_post["id"] for p in body)
+    assert all(p["author_id"] == target_id for p in body)
+    assert all(p["is_liked_by_me"] is False for p in body)
+    assert all(p["is_saved_by_me"] is False for p in body)
+
+
 def test_like_comment_increments_like_count(client: TestClient) -> None:
     token = _register_and_login(
         client, username="liker", email="liker@example.com"
@@ -591,7 +753,7 @@ def test_share_post_increments_share_count_and_returns_url(client: TestClient) -
     assert response.status_code == 201
     body = response.json()
     assert "share_url" in body
-    assert str(post["id"]) in body["share_url"]
+    assert body["share_url"].endswith(f"/community/posts/{post['id']}")
 
     post_response = client.get(
         f"/api/v1/community/posts/{post['id']}",
@@ -778,14 +940,8 @@ def test_following_and_followers_lists(client: TestClient) -> None:
         headers=_auth_headers(follower_token),
     )
 
-    following_response = client.get(
-        f"/api/v1/community/users/{follower_id}/following",
-        headers=_auth_headers(follower_token),
-    )
-    followers_response = client.get(
-        f"/api/v1/community/users/{followee_id}/followers",
-        headers=_auth_headers(followee_token),
-    )
+    following_response = client.get(f"/api/v1/community/users/{follower_id}/following")
+    followers_response = client.get(f"/api/v1/community/users/{followee_id}/followers")
 
     assert following_response.status_code == 200
     assert any(f["followee_id"] == followee_id for f in following_response.json())

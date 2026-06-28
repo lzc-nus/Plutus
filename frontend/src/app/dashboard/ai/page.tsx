@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use client";
 
 import { useMemo, useState } from "react";
@@ -59,4 +60,10 @@ export default function AIPage() {
       />
     </div>
   );
+=======
+import { redirect } from "next/navigation";
+
+export default function AIPage() {
+  redirect("/dashboard/insights");
+>>>>>>> 960af32b2963319ba21f279510541e91d5049988
 }

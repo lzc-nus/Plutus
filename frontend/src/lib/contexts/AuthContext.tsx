@@ -16,30 +16,39 @@ interface AuthContextValue {
   loading: boolean;
   /** Call this after a profile update to sync the context without a refetch. */
   setUser: (user: UserRead) => void;
-  /** Clears the user — call on logout. */
+  /** Clears the user on logout. */
   clearUser: () => void;
 }
 
+type AuthProviderProps = {
+  children: ReactNode;
+  initialUser?: UserRead | null;
+};
+
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserRead | null>(null);
-  const [loading, setLoading] = useState(true);
+export function AuthProvider({ children, initialUser = null }: AuthProviderProps) {
+  const [user, setUser] = useState<UserRead | null>(initialUser);
+  const [loading, setLoading] = useState(!initialUser);
 
   useEffect(() => {
+    if (initialUser) {
+      return;
+    }
+
     getMe()
       .then((res) => {
         setUser(res.data ?? null);
       })
       .catch(() => {
-        // Token missing, expired, or invalid — leave user as null.
+        // Token missing, expired, or invalid; leave user as null.
         // The app's existing auth guard will handle the redirect to login.
         setUser(null);
       })
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [initialUser]);
 
   function clearUser() {
     setUser(null);

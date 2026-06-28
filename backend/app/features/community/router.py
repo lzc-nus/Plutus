@@ -4,10 +4,11 @@ import datetime
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentUser, OptionalCurrentUser
+from app.core.config import settings
 from app.db.session import get_db
 from app.features.community.schemas import (
     CommentCreate,
@@ -38,6 +39,7 @@ from app.features.community.service import (
     list_following,
     list_global_posts,
     list_saved_posts,
+    list_user_posts,
     read_post_for_user,
     read_posts_for_user,
     save_post,
@@ -89,14 +91,15 @@ def get_feed(
     operation_id="community_feed_global",
 )
 def get_global_feed(
-    current_user: CurrentUser,
+    current_user: OptionalCurrentUser,
     db: Annotated[Session, Depends(get_db)],
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
     before: Annotated[datetime.datetime | None, Query()] = None,
 ) -> list[PostRead]:
     """Chronological feed of all posts regardless of follows."""
     posts = list_global_posts(db, limit=limit, before=before)
-    return read_posts_for_user(db, posts=posts, current_user_id=current_user.id)
+    current_user_id = current_user.id if current_user else None
+    return read_posts_for_user(db, posts=posts, current_user_id=current_user_id)
 
 
 # ── Posts ─────────────────────────────────────────────────────────────────────
@@ -122,7 +125,7 @@ def get_saved_posts(
 )
 def get_post_endpoint(
     post_id: uuid.UUID,
-    current_user: CurrentUser,
+    current_user: OptionalCurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> PostRead:
     from app.features.community.models import Post
@@ -132,7 +135,8 @@ def get_post_endpoint(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Post not found.",
         )
-    return read_post_for_user(db, post=post, current_user_id=current_user.id)
+    current_user_id = current_user.id if current_user else None
+    return read_post_for_user(db, post=post, current_user_id=current_user_id)
 
 @router.post(
     "/posts",
@@ -296,10 +300,13 @@ def share_post_endpoint(
     post_id: uuid.UUID,
     current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
-    request: Request,
 ) -> ShareLinkRead:
-    base_url = str(request.base_url).rstrip("/")
-    result = share_post(db, user_id=current_user.id, post_id=post_id, base_url=base_url)
+    result = share_post(
+        db,
+        user_id=current_user.id,
+        post_id=post_id,
+        frontend_origin=settings.frontend_origin,
+    )
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -368,7 +375,6 @@ def delete_repost_endpoint(
 )
 def get_comments(
     post_id: uuid.UUID,
-    current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> list[CommentRead]:
     comments = list_comments(db, post_id=post_id)
@@ -518,15 +524,13 @@ def share_comment_endpoint(
     comment_id: uuid.UUID,
     current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
-    request: Request,
 ) -> ShareLinkRead:
-    base_url = str(request.base_url).rstrip("/")
     result = share_comment(
         db,
         user_id=current_user.id,
         post_id=post_id,
         comment_id=comment_id,
-        base_url=base_url,
+        frontend_origin=settings.frontend_origin,
     )
     if not result:
         raise HTTPException(
@@ -584,13 +588,36 @@ def unfollow_user_endpoint(
 
 
 @router.get(
+    "/users/{user_id}/posts",
+    response_model=list[PostRead],
+    operation_id="community_user_posts_list",
+)
+def get_user_posts(
+    user_id: uuid.UUID,
+    current_user: OptionalCurrentUser,
+    db: Annotated[Session, Depends(get_db)],
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    before: Annotated[datetime.datetime | None, Query()] = None,
+) -> list[PostRead]:
+    """Chronological public posts authored by one user."""
+    if not get_user_by_id(db, user_id=user_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found.",
+        )
+
+    posts = list_user_posts(db, user_id=user_id, limit=limit, before=before)
+    current_user_id = current_user.id if current_user else None
+    return read_posts_for_user(db, posts=posts, current_user_id=current_user_id)
+
+
+@router.get(
     "/users/{user_id}/following",
     response_model=list[FollowRead],
     operation_id="community_following_list",
 )
 def get_following(
     user_id: uuid.UUID,
-    current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> list[FollowRead]:
     follows = list_following(db, user_id=user_id)
@@ -604,7 +631,6 @@ def get_following(
 )
 def get_followers(
     user_id: uuid.UUID,
-    current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> list[FollowRead]:
     follows = list_followers(db, user_id=user_id)

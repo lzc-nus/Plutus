@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use client";
 
 import { useEffect, useState } from "react";
@@ -164,3 +165,10 @@ function getInitials(name: string): string {
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return name.slice(0, 2).toUpperCase();
 }
+=======
+import { ProfileUserListPage } from "@/components/profile/ProfileUserListPage";
+
+export default function FollowingPage() {
+  return <ProfileUserListPage mode="following" />;
+}
+>>>>>>> 960af32b2963319ba21f279510541e91d5049988
