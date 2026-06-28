@@ -46,6 +46,29 @@ def test_allowed_origins_are_required() -> None:
         make_settings(allowed_origins=[])
 
 
+def test_allowed_origins_load_from_comma_separated_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(
+        "DATABASE_URL",
+        "postgresql+psycopg2://user:pass@db.example.com:5432/plutus",
+    )
+    monkeypatch.setenv("SECRET_KEY", "x" * 32)
+    monkeypatch.setenv("AUTH_COOKIE_NAME", "plutus_access_token")
+    monkeypatch.setenv("FRONTEND_ORIGIN", "https://plutus.example")
+    monkeypatch.setenv(
+        "ALLOWED_ORIGINS",
+        "https://plutus.example, https://admin.plutus.example",
+    )
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.setenv("AUTH_COOKIE_SECURE", "true")
+
+    settings = Settings(_env_file=None)
+
+    assert settings.allowed_origins == [
+        "https://plutus.example",
+        "https://admin.plutus.example",
+    ]
+
+
 def test_openai_runtime_settings_are_configurable() -> None:
     settings = make_settings(
         openai_model="gpt-5.4-mini",

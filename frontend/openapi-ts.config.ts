@@ -14,7 +14,10 @@ export default defineConfig({
   input: `${apiBaseUrl.replace(/\/$/, "")}/openapi.json`,
   output: "src/lib/api/generated",
   plugins: [
-    "@hey-api/client-fetch",
+    {
+      name: "@hey-api/client-fetch",
+      baseUrl: "",
+    },
     "@hey-api/typescript",
     "@hey-api/sdk",
   ],

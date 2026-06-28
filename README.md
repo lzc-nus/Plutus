@@ -194,6 +194,8 @@ Open the backend docs:
 http://localhost:8000/docs
 ```
 
+For production deployment, use [DEPLOYMENT.md](DEPLOYMENT.md).
+
 Check backend and database health:
 
 ```text

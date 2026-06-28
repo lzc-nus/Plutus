@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import ast
 from functools import lru_cache
-from typing import Literal
+from typing import Annotated, Literal
 from urllib.parse import urlparse
 
 from pydantic import Field, field_validator, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 OpenAIReasoningEffort = Literal["none", "minimal", "low", "medium", "high", "xhigh"]
 
@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     openai_request_timeout_seconds: float = 30.0
     openai_store_responses: bool = False
 
-    allowed_origins: list[str]
+    allowed_origins: Annotated[list[str], NoDecode]
 
     @staticmethod
     def _normalize_origin(value: str, field_name: str) -> str:
