@@ -3,15 +3,9 @@
 import { useEffect, useState } from "react";
 
 import {
-<<<<<<< HEAD
-  CashflowBreakdownChart,
-  CashflowButterflyChart,
-  MetricCard,
-=======
   CashflowButterflyChart,
   MetricCard,
   RiskScoreCard,
->>>>>>> 960af32b2963319ba21f279510541e91d5049988
   SectionHeader,
   UpcomingEventsCard,
 } from "@/components/WealthComponents";
@@ -22,10 +16,7 @@ import {
   portfolioLiabilitiesList,
   transactionsList,
 } from "@/lib/api/generated";
-<<<<<<< HEAD
-=======
 import { useLatestInsight } from "@/lib/insightStorage";
->>>>>>> 960af32b2963319ba21f279510541e91d5049988
 import { formatCurrency, formatCurrencyWithCents } from "@/lib/format";
 
 const TOP_CATEGORY_COUNT = 5;
