@@ -8,6 +8,8 @@ from urllib.parse import urlparse
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+OpenAIReasoningEffort = Literal["none", "minimal", "low", "medium", "high", "xhigh"]
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -28,15 +30,19 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     sql_echo: bool = False
 
-    auth_cookie_name: str = "plutus_access_token"
+    auth_cookie_name: str
     auth_cookie_secure: bool | None = None
     auth_cookie_samesite: Literal["lax", "strict", "none"] = "lax"
-    frontend_origin: str = "http://localhost:3000"
+    frontend_origin: str
 
-    allowed_origins: list[str] = [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ]
+    openai_api_key: str | None = None
+    openai_model: str | None = None
+    openai_reasoning_effort: OpenAIReasoningEffort | None = None
+    openai_max_output_tokens: int = 1200
+    openai_request_timeout_seconds: float = 30.0
+    openai_store_responses: bool = False
+
+    allowed_origins: list[str]
 
     @staticmethod
     def _normalize_origin(value: str, field_name: str) -> str:
@@ -79,6 +85,48 @@ class Settings(BaseSettings):
         value = value.strip()
         if not value:
             raise ValueError("AUTH_COOKIE_NAME must not be empty.")
+        return value
+
+    @field_validator("openai_api_key", mode="before")
+    @classmethod
+    def normalize_openai_api_key(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = str(value).strip()
+        return value or None
+
+    @field_validator("openai_model", mode="before")
+    @classmethod
+    def normalize_openai_model(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = str(value).strip()
+        return value or None
+
+    @field_validator("openai_reasoning_effort", mode="before")
+    @classmethod
+    def normalize_openai_reasoning_effort(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = str(value).strip().lower()
+        return value or None
+
+    @field_validator("openai_max_output_tokens")
+    @classmethod
+    def validate_openai_max_output_tokens(cls, value: int) -> int:
+        if value <= 0:
+            raise ValueError("OPENAI_MAX_OUTPUT_TOKENS must be positive.")
+        if value > 4000:
+            raise ValueError("OPENAI_MAX_OUTPUT_TOKENS must be 4000 or less.")
+        return value
+
+    @field_validator("openai_request_timeout_seconds")
+    @classmethod
+    def validate_openai_request_timeout_seconds(cls, value: float) -> float:
+        if value <= 0:
+            raise ValueError("OPENAI_REQUEST_TIMEOUT_SECONDS must be positive.")
+        if value > 120:
+            raise ValueError("OPENAI_REQUEST_TIMEOUT_SECONDS must be 120 or less.")
         return value
 
     @field_validator("frontend_origin")

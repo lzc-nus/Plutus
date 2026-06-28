@@ -5,6 +5,106 @@ export type ClientOptions = {
 };
 
 /**
+ * AiInsightRequest
+ *
+ * Inbound request for generating a financial insight memo.
+ */
+export type AiInsightRequest = {
+    /**
+     * Time Horizon
+     */
+    time_horizon?: 'daily' | 'monthly' | 'annual' | 'all_time';
+    /**
+     * Focus
+     */
+    focus?: 'complete' | 'cashflow' | 'portfolio' | 'risk' | 'planning';
+    /**
+     * Question
+     */
+    question?: string | null;
+};
+
+/**
+ * AiInsightResponse
+ *
+ * Response returned to the frontend.
+ */
+export type AiInsightResponse = {
+    /**
+     * Score
+     */
+    score: number;
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * Executive Summary
+     */
+    executive_summary: string;
+    /**
+     * Sections
+     */
+    sections: Array<AiInsightSection>;
+    /**
+     * Action Items
+     */
+    action_items: Array<string>;
+    /**
+     * Risk Flags
+     */
+    risk_flags: Array<string>;
+    /**
+     * Assumptions
+     */
+    assumptions: Array<string>;
+    /**
+     * Disclaimer
+     */
+    disclaimer: string;
+    /**
+     * Generated At
+     */
+    generated_at: string;
+    /**
+     * Model
+     */
+    model: string;
+    /**
+     * Time Horizon
+     */
+    time_horizon: 'daily' | 'monthly' | 'annual' | 'all_time';
+    /**
+     * Focus
+     */
+    focus: 'complete' | 'cashflow' | 'portfolio' | 'risk' | 'planning';
+};
+
+/**
+ * AiInsightSection
+ *
+ * Single section returned by the model.
+ */
+export type AiInsightSection = {
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Severity
+     */
+    severity: 'positive' | 'neutral' | 'watch' | 'risk';
+    /**
+     * Summary
+     */
+    summary: string;
+    /**
+     * Signals
+     */
+    signals: Array<string>;
+};
+
+/**
  * AssetCreate
  *
  * Inbound payload for creating an asset.
@@ -2559,6 +2659,31 @@ export type MarketCandlesResponses = {
 };
 
 export type MarketCandlesResponse = MarketCandlesResponses[keyof MarketCandlesResponses];
+
+export type AiInsightsGenerateData = {
+    body: AiInsightRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/ai/insights';
+};
+
+export type AiInsightsGenerateErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AiInsightsGenerateError = AiInsightsGenerateErrors[keyof AiInsightsGenerateErrors];
+
+export type AiInsightsGenerateResponses = {
+    /**
+     * Successful Response
+     */
+    200: AiInsightResponse;
+};
+
+export type AiInsightsGenerateResponse = AiInsightsGenerateResponses[keyof AiInsightsGenerateResponses];
 
 export type HealthCheckHealthGetData = {
     body?: never;
