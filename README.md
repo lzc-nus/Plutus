@@ -1,6 +1,6 @@
 # Plutus
 
-Plutus is an AI financial intelligence product by Two Sicilies. The project combines a Next.js frontend, a FastAPI backend, and a PostgreSQL database to support private wealth tracking, portfolio visibility, transaction workflows, and future AI-assisted financial insight.
+[Plutus](https://plutus-frontend-mu.vercel.app) is an AI financial intelligence product by Two Sicilies. The project combines a Next.js frontend, a FastAPI backend, and a PostgreSQL database to support private wealth tracking, portfolio visibility, transaction workflows, and future AI-assisted financial insight.
 
 The current foundation focuses on authentication, local development workflow, database migrations, and a scalable structure for future product features.
 
