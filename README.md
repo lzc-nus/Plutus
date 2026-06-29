@@ -42,6 +42,7 @@ Create new work branches from `dev`. Merge completed work back into `dev`, run c
 ## Live Production Deployment
 
 The full platform infrastructure is live, interconnected, and open for exploration. You can register an account, configure your asset ledgers, and interact with the public trading feed in real time: 
+
 Explore the Live App: plutus-frontend-mu.vercel.app 
 
 ## Local Development
