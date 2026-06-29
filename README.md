@@ -39,6 +39,11 @@ dev -> feature-or-refactor-branch -> dev -> main
 
 Create new work branches from `dev`. Merge completed work back into `dev`, run checks there, and only merge `dev` into `main` after the integrated branch is clean.
 
+## Live Production Deployment
+
+The full platform infrastructure is live, interconnected, and open for exploration. You can register an account, configure your asset ledgers, and interact with the public trading feed in real time: 
+Explore the Live App: plutus-frontend-mu.vercel.app 
+
 ## Local Development
 
 A fresh machine needs these tools installed before project commands will work:
