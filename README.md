@@ -29,7 +29,7 @@ The product should treat user financial data as sensitive by default. Frontend v
 
 ## Branching Workflow
 
-Use `main` as the stable branch and `dev` as the integration branch.
+Use `main` as the stable branch and `dev` as the integration branch. Please refer to `dev` branch for latest updates.
 
 For new features or refactors:
 
