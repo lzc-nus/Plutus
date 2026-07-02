@@ -20,6 +20,8 @@ import {
   type TransactionFilterState,
 } from "@/components/dashboard/transactions/TransactionSearchFilterBar";
 import { filterTransactions } from "@/lib/filterTransactions";
+import { ConfirmDeleteDialog } from "@/components/dashboard/portfolio/ConfirmDeleteDialog";
+import { deleteTransaction } from "@/lib/api/transactions";
 
 function toNumber(value: number | string) {
   return typeof value === "number" ? value : Number(value);
@@ -109,6 +111,27 @@ export default function TransactionsPage() {
     () => Array.from(new Set(ledgerTransactions.map((t) => t.impact))),
     [ledgerTransactions],
   );
+
+  const [deleteTarget, setDeleteTarget] = useState<TransactionRead | null>(null);
+
+  function handleEditClick(id: string) {
+    const original = transactions.find((transaction) => transaction.id === id);
+    if (original) openEditModal(original);
+  }
+
+  function handleDeleteClick(id: string) {
+    const original = transactions.find((transaction) => transaction.id === id);
+    if (original) setDeleteTarget(original);
+  }
+
+  async function handleConfirmDelete(): Promise<boolean> {
+    if (!deleteTarget) return false;
+    const { error } = await deleteTransaction(deleteTarget.id);
+    if (error) return false;
+    await loadTransactions();
+    return true;
+  }
+
   const filteredTransactions = useMemo(
     () => filterTransactions(ledgerTransactions, filters),
     [ledgerTransactions, filters],
@@ -191,7 +214,11 @@ export default function TransactionsPage() {
         ) : null}
 
         {!isLoading && !errorMessage && filteredTransactions.length > 0 ? (
-          <TransactionList onRowClick={handleRowClick} transactions={filteredTransactions} />
+          <TransactionList
+            onDeleteClick={handleDeleteClick}
+            onEditClick={handleEditClick}
+            transactions={filteredTransactions}
+          />
         ) : null}
 
         {!isLoading && !errorMessage && filteredTransactions.length === 0 ? (
@@ -214,6 +241,14 @@ export default function TransactionsPage() {
         ) : null}
       </section>
       <EditTransactionModal onSuccess={loadTransactions} />
+      {deleteTarget ? (
+        <ConfirmDeleteDialog
+          itemName={deleteTarget.description}
+          itemType="transaction"
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={handleConfirmDelete}
+        />
+      ) : null}
     </div>
   );
 }

@@ -386,29 +386,29 @@ export function TransactionRangeToggle({
 
 export function TransactionList({
   transactions,
-  onRowClick,
+  onEditClick,
+  onDeleteClick,
 }: {
   transactions: Transaction[];
-  onRowClick?: (id: string) => void;
+  onEditClick?: (id: string) => void;
+  onDeleteClick?: (id: string) => void;
 }) {
   return (
     <div className="overflow-hidden rounded-lg border border-[#d9d0c1] bg-[#fbf7ef]">
-      <div className="hidden grid-cols-[0.9fr_1.4fr_0.9fr_1fr_0.8fr_1fr] gap-4 border-b border-[#d9d0c1] px-5 py-3 text-xs font-semibold uppercase text-[#8a8173] lg:grid">
+      <div className="hidden grid-cols-[0.9fr_1.4fr_0.9fr_1fr_0.8fr_1fr_auto] gap-4 border-b border-[#d9d0c1] px-5 py-3 text-xs font-semibold uppercase text-[#8a8173] lg:grid">
         <span>Date</span>
         <span>Description</span>
         <span>Category</span>
         <span>Account</span>
         <span className="text-right">Amount</span>
         <span>Impact</span>
+        <span />
       </div>
       <div className="divide-y divide-[#e2dacd]">
         {transactions.map((item) => (
           <div
-            className={`grid gap-3 px-5 py-4 text-sm lg:grid-cols-[0.9fr_1.4fr_0.9fr_1fr_0.8fr_1fr] lg:items-center ${
-              onRowClick ? "cursor-pointer transition hover:bg-[#f2ead9]" : ""
-            }`}
+            className="group grid gap-3 px-5 py-4 text-sm lg:grid-cols-[0.9fr_1.4fr_0.9fr_1fr_0.8fr_1fr_auto] lg:items-center"
             key={item.id}
-            onClick={() => onRowClick?.(item.id)}
           >
             <p className="text-[#756d60]">{item.date}</p>
             <p className="font-semibold">{item.description}</p>
@@ -426,6 +426,41 @@ export function TransactionList({
                 {item.impact}
               </span>
             </p>
+            <div className="flex items-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+              <button
+                aria-label="Edit transaction"
+                className="rounded-md border border-[#d0c5b3] p-1.5 text-[#6f675b] transition hover:border-[#7a6332] hover:text-[#7a6332]"
+                onClick={() => onEditClick?.(item.id)}
+                type="button"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path
+                    d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              <button
+                aria-label="Delete transaction"
+                className="rounded-md border border-[#d5a58b] p-1.5 text-[#8f3f32] transition hover:bg-[#f2e0d8]"
+                onClick={() => onDeleteClick?.(item.id)}
+                type="button"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path
+                    d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
         ))}
       </div>
