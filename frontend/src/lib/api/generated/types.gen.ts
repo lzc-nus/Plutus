@@ -1120,6 +1120,38 @@ export type TransactionRead = {
 };
 
 /**
+ * TransactionUpdate
+ *
+ * Inbound payload for updating a user transaction. All fields optional.
+ */
+export type TransactionUpdate = {
+    /**
+     * Occurred At
+     */
+    occurred_at?: string | null;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Category
+     */
+    category?: string | null;
+    /**
+     * Account
+     */
+    account?: string | null;
+    /**
+     * Amount
+     */
+    amount?: number | string | null;
+    /**
+     * Impact
+     */
+    impact?: string | null;
+};
+
+/**
  * UserPasswordUpdate
  *
  * Inbound payload for changing the authenticated user's password.
@@ -1577,6 +1609,66 @@ export type TransactionsCreateResponses = {
 };
 
 export type TransactionsCreateResponse = TransactionsCreateResponses[keyof TransactionsCreateResponses];
+
+export type TransactionsDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Transaction Id
+         */
+        transaction_id: string;
+    };
+    query?: never;
+    url: '/api/v1/transactions/{transaction_id}';
+};
+
+export type TransactionsDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TransactionsDeleteError = TransactionsDeleteErrors[keyof TransactionsDeleteErrors];
+
+export type TransactionsDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type TransactionsDeleteResponse = TransactionsDeleteResponses[keyof TransactionsDeleteResponses];
+
+export type TransactionsUpdateData = {
+    body: TransactionUpdate;
+    path: {
+        /**
+         * Transaction Id
+         */
+        transaction_id: string;
+    };
+    query?: never;
+    url: '/api/v1/transactions/{transaction_id}';
+};
+
+export type TransactionsUpdateErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TransactionsUpdateError = TransactionsUpdateErrors[keyof TransactionsUpdateErrors];
+
+export type TransactionsUpdateResponses = {
+    /**
+     * Successful Response
+     */
+    200: TransactionRead;
+};
+
+export type TransactionsUpdateResponse = TransactionsUpdateResponses[keyof TransactionsUpdateResponses];
 
 export type CalendarEventsListData = {
     body?: never;

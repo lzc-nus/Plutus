@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
   MetricCard,
   SectionHeader,
@@ -12,6 +12,14 @@ import { listTransactions, type TransactionRange } from "@/lib/api/transactions"
 import type { TransactionRead } from "@/lib/api/generated";
 import type { Transaction } from "@/data/wealthData";
 import { formatCurrency, formatCurrencyWithCents } from "@/lib/format";
+import EditTransactionModal from "@/components/dashboard/transactions/EditTransactionModal";
+import { useTransactionModalStore } from "@/lib/stores/transactionModalStore";
+import {
+  TransactionSearchFilterBar,
+  DEFAULT_TRANSACTION_FILTERS,
+  type TransactionFilterState,
+} from "@/components/dashboard/transactions/TransactionSearchFilterBar";
+import { filterTransactions } from "@/lib/filterTransactions";
 
 function toNumber(value: number | string) {
   return typeof value === "number" ? value : Number(value);
@@ -41,53 +49,79 @@ function toLedgerTransaction(transaction: TransactionRead, range: TransactionRan
 export default function TransactionsPage() {
   const [range, setRange] = useState<TransactionRange>("ALL");
   const [transactions, setTransactions] = useState<TransactionRead[]>([]);
+
+  const { openEditModal } = useTransactionModalStore();
+
+  function handleRowClick(id: string) {
+    const original = transactions.find((transaction) => transaction.id === id);
+    if (original) {
+      openEditModal(original);
+    }
+  }
+
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
-  useEffect(() => {
-    let ignore = false;
+  const ignoreRef = useRef(false);
 
-    async function loadTransactions() {
-      setIsLoading(true);
-      setErrorMessage("");
+  async function loadTransactions() {
+    setIsLoading(true);
+    setErrorMessage("");
 
-      const { data, error, response } = await listTransactions(range);
+    const { data, error, response } = await listTransactions(range);
 
-      if (ignore) {
-        return;
-      }
+    if (ignoreRef.current) return;
 
-      if (error || !response?.ok) {
-        setTransactions([]);
-        setErrorMessage("Unable to load transactions. Please try again.");
-        setIsLoading(false);
-        return;
-      }
-
-      setTransactions(data ?? []);
+    if (error || !response?.ok) {
+      setTransactions([]);
+      setErrorMessage("Unable to load transactions. Please try again.");
       setIsLoading(false);
+      return;
     }
 
-    void loadTransactions();
+    setTransactions(data ?? []);
+    setIsLoading(false);
+  }
 
+  useEffect(() => {
+    ignoreRef.current = false;
+    void loadTransactions();
     return () => {
-      ignore = true;
+      ignoreRef.current = true;
     };
   }, [range]);
+
+  const [filters, setFilters] = useState<TransactionFilterState>(DEFAULT_TRANSACTION_FILTERS);
 
   const ledgerTransactions = useMemo(
     () => transactions.map((transaction) => toLedgerTransaction(transaction, range)),
     [range, transactions],
   );
-  const inflow = ledgerTransactions
+  const availableCategories = useMemo(
+    () => Array.from(new Set(ledgerTransactions.map((t) => t.category))),
+    [ledgerTransactions],
+  );
+  const availableAccounts = useMemo(
+    () => Array.from(new Set(ledgerTransactions.map((t) => t.account))),
+    [ledgerTransactions],
+  );
+  const availableImpacts = useMemo(
+    () => Array.from(new Set(ledgerTransactions.map((t) => t.impact))),
+    [ledgerTransactions],
+  );
+  const filteredTransactions = useMemo(
+    () => filterTransactions(ledgerTransactions, filters),
+    [ledgerTransactions, filters],
+  );
+  const inflow = filteredTransactions
     .filter((transaction) => transaction.amount > 0)
     .reduce((total, transaction) => total + transaction.amount, 0);
   const outflow = Math.abs(
-    ledgerTransactions
+    filteredTransactions
       .filter((transaction) => transaction.amount < 0)
       .reduce((total, transaction) => total + transaction.amount, 0),
   );
-  const netMovement = ledgerTransactions.reduce(
+  const netMovement = filteredTransactions.reduce(
     (total, transaction) => total + transaction.amount,
     0,
   );
@@ -136,6 +170,13 @@ export default function TransactionsPage() {
           />
           <TransactionRangeToggle onChange={setRange} value={range} />
         </div>
+        <TransactionSearchFilterBar
+          availableAccounts={availableAccounts}
+          availableCategories={availableCategories}
+          availableImpacts={availableImpacts}
+          filters={filters}
+          onChange={setFilters}
+        />
 
         {isLoading ? (
           <div className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-8 text-sm font-semibold text-[#696154]">
@@ -149,17 +190,19 @@ export default function TransactionsPage() {
           </div>
         ) : null}
 
-        {!isLoading && !errorMessage && ledgerTransactions.length > 0 ? (
-          <TransactionList transactions={ledgerTransactions} />
+        {!isLoading && !errorMessage && filteredTransactions.length > 0 ? (
+          <TransactionList onRowClick={handleRowClick} transactions={filteredTransactions} />
         ) : null}
 
-        {!isLoading && !errorMessage && ledgerTransactions.length === 0 ? (
+        {!isLoading && !errorMessage && filteredTransactions.length === 0 ? (
           <div className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-8 text-center">
             <h3 className="font-display text-3xl font-semibold text-[#1d211c]">
               No transactions in this view
             </h3>
             <p className="mt-2 text-sm text-[#696154]">
-              Add your first transaction or choose All to inspect the full ledger.
+              {filters.search || filters.categories.length > 0
+                ? "No matches for your search. Try a different term or clear the search."
+                : "Add your first transaction or choose All to inspect the full ledger."}
             </p>
             <Link
               className="mt-5 inline-flex h-11 items-center justify-center rounded-md bg-[#1d211c] px-4 text-sm font-semibold text-[#fbf7ef] transition hover:bg-[#343b32]"
@@ -170,6 +213,7 @@ export default function TransactionsPage() {
           </div>
         ) : null}
       </section>
+      <EditTransactionModal onSuccess={loadTransactions} />
     </div>
   );
 }
