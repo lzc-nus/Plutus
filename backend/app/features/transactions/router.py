@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, status
@@ -11,8 +12,14 @@ from app.features.transactions.schemas import (
     TransactionCreate,
     TransactionRange,
     TransactionRead,
+    TransactionUpdate
 )
-from app.features.transactions.service import create_transaction, list_transactions
+from app.features.transactions.service import (
+    create_transaction,
+    delete_transaction, 
+    list_transactions,
+    update_transaction,
+)
 
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
@@ -58,3 +65,36 @@ def create_user_transaction(
         payload=payload,
     )
     return TransactionRead.model_validate(transaction, from_attributes=True)
+
+
+@router.patch(
+    "/{transaction_id}",
+    response_model=TransactionRead,
+    operation_id="transactions_update",
+)
+def update_user_transaction(
+    transaction_id: uuid.UUID,
+    payload: TransactionUpdate,
+    current_user: CurrentUser,
+    db: Annotated[Session, Depends(get_db)],
+) -> TransactionRead:
+    transaction = update_transaction(
+        db,
+        transaction_id=transaction_id,
+        user_id=current_user.id,
+        payload=payload,
+    )
+    return TransactionRead.model_validate(transaction, from_attributes=True)
+
+
+@router.delete(
+    "/{transaction_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="transactions_delete",
+)
+def delete_user_transaction(
+    transaction_id: uuid.UUID,
+    current_user: CurrentUser,
+    db: Annotated[Session, Depends(get_db)],
+) -> None:
+    delete_transaction(db, transaction_id=transaction_id, user_id=current_user.id)

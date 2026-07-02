@@ -386,8 +386,10 @@ export function TransactionRangeToggle({
 
 export function TransactionList({
   transactions,
+  onRowClick,
 }: {
   transactions: Transaction[];
+  onRowClick?: (id: string) => void;
 }) {
   return (
     <div className="overflow-hidden rounded-lg border border-[#d9d0c1] bg-[#fbf7ef]">
@@ -402,8 +404,11 @@ export function TransactionList({
       <div className="divide-y divide-[#e2dacd]">
         {transactions.map((item) => (
           <div
-            className="grid gap-3 px-5 py-4 text-sm lg:grid-cols-[0.9fr_1.4fr_0.9fr_1fr_0.8fr_1fr] lg:items-center"
+            className={`grid gap-3 px-5 py-4 text-sm lg:grid-cols-[0.9fr_1.4fr_0.9fr_1fr_0.8fr_1fr] lg:items-center ${
+              onRowClick ? "cursor-pointer transition hover:bg-[#f2ead9]" : ""
+            }`}
             key={item.id}
+            onClick={() => onRowClick?.(item.id)}
           >
             <p className="text-[#756d60]">{item.date}</p>
             <p className="font-semibold">{item.description}</p>
@@ -425,6 +430,24 @@ export function TransactionList({
         ))}
       </div>
     </div>
+  );
+}
+
+export function TransactionSearchInput({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <input
+      className="h-11 w-full rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-none transition focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20 sm:w-64"
+      onChange={(event) => onChange(event.target.value)}
+      placeholder="Search description, category, account"
+      type="text"
+      value={value}
+    />
   );
 }
 

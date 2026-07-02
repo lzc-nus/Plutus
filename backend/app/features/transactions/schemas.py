@@ -36,6 +36,31 @@ class TransactionCreate(SQLModel):
         return value
 
 
+class TransactionUpdate(SQLModel):
+    """Inbound payload for updating a user transaction. All fields optional."""
+
+    occurred_at: datetime.datetime | None = None
+    description: str | None = Field(default=None, min_length=1, max_length=160)
+    category: str | None = Field(default=None, min_length=1, max_length=80)
+    account: str | None = Field(default=None, min_length=1, max_length=80)
+    amount: Decimal | None = Field(default=None, max_digits=14, decimal_places=2)
+    impact: str | None = Field(default=None, max_length=160)
+
+    @field_validator("description", "category", "account", "impact", mode="before")
+    @classmethod
+    def strip_text_fields(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return str(value).strip()
+
+    @field_validator("amount")
+    @classmethod
+    def validate_non_zero_amount(cls, value: Decimal | None) -> Decimal | None:
+        if value is not None and value == 0:
+            raise ValueError("Amount cannot be zero.")
+        return value
+
+
 class TransactionRead(SQLModel):
     """Outbound transaction shape returned to clients."""
 

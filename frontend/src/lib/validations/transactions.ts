@@ -31,4 +31,24 @@ export const transactionFormSchema = z.object({
     .optional(),
 });
 
+export function transactionToFormDefaults(transaction: {
+  occurred_at: string;
+  description: string;
+  category: string;
+  account: string;
+  amount: string | number;
+  impact?: string | null;
+}): TransactionFormInput {
+  const occurredAt = new Date(transaction.occurred_at);
+  return {
+    description: transaction.description,
+    amount: String(transaction.amount),
+    date: occurredAt.toISOString().slice(0, 10),
+    time: occurredAt.toTimeString().slice(0, 5),
+    account: transaction.account,
+    category: transaction.category,
+    impact: transaction.impact ?? "",
+  };
+}
+
 export type TransactionFormInput = z.infer<typeof transactionFormSchema>;

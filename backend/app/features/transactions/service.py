@@ -6,8 +6,10 @@ from decimal import Decimal, ROUND_HALF_UP
 
 from sqlmodel import Session, select
 
+from fastapi import HTTPException, status
+
 from app.features.transactions.models import Transaction
-from app.features.transactions.schemas import TransactionCreate, TransactionRange
+from app.features.transactions.schemas import TransactionCreate, TransactionRange, TransactionUpdate
 
 MONEY_QUANT = Decimal("0.01")
 
@@ -33,6 +35,56 @@ def create_transaction(
     db.refresh(transaction)
     return transaction
 
+
+def get_transaction(
+    db: Session,
+    *,
+    transaction_id: uuid.UUID,
+    user_id: uuid.UUID,
+) -> Transaction:
+    transaction = db.get(Transaction, transaction_id)
+    if transaction is None or transaction.user_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Transaction not found.",
+        )
+    return transaction
+
+
+def update_transaction(
+    db: Session,
+    *,
+    transaction_id: uuid.UUID,
+    user_id: uuid.UUID,
+    payload: TransactionUpdate,
+) -> Transaction:
+    transaction = get_transaction(db, transaction_id=transaction_id, user_id=user_id)
+
+    update_data = payload.model_dump(exclude_unset=True)
+    if "occurred_at" in update_data:
+        update_data["occurred_at"] = _ensure_timezone(update_data["occurred_at"])
+    if "amount" in update_data:
+        update_data["amount"] = _quantize_money(update_data["amount"])
+
+    for field, value in update_data.items():
+        setattr(transaction, field, value)
+
+    db.add(transaction)
+    db.commit()
+    db.refresh(transaction)
+    return transaction
+
+
+def delete_transaction(
+    db: Session,
+    *,
+    transaction_id: uuid.UUID,
+    user_id: uuid.UUID,
+) -> None:
+    transaction = get_transaction(db, transaction_id=transaction_id, user_id=user_id)
+    db.delete(transaction)
+    db.commit()
+    
 
 def list_transactions(
     db: Session,
