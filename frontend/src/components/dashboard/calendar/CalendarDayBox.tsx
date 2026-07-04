@@ -26,7 +26,7 @@ export function CalendarDayBox({
     }, [dateObj]);
 
     return (
-        <div className="group flex min-h-0 min-w-0 flex-col bg-[#fbf7ef] p-2.5 transition hover:bg-[#fcfbf7]">
+        <div className="group flex min-h-0 min-w-0 flex-col overflow-hidden border-b border-r border-[#d9d0c1] bg-[#fbf7ef] p-2.5 transition hover:bg-[#fcfbf7]">
             <div className="mb-2 flex items-center justify-between gap-2">
                 <button
                     className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${isToday ? "bg-[#1d211c] text-[#fbf7ef]" : "text-[#1d211c] group-hover:bg-[#f5efe4]"
@@ -43,7 +43,7 @@ export function CalendarDayBox({
                 )}
             </div>
 
-            <div className="custom-scrollbar flex-1 space-y-1 overflow-y-auto pr-0.5">
+            <div className="custom-scrollbar min-h-0 flex-1 space-y-1 overflow-y-auto pr-0.5">
                 {dailyEvents.map((evt) => {
                     const color = getCalendarEventColor(evt.color);
                     const formattedTime = evt.is_all_day

@@ -14,8 +14,8 @@ export function filterTransactions(
   return transactions.filter((transaction) => {
     const matchesSearch =
       !query ||
-      [transaction.description, transaction.category, transaction.account, transaction.impact].some((field) =>
-        field.toLowerCase().includes(query),
+      [transaction.description, transaction.category, transaction.account, transaction.impact].some(
+        (field) => field.toLowerCase().includes(query),
       );
 
     const matchesCategory =

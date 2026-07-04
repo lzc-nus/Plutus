@@ -14,11 +14,14 @@ import {
 import { getApiErrorMessage } from "@/lib/api/auth";
 import type { CalendarEventCreate, CalendarEventRead, CalendarEventUpdate } from "@/lib/api/generated";
 import { calendarEventFormSchema } from "@/lib/validations/calendar";
+import { toLocalOffsetIso, addOneHourToTime } from "@/lib/utils/calendarDateUtils";
 
 type FieldErrors = Record<string, string[] | undefined>;
 
 type CalendarEventFormProps = {
   selectedDateKey: string | null;
+  selectedTime: string | null;
+  selectedEndTime: string | null;
   selectedEvent: CalendarEventRead | null;
   onCancelSelection: () => void;
   onCollapse: () => void;
@@ -57,12 +60,14 @@ type CalendarEventFormState = {
 
 export function CalendarEventForm({
   selectedDateKey,
+  selectedTime,
+  selectedEndTime,
   selectedEvent,
   onCancelSelection,
   onCollapse,
   onSaved,
 }: CalendarEventFormProps) {
-  const initialValues = getInitialFormValues(selectedEvent, selectedDateKey);
+  const initialValues = getInitialFormValues(selectedEvent, selectedDateKey, selectedTime, selectedEndTime);
   const isRecurringInstance = Boolean(selectedEvent?.is_recurring_instance);
 
   const [title, setTitle] = useState(initialValues.title);
@@ -427,20 +432,11 @@ function buildApiInterval(value: {
   };
 }
 
-function toLocalOffsetIso(date: string, time: string) {
-  const localDateTime = new Date(`${date}T${time}:00`);
-  const offsetMinutes = -localDateTime.getTimezoneOffset();
-  const sign = offsetMinutes >= 0 ? "+" : "-";
-  const absoluteOffset = Math.abs(offsetMinutes);
-  const offsetHours = String(Math.floor(absoluteOffset / 60)).padStart(2, "0");
-  const offsetRemainderMinutes = String(absoluteOffset % 60).padStart(2, "0");
-
-  return `${date}T${time}:00${sign}${offsetHours}:${offsetRemainderMinutes}`;
-}
-
 function getInitialFormValues(
   selectedEvent: CalendarEventRead | null,
   selectedDateKey: string | null,
+  selectedTime: string | null,
+  selectedEndTime: string | null,
 ): CalendarEventFormState {
   if (selectedEvent) {
     const start = new Date(selectedEvent.start_at);
@@ -462,19 +458,24 @@ function getInitialFormValues(
   }
 
   const date = selectedDateKey ?? toDateInputValue(new Date());
+  const startTime = selectedTime ?? "09:00";
+  const endTime = selectedEndTime ?? (selectedTime ? addOneHourToTime(selectedTime) : "10:00");
+
   return {
     title: "",
     description: "",
     color: defaultCalendarEventColor,
     startDate: date,
-    startTime: "09:00",
+    startTime,
     endDate: date,
-    endTime: "10:00",
+    endTime,
     isAllDay: false,
     recurrenceOption: "NONE",
     scope: "ALL_SESSIONS",
   };
 }
+
+
 
 function toDateInputValue(value: Date) {
   const year = value.getFullYear();

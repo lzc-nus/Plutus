@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { CalendarDayBox } from "./CalendarDayBox";
+import { groupEventsByDateKey } from "@/lib/utils/calendarDateUtils";
 import type { CalendarEventRead } from "@/lib/api/generated";
 
 interface CalendarGridProps {
@@ -22,26 +23,7 @@ export function CalendarGrid({ currentDate, events, onSelectEvent, onSelectDate 
     const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
     const emptyPrefixSlots = Array.from({ length: firstDayOfMonth }, (_, i) => i);
 
-    const eventsByDateMap = useMemo(() => {
-        const map: Record<string, CalendarEventRead[]> = {};
-        events.forEach((evt) => {
-            getDateKeysForEvent(evt).forEach((dateKey) => {
-                if (!map[dateKey]) {
-                    map[dateKey] = [];
-                }
-                map[dateKey].push(evt);
-            });
-        });
-
-        Object.values(map).forEach((dailyEvents) => {
-            dailyEvents.sort((a, b) => {
-                if (a.is_all_day !== b.is_all_day) return a.is_all_day ? -1 : 1;
-                return new Date(a.start_at).getTime() - new Date(b.start_at).getTime();
-            });
-        });
-
-        return map;
-    }, [events]);
+    const eventsByDateMap = useMemo(() => groupEventsByDateKey(events), [events]);
 
     const totalSlots = emptyPrefixSlots.length + daysArray.length;
     const trailingSlotCount = totalSlots % 7 === 0 ? 0 : 7 - (totalSlots % 7);
@@ -56,9 +38,9 @@ export function CalendarGrid({ currentDate, events, onSelectEvent, onSelectDate 
                     ))}
                 </div>
 
-                <div className="grid auto-rows-[126px] grid-flow-row grid-cols-7 gap-[1px] bg-[#d9d0c1]">
+                <div className="grid auto-rows-[126px] grid-flow-row grid-cols-7 border-l border-t border-[#d9d0c1] bg-[#fbf7ef]">
                     {emptyPrefixSlots.map((slot) => (
-                        <div key={`empty-${slot}`} className="bg-[#fbf7ef]/50" />
+                        <div key={`empty-${slot}`} className="border-b border-r border-[#d9d0c1] bg-[#fbf7ef]/50" />
                     ))}
 
                     {daysArray.map((day) => {
@@ -80,40 +62,10 @@ export function CalendarGrid({ currentDate, events, onSelectEvent, onSelectDate 
                     })}
 
                     {trailingSlots.map((slot) => (
-                        <div key={`trailing-${slot}`} className="bg-[#fbf7ef]/50" />
+                        <div key={`trailing-${slot}`} className="border-b border-r border-[#d9d0c1] bg-[#fbf7ef]/50" />
                     ))}
                 </div>
             </div>
         </div>
     );
-}
-
-function getDateKeysForEvent(event: CalendarEventRead) {
-    const start = startOfDay(new Date(event.start_at));
-    const end = startOfDay(new Date(event.end_at));
-    const visibleEnd = event.is_all_day ? addDays(end, -1) : end;
-    const keys: string[] = [];
-
-    for (let cursor = start; cursor <= visibleEnd; cursor = addDays(cursor, 1)) {
-        keys.push(toDateKey(cursor));
-    }
-
-    return keys.length > 0 ? keys : [toDateKey(start)];
-}
-
-function startOfDay(value: Date) {
-    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
-}
-
-function addDays(value: Date, days: number) {
-    const next = new Date(value);
-    next.setDate(next.getDate() + days);
-    return next;
-}
-
-function toDateKey(value: Date) {
-    const year = value.getFullYear();
-    const month = String(value.getMonth() + 1).padStart(2, "0");
-    const day = String(value.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
 }
