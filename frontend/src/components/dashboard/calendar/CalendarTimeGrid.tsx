@@ -63,6 +63,7 @@ interface ActiveDrag {
     originalStartMinutes: number;
     originalEndMinutes: number;
     pointerStartClientY: number;
+    pointerStartClientX: number;
     latestStartMinutes: number;
     latestEndMinutes: number;
     // Cross-day move only (resize always keeps latestDateKey === dateKey):
@@ -71,6 +72,7 @@ interface ActiveDrag {
     latestColumnIndex: number;
     latestDateKey: string;
     baseLeftPercent: number;
+    columnWidthPx: number;
 }
 
 /** The single source of truth for where a dragged/resized event renders,
@@ -143,15 +145,14 @@ export function CalendarTimeGrid({
             active.latestStartMinutes = newStart;
             active.latestEndMinutes = newEnd;
 
-            if (active.mode === "move" && active.columnDateKeys.length > 1) {
-                let targetIndex = active.originColumnIndex;
-                for (let i = 0; i < active.columnDateKeys.length; i++) {
-                    const rect = dayColumnRefs.current[active.columnDateKeys[i]]?.getBoundingClientRect();
-                    if (rect && e.clientX >= rect.left && e.clientX < rect.right) {
-                        targetIndex = i;
-                        break;
-                    }
-                }
+            let deltaX = 0;
+            if (active.mode === "move" && active.columnDateKeys.length > 1 && active.columnWidthPx > 0) {
+                deltaX = e.clientX - active.pointerStartClientX;
+                const snappedOffsetColumns = Math.round(deltaX / active.columnWidthPx);
+                const targetIndex = Math.max(
+                    0,
+                    Math.min(active.columnDateKeys.length - 1, active.originColumnIndex + snappedOffsetColumns),
+                );
                 active.latestColumnIndex = targetIndex;
                 active.latestDateKey = active.columnDateKeys[targetIndex];
             }
@@ -162,9 +163,7 @@ export function CalendarTimeGrid({
                 el.style.height = `${Math.max(18, ((newEnd - newStart) / 60) * HOUR_HEIGHT)}px`;
 
                 if (active.mode === "move") {
-                    const columnWidthPx = dayColumnRefs.current[active.dateKey]?.getBoundingClientRect().width ?? 0;
-                    const offsetColumns = active.latestColumnIndex - active.originColumnIndex;
-                    el.style.left = `calc(${active.baseLeftPercent}% + ${offsetColumns * columnWidthPx}px)`;
+                    el.style.left = `calc(${active.baseLeftPercent}% + ${deltaX}px)`;
                 }
             }
         }
@@ -482,6 +481,7 @@ export function CalendarTimeGrid({
                                                     originalStartMinutes: laid.startMinutes,
                                                     originalEndMinutes: laid.endMinutes,
                                                     pointerStartClientY: e.clientY,
+                                                    pointerStartClientX: e.clientX,
                                                     latestStartMinutes: laid.startMinutes,
                                                     latestEndMinutes: laid.endMinutes,
                                                     columnDateKeys: days.map((d) => toDateKey(d)),
@@ -489,6 +489,7 @@ export function CalendarTimeGrid({
                                                     latestColumnIndex: dayIndex,
                                                     latestDateKey: dateKey,
                                                     baseLeftPercent: laid.colIndex * widthPercent,
+                                                    columnWidthPx: dayColumnRefs.current[dateKey]?.getBoundingClientRect().width ?? 0,
                                                 };
                                                 setPreviewOverride({
                                                     eventId: laid.event.id,
@@ -517,6 +518,7 @@ export function CalendarTimeGrid({
                                                             originalStartMinutes: laid.startMinutes,
                                                             originalEndMinutes: laid.endMinutes,
                                                             pointerStartClientY: e.clientY,
+                                                            pointerStartClientX: e.clientX,
                                                             latestStartMinutes: laid.startMinutes,
                                                             latestEndMinutes: laid.endMinutes,
                                                             columnDateKeys: [dateKey],
@@ -524,6 +526,7 @@ export function CalendarTimeGrid({
                                                             latestColumnIndex: dayIndex,
                                                             latestDateKey: dateKey,
                                                             baseLeftPercent: laid.colIndex * widthPercent,
+                                                            columnWidthPx: 0,
                                                         };
                                                         setPreviewOverride({
                                                             eventId: laid.event.id,

@@ -168,7 +168,13 @@ export default function CalendarPage() {
             const end = endOfWeek(currentDate);
             const sameMonth = start.getMonth() === end.getMonth();
             const startLabel = start.toLocaleDateString("en", { month: "short", day: "numeric" });
-            const endLabel = end.toLocaleDateString("en", sameMonth ? { day: "numeric", year: "numeric" } : { month: "short", day: "numeric", year: "numeric" });
+            const endLabel = sameMonth
+                ? `${end.getDate()}, ${end.getFullYear()}`
+                : end.toLocaleDateString("en", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                });
             return `${startLabel} \u2013 ${endLabel}`;
         }
 
