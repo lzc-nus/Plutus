@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import {
   MetricCard,
   SectionHeader,
@@ -66,7 +66,7 @@ export default function TransactionsPage() {
 
   const ignoreRef = useRef(false);
 
-  async function loadTransactions() {
+  const loadTransactions = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage("");
 
@@ -83,7 +83,7 @@ export default function TransactionsPage() {
 
     setTransactions(data ?? []);
     setIsLoading(false);
-  }
+  }, [range]);
 
   useEffect(() => {
     ignoreRef.current = false;
@@ -91,7 +91,7 @@ export default function TransactionsPage() {
     return () => {
       ignoreRef.current = true;
     };
-  }, [range]);
+  }, [loadTransactions]);
 
   const [filters, setFilters] = useState<TransactionFilterState>(DEFAULT_TRANSACTION_FILTERS);
 
@@ -217,6 +217,7 @@ export default function TransactionsPage() {
           <TransactionList
             onDeleteClick={handleDeleteClick}
             onEditClick={handleEditClick}
+            onRowClick={handleRowClick}
             transactions={filteredTransactions}
           />
         ) : null}

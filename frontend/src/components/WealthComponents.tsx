@@ -388,10 +388,12 @@ export function TransactionList({
   transactions,
   onEditClick,
   onDeleteClick,
+  onRowClick,
 }: {
   transactions: Transaction[];
   onEditClick?: (id: string) => void;
   onDeleteClick?: (id: string) => void;
+  onRowClick?: (id: string) => void;
 }) {
   return (
     <div className="overflow-hidden rounded-lg border border-[#d9d0c1] bg-[#fbf7ef]">
@@ -407,8 +409,24 @@ export function TransactionList({
       <div className="divide-y divide-[#e2dacd]">
         {transactions.map((item) => (
           <div
-            className="group grid gap-3 px-5 py-4 text-sm lg:grid-cols-[0.9fr_1.4fr_0.9fr_1fr_0.8fr_1fr_auto] lg:items-center"
+            className={[
+              "group grid gap-3 px-5 py-4 text-sm lg:grid-cols-[0.9fr_1.4fr_0.9fr_1fr_0.8fr_1fr_auto] lg:items-center",
+              onRowClick ? "cursor-pointer transition-colors hover:bg-[#f7f0e6]" : "",
+            ].join(" ")}
             key={item.id}
+            onClick={onRowClick ? () => onRowClick(item.id) : undefined}
+            onKeyDown={
+              onRowClick
+                ? (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onRowClick(item.id);
+                    }
+                  }
+                : undefined
+            }
+            role={onRowClick ? "button" : undefined}
+            tabIndex={onRowClick ? 0 : undefined}
           >
             <p className="text-[#756d60]">{item.date}</p>
             <p className="font-semibold">{item.description}</p>
@@ -426,11 +444,14 @@ export function TransactionList({
                 {item.impact}
               </span>
             </p>
-            <div className="flex items-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="flex items-center gap-1.5">
               <button
                 aria-label="Edit transaction"
                 className="rounded-md border border-[#d0c5b3] p-1.5 text-[#6f675b] transition hover:border-[#7a6332] hover:text-[#7a6332]"
-                onClick={() => onEditClick?.(item.id)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onEditClick?.(item.id);
+                }}
                 type="button"
               >
                 <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -449,7 +470,10 @@ export function TransactionList({
               <button
                 aria-label="Delete transaction"
                 className="rounded-md border border-[#d5a58b] p-1.5 text-[#8f3f32] transition hover:bg-[#f2e0d8]"
-                onClick={() => onDeleteClick?.(item.id)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onDeleteClick?.(item.id);
+                }}
                 type="button"
               >
                 <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
