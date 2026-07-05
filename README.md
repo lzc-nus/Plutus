@@ -1,6 +1,6 @@
 # Plutus
 
-Plutus is an AI financial intelligence product by Two Sicilies. The project combines a Next.js frontend, a FastAPI backend, and a PostgreSQL database to support private wealth tracking, portfolio visibility, transaction workflows, and future AI-assisted financial insight.
+[Plutus](https://plutus-frontend-mu.vercel.app) is an AI financial intelligence product by Two Sicilies. The project combines a Next.js frontend, a FastAPI backend, and a PostgreSQL database to support private wealth tracking, portfolio visibility, transaction workflows, and future AI-assisted financial insight.
 
 The current foundation focuses on authentication, local development workflow, database migrations, and a scalable structure for future product features.
 
@@ -29,7 +29,7 @@ The product should treat user financial data as sensitive by default. Frontend v
 
 ## Branching Workflow
 
-Use `main` as the stable branch and `dev` as the integration branch.
+Use `main` as the stable branch and `dev` as the integration branch. Please refer to `dev` branch for latest updates.
 
 For new features or refactors:
 
@@ -38,6 +38,12 @@ dev -> feature-or-refactor-branch -> dev -> main
 ```
 
 Create new work branches from `dev`. Merge completed work back into `dev`, run checks there, and only merge `dev` into `main` after the integrated branch is clean.
+
+## Live Production Deployment
+
+The full platform infrastructure is live, interconnected, and open for exploration. You can register an account, configure your asset ledgers, and interact with the public trading feed in real time: 
+
+Explore the Live App: https://plutus-frontend-mu.vercel.app 
 
 ## Local Development
 
@@ -202,11 +208,8 @@ Check backend and database health:
 http://localhost:8000/health
 ```
 
-`/health` returns `200` when the API can reach PostgreSQL and `503` when the database is unavailable.
-
 ## Database Workflow
 
-The local database is PostgreSQL running in Docker. The default local connection is:
 
 ```text
 postgresql+psycopg2://plutus:plutus@localhost:5432/plutus
@@ -333,11 +336,7 @@ frontend/src/lib/api/generated
 ```
 
 Regenerate the frontend API client whenever backend endpoint paths, request bodies, response models, status codes, or `operation_id` values change:
-
-```bash
-cd frontend
 npm run api:generate
-```
 
 Application code should call hand-written API wrappers such as `frontend/src/lib/api/auth.ts`, not generated files directly. Generated files should be treated as build artifacts produced from the backend API contract.
 
