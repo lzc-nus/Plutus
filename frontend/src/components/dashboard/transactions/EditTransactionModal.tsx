@@ -68,6 +68,8 @@ export default function EditTransactionModal({ onSuccess }: EditTransactionModal
 
   if (!editModalOpen || !editingTransaction) return null;
 
+  const transaction = editingTransaction;
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError("");
@@ -91,7 +93,7 @@ export default function EditTransactionModal({ onSuccess }: EditTransactionModal
     setIsSubmitting(true);
 
     try {
-      const { error } = await updateTransaction(editingTransaction.id, {
+      const { error } = await updateTransaction(transaction.id, {
         occurred_at: toIsoDateTime(parsed.data.date, parsed.data.time),
         description: parsed.data.description,
         category: parsed.data.category,
@@ -105,7 +107,7 @@ export default function EditTransactionModal({ onSuccess }: EditTransactionModal
       }
 
       closeEditModal();
-      onSuccess?.()
+      onSuccess?.();
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Unable to update transaction.");
     } finally {
@@ -114,7 +116,7 @@ export default function EditTransactionModal({ onSuccess }: EditTransactionModal
   }
 
   async function handleDelete(): Promise<boolean> {
-    const { error } = await deleteTransaction(editingTransaction.id);
+    const { error } = await deleteTransaction(transaction.id);
 
     if (error) {
       return false;
@@ -256,7 +258,7 @@ export default function EditTransactionModal({ onSuccess }: EditTransactionModal
 
       {confirmDeleteOpen ? (
         <ConfirmDeleteDialog
-          itemName={editingTransaction.description}
+          itemName={transaction.description}
           itemType="transaction"
           onClose={() => setConfirmDeleteOpen(false)}
           onConfirm={handleDelete}
