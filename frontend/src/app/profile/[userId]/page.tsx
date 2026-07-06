@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { UserPublicRead, UserRead } from "@/lib/api/generated";
-import { getFollowers, getFollowing, getUserPosts } from "@/lib/api/community";
+import { getFollowers, getFollowing, getUserPosts, getUserPostsCount } from "@/lib/api/community";
 import { getUserById, updateMe } from "@/lib/api/users";
 import { AuthRequiredDialog } from "@/components/community/AuthRequiredDialog";
 import { FollowButton } from "@/components/community/FollowButton";
@@ -24,6 +24,7 @@ export default function ProfilePage() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [editOpen, setEditOpen] = useState(false);
   const [authAction, setAuthAction] = useState<string | null>(null);
+  const [postCount, setPostCount] = useState<number | null>(null);
 
   const isOwnProfile = currentUser?.id === userId;
 
@@ -35,10 +36,11 @@ export default function ProfilePage() {
     async function loadProfile() {
       setStatus("loading");
       try {
-        const [profileResponse, followersResponse, followingResponse] = await Promise.all([
+        const [profileResponse, followersResponse, followingResponse, postCountResponse] = await Promise.all([
           getUserById(userId),
           getFollowers(userId),
           getFollowing(userId),
+          getUserPostsCount(userId),
         ]);
 
         if (cancelled) return;
@@ -55,6 +57,7 @@ export default function ProfilePage() {
         setProfile(nextProfile);
         setFollowerCount(followers.length);
         setFollowingCount(following.length);
+        setPostCount(postCountResponse.data ?? null);
         setIsFollowing(followers.some((follow) => follow.follower_id === currentUser?.id));
         setStatus("ready");
       } catch {
@@ -148,7 +151,7 @@ export default function ProfilePage() {
                   {profile.bio || "No bio yet."}
                 </p>
 
-                <div className="mt-5 grid grid-cols-2 gap-2">
+                <div className="mt-5 grid grid-cols-3 gap-2">
                   <ProfileStat
                     href={`/profile/${userId}/followers`}
                     label={followerCount === 1 ? "Follower" : "Followers"}
@@ -158,6 +161,11 @@ export default function ProfilePage() {
                     href={`/profile/${userId}/following`}
                     label="Following"
                     value={followingCount}
+                  />
+                  <ProfileStat
+                    href={`/profile/${userId}`}
+                    label="Posts"
+                    value={postCount}
                   />
                 </div>
 
@@ -201,13 +209,29 @@ export default function ProfilePage() {
             </div>
           </header>
 
-          <PostFeed
-            fetcher={fetcher}
-            feedKey={`profile-${userId}-${currentUser?.id ?? "guest"}`}
-            viewer={currentUser}
-            onAuthRequired={setAuthAction}
-            detailBasePath="/community/posts"
-          />
+          {postCount === 0 ? (
+            <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
+              <p className="text-sm font-semibold text-[#1c2018]">
+                {isOwnProfile ? "You haven't posted yet." : "No posts yet."}
+              </p>
+              {isOwnProfile && (
+                <Link
+                  href="/dashboard/community"
+                  className="inline-flex h-9 items-center justify-center rounded-md bg-[#1c2018] px-4 text-sm font-semibold text-[#fbf7ef] transition hover:bg-[#343a2e]"
+                >
+                  Create your first post
+                </Link>
+              )}
+            </div>
+          ) : (
+            <PostFeed
+              fetcher={fetcher}
+              feedKey={`profile-${userId}-${currentUser?.id ?? "guest"}`}
+              viewer={currentUser}
+              onAuthRequired={setAuthAction}
+              detailBasePath="/community/posts"
+            />
+          )}
         </section>
       </div>
 
