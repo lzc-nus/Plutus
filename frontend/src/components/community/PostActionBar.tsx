@@ -15,7 +15,7 @@ import { ShareModal } from "@/components/community/ShareModal";
 
 interface PostActionBarProps {
   post: PostRead;
-  viewer: UserRead | null;
+  viewer?: UserRead | null;
   onAuthRequired?: (action: string) => void;
   onUpdate: (updated: PostRead) => void;
   /** When true, shows full count labels. Used in PostDetail. */
