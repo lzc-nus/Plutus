@@ -23,6 +23,7 @@ import {
   communityFollow,
   communityUnfollow,
   communityUserPostsList,
+  communityUserPostsCount,
   communityFollowingList,
   communityFollowersList,
 } from "@/lib/api/generated";
@@ -66,6 +67,14 @@ export async function getUserPosts(userId: string, limit?: number, before?: stri
     path: { user_id: userId },
     query: { limit, before },
   });
+}
+
+/**
+ * Returns the total number of posts by a user.
+ */
+export async function getUserPostsCount(userId: string) {
+  configureApiClient();
+  return communityUserPostsCount({ path: { user_id: userId } });
 }
 
 // ── Posts ─────────────────────────────────────────────────────────────────────
