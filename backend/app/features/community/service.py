@@ -26,6 +26,8 @@ from app.features.community.schemas import (
     RepostCreate,
 )
 from app.features.users.models import User
+from app.features.notifications.schemas import NotificationCreate
+from app.features.notifications.service import create_notification
 
 UTC = datetime.timezone.utc
 
@@ -287,6 +289,13 @@ def create_comment(
     db.add(post)
     db.commit()
     db.refresh(comment)
+    create_notification(db, payload=NotificationCreate(
+        user_id=post.author_id,
+        actor_id=author_id,
+        type="comment",
+        post_id=post_id,
+        comment_id=comment.id,
+    ))
     return comment
 
 
@@ -382,6 +391,12 @@ def create_repost(
     db.add(post)
     db.commit()
     db.refresh(repost)
+    create_notification(db, payload=NotificationCreate(
+        user_id=post.author_id,
+        actor_id=author_id,
+        type="repost",
+        post_id=post_id,
+    ))
     return repost
 
 
@@ -431,6 +446,12 @@ def like_post(
     db.add(post)
     db.commit()
     db.refresh(like)
+    create_notification(db, payload=NotificationCreate(
+        user_id=post.author_id,
+        actor_id=user_id,
+        type="like_post",
+        post_id=post_id,
+    ))
     return like
 
 
@@ -484,6 +505,13 @@ def like_comment(
     db.add(comment)
     db.commit()
     db.refresh(like)
+    create_notification(db, payload=NotificationCreate(
+        user_id=comment.author_id,
+        actor_id=user_id,
+        type="like_comment",
+        post_id=comment.post_id,
+        comment_id=comment_id,
+    ))
     return like
 
 
@@ -653,6 +681,11 @@ def follow_user(
     db.add(follow)
     db.commit()
     db.refresh(follow)
+    create_notification(db, payload=NotificationCreate(
+        user_id=followee_id,
+        actor_id=follower_id,
+        type="follow",
+    ))
     return follow
 
 
