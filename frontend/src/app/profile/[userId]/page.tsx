@@ -34,8 +34,6 @@ export default function ProfilePage() {
   const isOwnProfile = currentUser?.id === userId;
 
   useEffect(() => {
-    if (viewerLoading) return;
-
     let cancelled = false;
 
     async function loadProfile() {
@@ -63,7 +61,6 @@ export default function ProfilePage() {
         setFollowerCount(followers.length);
         setFollowingCount(following.length);
         setPostCount(postCountResponse.data ?? null);
-        setIsFollowing(followers.some((follow) => follow.follower_id === currentUser?.id));
         setStatus("ready");
       } catch {
         if (!cancelled) {
@@ -77,7 +74,15 @@ export default function ProfilePage() {
     return () => {
       cancelled = true;
     };
-  }, [currentUser?.id, userId, viewerLoading]);
+  }, [userId]);
+
+  useEffect(() => {
+    if (viewerLoading || !currentUser || followerCount === null) return;
+    getFollowers(userId).then((res) => {
+      const followers = res.data ?? [];
+      setIsFollowing(followers.some((f) => f.follower_id === currentUser.id));
+    });
+  }, [userId, currentUser, viewerLoading, followerCount]);
 
   const fetcher = useCallback(
     (before?: string) => getUserPosts(userId, 20, before),
