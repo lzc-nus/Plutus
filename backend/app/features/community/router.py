@@ -612,6 +612,22 @@ def get_user_posts(
 
 
 @router.get(
+    "/users/{user_id}/posts/count",
+    operation_id="community_user_posts_count",
+)
+def get_user_posts_count(
+    user_id: uuid.UUID,
+    current_user: CurrentUser,
+    db: Annotated[Session, Depends(get_db)],
+) -> int:
+    from sqlmodel import select, func
+    count = db.exec(
+        select(func.count()).where(Post.author_id == user_id)
+    ).one()
+    return count
+
+
+@router.get(
     "/users/{user_id}/following",
     response_model=list[FollowRead],
     operation_id="community_following_list",

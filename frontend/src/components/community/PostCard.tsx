@@ -2,35 +2,62 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import type { PostRead, UserRead } from "@/lib/api/generated";
+import type { PostRead, CommentRead } from "@/lib/api/generated";
 import { ContentBlockRenderer } from "@/components/community/ContentBlockRenderer";
 import { PostActionBar } from "@/components/community/PostActionBar";
 import { UserAvatar } from "@/components/community/UserAvatar";
+import { CommentThread } from "@/components/community/CommentThread";
+import { CommentComposer } from "@/components/community/CommentComposer";
+import { listComments } from "@/lib/api/community";
 import type { ContentBlock } from "@/lib/validations/community";
 
 interface PostCardProps {
   post: PostRead;
-  viewer: UserRead | null;
-  onAuthRequired?: (action: string) => void;
-  detailBasePath?: string;
-  /** Hides the link-to-detail behaviour — used when already on PostDetail. */
   disableNavigation?: boolean;
+  /** When true, clicking the comment button expands inline comments instead of navigating */
+  inlineComments?: boolean;
 }
 
 export function PostCard({
   post: initialPost,
-  viewer,
-  onAuthRequired,
-  detailBasePath = "/community/posts",
   disableNavigation = false,
+  inlineComments = false,
 }: PostCardProps) {
-  const router = useRouter();
-  // PostCard owns its own post copy so PostActionBar optimistic updates
-  // stay local without requiring a parent refetch.
   const [post, setPost] = useState<PostRead>(initialPost);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [comments, setComments] = useState<CommentRead[]>([]);
+  const [commentsStatus, setCommentsStatus] = useState<"loading" | "ready" | "error">("loading");
 
-  const postUrl = `${detailBasePath}/${post.id}`;
+  const postUrl = `/community/posts/${post.id}`;
+
+  function handleCommentClick() {
+    if (!inlineComments) return;
+    if (commentsOpen) {
+      setCommentsOpen(false);
+      return;
+    }
+    setCommentsOpen(true);
+    setCommentsStatus("loading");
+    listComments(post.id)
+      .then((res) => {
+        setComments(res.data ?? []);
+        setCommentsStatus("ready");
+      })
+      .catch(() => setCommentsStatus("error"));
+  }
+
+  function handleCommentCreated(comment: CommentRead) {
+    setComments((prev) => [...prev, comment]);
+    setPost((prev) => ({ ...prev, comment_count: prev.comment_count + 1 }));
+  }
+
+  function handleCommentDeleted(commentId: string) {
+    setComments((prev) => prev.filter((c) => c.id !== commentId));
+    setPost((prev) => ({
+      ...prev,
+      comment_count: Math.max(0, prev.comment_count - 1),
+    }));
+  }
 
   return (
     <article className="border-b border-[#d7c6a3]/30 px-4 py-4 transition-colors hover:bg-[#f0e8d8]/60">
@@ -49,7 +76,7 @@ export function PostCard({
         </time>
       </div>
 
-      {/* Content — clicking the body navigates to PostDetail */}
+      {/* Content */}
       {disableNavigation ? (
         <div className="mb-3">
           <ContentBlockRenderer blocks={post.content_blocks as ContentBlock[]} />
@@ -63,11 +90,31 @@ export function PostCard({
       {/* Action bar */}
       <PostActionBar
         post={post}
-        viewer={viewer}
-        onAuthRequired={onAuthRequired}
         onUpdate={setPost}
-        onCommentClick={() => router.push(postUrl)}
+        onCommentClick={inlineComments ? handleCommentClick : undefined}
       />
+
+      {/* Inline comment section */}
+      {inlineComments && commentsOpen && (
+        <div className="mt-3 border-t border-[#d7c6a3]/30 pt-3">
+          <CommentComposer
+            postId={post.id}
+            viewer={null}
+            onAuthRequired={() => {}}
+            onCreated={handleCommentCreated}
+          />
+          <div className="mt-3">
+            <CommentThread
+              postId={post.id}
+              comments={comments}
+              status={commentsStatus}
+              viewer={null}
+              onAuthRequired={() => {}}
+              onDeleted={handleCommentDeleted}
+            />
+          </div>
+        </div>
+      )}
     </article>
   );
 }
