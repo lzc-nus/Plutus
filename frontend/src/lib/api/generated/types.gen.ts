@@ -2829,6 +2829,38 @@ export type CommunityUserPostsListResponses = {
 
 export type CommunityUserPostsListResponse = CommunityUserPostsListResponses[keyof CommunityUserPostsListResponses];
 
+export type CommunityUserPostsCountData = {
+    body?: never;
+    path: {
+        /**
+         * User Id
+         */
+        user_id: string;
+    };
+    query?: never;
+    url: '/api/v1/community/users/{user_id}/posts/count';
+};
+
+export type CommunityUserPostsCountErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CommunityUserPostsCountError = CommunityUserPostsCountErrors[keyof CommunityUserPostsCountErrors];
+
+export type CommunityUserPostsCountResponses = {
+    /**
+     * Response Community User Posts Count
+     *
+     * Successful Response
+     */
+    200: number;
+};
+
+export type CommunityUserPostsCountResponse = CommunityUserPostsCountResponses[keyof CommunityUserPostsCountResponses];
+
 export type CommunityFollowingListData = {
     body?: never;
     path: {
