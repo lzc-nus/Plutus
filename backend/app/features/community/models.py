@@ -4,8 +4,8 @@ import datetime
 import uuid
 from typing import Any
 
-from sqlalchemy import Index
-from sqlalchemy import JSON
+import sqlalchemy as sa
+from sqlalchemy import Index, JSON, Column, ForeignKey
 from sqlmodel import Column, Field, SQLModel
 
 UTC = datetime.timezone.utc
@@ -58,7 +58,12 @@ class Comment(SQLModel, table=True):
     )
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    post_id: uuid.UUID = Field(foreign_key="community_posts.id", nullable=False)
+    post_id: uuid.UUID = Field(
+        sa_column=Column(
+            ForeignKey("community_posts.id", ondelete="CASCADE"),
+            nullable=False,
+        )
+    )
     author_id: uuid.UUID = Field(foreign_key="users.id", nullable=False)
 
     # Same content block schema as Post
@@ -92,7 +97,12 @@ class Repost(SQLModel, table=True):
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     author_id: uuid.UUID = Field(foreign_key="users.id", nullable=False)
-    original_post_id: uuid.UUID = Field(foreign_key="community_posts.id", nullable=False)
+    original_post_id: uuid.UUID = Field(
+        sa_column=Column(
+            ForeignKey("community_posts.id", ondelete="CASCADE"),
+            nullable=False,
+        )
+    )
 
     # Empty list = simple repost. Non-empty = quote repost.
     content_blocks: list[Any] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
@@ -123,7 +133,12 @@ class PostLike(SQLModel, table=True):
     __tablename__ = "community_post_likes"
 
     user_id: uuid.UUID = Field(foreign_key="users.id", primary_key=True)
-    post_id: uuid.UUID = Field(foreign_key="community_posts.id", primary_key=True)
+    post_id: uuid.UUID = Field(
+        sa_column=Column(
+            ForeignKey("community_posts.id", ondelete="CASCADE"),
+            nullable=False,
+        )
+    )
 
     created_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(UTC),
@@ -137,7 +152,12 @@ class CommentLike(SQLModel, table=True):
     __tablename__ = "community_comment_likes"
 
     user_id: uuid.UUID = Field(foreign_key="users.id", primary_key=True)
-    comment_id: uuid.UUID = Field(foreign_key="community_comments.id", primary_key=True)
+    comment_id: uuid.UUID = Field(
+        sa_column=Column(
+            ForeignKey("community_comments.id", ondelete="CASCADE"),
+            nullable=False,
+        )
+    )
 
     created_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(UTC),
@@ -151,7 +171,12 @@ class PostSave(SQLModel, table=True):
     __tablename__ = "community_post_saves"
 
     user_id: uuid.UUID = Field(foreign_key="users.id", primary_key=True)
-    post_id: uuid.UUID = Field(foreign_key="community_posts.id", primary_key=True)
+    post_id: uuid.UUID = Field(
+        sa_column=Column(
+            ForeignKey("community_posts.id", ondelete="CASCADE"),
+            nullable=False,
+        )
+    )
 
     created_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(UTC),
@@ -166,7 +191,12 @@ class PostShare(SQLModel, table=True):
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = Field(foreign_key="users.id", nullable=False)
-    post_id: uuid.UUID = Field(foreign_key="community_posts.id", nullable=False)
+    post_id: uuid.UUID = Field(
+        sa_column=Column(
+            ForeignKey("community_posts.id", ondelete="CASCADE"),
+            nullable=False,
+        )
+    )
 
     created_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(UTC),
@@ -181,7 +211,12 @@ class CommentShare(SQLModel, table=True):
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = Field(foreign_key="users.id", nullable=False)
-    comment_id: uuid.UUID = Field(foreign_key="community_comments.id", nullable=False)
+    comment_id: uuid.UUID = Field(
+        sa_column=Column(
+            ForeignKey("community_comments.id", ondelete="CASCADE"),
+            nullable=False,
+        )
+    )
 
     created_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(UTC),

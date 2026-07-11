@@ -36,5 +36,5 @@ packages = [
 dev = "uvicorn.main:main"
 [dependency-groups]
 dev = [
-    "pytest (>=9.0.3,<10.0.0)"
+    "pytest (>=8.4.1,<9.0.0)"
 ]

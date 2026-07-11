@@ -14,6 +14,7 @@ import { PostFeed } from "@/components/community/PostFeed";
 import { useOptionalViewer } from "@/lib/hooks/useOptionalViewer";
 import { profileFormSchema, type ProfileFormInput } from "@/lib/validations/profile";
 import { PostCard } from "@/components/community/PostCard";
+import { NotificationBell } from "@/components/profile/NotificationBell";
 
 export default function ProfilePage() {
   const { userId } = useParams<{ userId: string }>();
@@ -248,15 +249,7 @@ export default function ProfilePage() {
                 />
               </div>
 
-              {/* Notification bell */}
-              <button
-                aria-label="Notifications"
-                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[#d7c6a3]/55 bg-[#fbf7ef] text-[#6b6252] transition hover:border-[#d8bd75]/55 hover:bg-white hover:text-[#1c2018]"
-              >
-                <BellIcon />
-                {/* Unread dot — remove if not needed yet */}
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[#d8bd75]" />
-              </button>
+              <NotificationBell />
             </div>
           </div>
 
@@ -612,15 +605,6 @@ function PanelIcon({ collapsed }: { collapsed: boolean }) {
           <path d="m16 15-3-3 3-3" />
         </>
       )}
-    </svg>
-  );
-}
-
-function BellIcon() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
   );
 }

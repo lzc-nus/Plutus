@@ -3,16 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getNotifications, markAllRead, markOneRead } from "@/lib/api/notifications";
-
-interface NotificationItem {
-  id: string;
-  actor_id: string;
-  type: string;
-  post_id: string | null;
-  comment_id: string | null;
-  read: boolean;
-  created_at: string;
-}
+import { NotificationRead } from "@/lib/api/generated";
 
 interface NotificationPanelProps {
   onClose: () => void;
@@ -28,13 +19,13 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export function NotificationPanel({ onClose, onAllRead }: NotificationPanelProps) {
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [notifications, setNotifications] = useState<NotificationRead[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
   useEffect(() => {
     getNotifications(30)
       .then((res) => {
-        setNotifications((res.data ?? []) as NotificationItem[]);
+        setNotifications((res.data ?? []) as NotificationRead[]);
         setStatus("ready");
       })
       .catch(() => setStatus("error"));
@@ -133,7 +124,7 @@ function NotificationRow({
   onRead,
   onClose,
 }: {
-  notification: NotificationItem;
+  notification: NotificationRead;
   onRead: () => void;
   onClose: () => void;
 }) {

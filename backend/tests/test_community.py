@@ -52,6 +52,22 @@ def _create_comment(
     return dict(response.json())
 
 
+def _register_and_login(client: TestClient, *, username: str, email: str) -> str:
+    client.post(
+        "/api/v1/auth/register",
+        json={"username": username, "email": email, "password": "StrongPass1!"},
+    )
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": "StrongPass1!"},
+    )
+    return str(response.json()["access_token"])
+ 
+ 
+def _auth_headers(token: str) -> dict[str, str]:
+    return {"Authorization": f"Bearer {token}"}
+
+
 # ── Posts ─────────────────────────────────────────────────────────────────────
 
 def test_create_and_get_post(client: TestClient) -> None:
@@ -351,6 +367,36 @@ def test_following_feed_falls_back_to_global_when_following_nobody(client: TestC
     assert response.status_code == 200
     contents = [b["content_blocks"][0]["value"] for b in response.json()]
     assert "Visible to lonely user." in contents
+
+
+def test_feed_pagination_with_before_cursor(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="paginator", email="paginator@example.com"
+    )
+ 
+    # Create two posts — second is newer
+    post_old = _create_post(client, token)
+    post_new = _create_post(client, token)
+ 
+    # First page: limit=1, newest first
+    first_page = client.get(
+        "/api/v1/community/feed/global",
+        headers=_auth_headers(token),
+        params={"limit": 1},
+    ).json()
+ 
+    assert len(first_page) == 1
+    assert first_page[0]["id"] == post_new["id"]
+ 
+    # Second page: use created_at of newest as cursor
+    second_page = client.get(
+        "/api/v1/community/feed/global",
+        headers=_auth_headers(token),
+        params={"limit": 1, "before": first_page[0]["created_at"]},
+    ).json()
+ 
+    assert len(second_page) == 1
+    assert second_page[0]["id"] == post_old["id"]
 
 
 # ── Comments ──────────────────────────────────────────────────────────────────
@@ -737,6 +783,29 @@ def test_duplicate_save_returns_409(client: TestClient) -> None:
     assert response.status_code == 409
 
 
+def test_saved_posts_list_is_scoped_to_current_user(client: TestClient) -> None:
+    token_a = _register_and_login(
+        client, username="save-user-a", email="save-user-a@example.com"
+    )
+    token_b = _register_and_login(
+        client, username="save-user-b", email="save-user-b@example.com"
+    )
+    post = _create_post(client, token_a)
+ 
+    client.post(
+        f"/api/v1/community/posts/{post['id']}/save",
+        headers=_auth_headers(token_a),
+    )
+ 
+    response = client.get(
+        "/api/v1/community/posts/saved",
+        headers=_auth_headers(token_b),
+    )
+ 
+    assert response.status_code == 200
+    assert response.json() == []
+
+
 # ── Shares ────────────────────────────────────────────────────────────────────
 
 def test_share_post_increments_share_count_and_returns_url(client: TestClient) -> None:
@@ -782,6 +851,31 @@ def test_share_post_multiple_times_accumulates_count(client: TestClient) -> None
         headers=_auth_headers(token),
     )
     assert response.json()["share_count"] == 2
+
+
+def test_share_comment_increments_share_count_and_returns_url(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="share-user", email="share-user@example.com"
+    )
+    post = _create_post(client, token)
+    comment = _create_comment(client, token, post_id=post["id"])
+ 
+    response = client.post(
+        f"/api/v1/community/posts/{post['id']}/comments/{comment['id']}/share",
+        headers=_auth_headers(token),
+    )
+ 
+    assert response.status_code == 201
+    body = response.json()
+    assert "share_url" in body
+    assert str(comment["id"]) in body["share_url"]
+ 
+    comments = client.get(
+        f"/api/v1/community/posts/{post['id']}/comments",
+        headers=_auth_headers(token),
+    ).json()
+    updated_comment = next(c for c in comments if c["id"] == comment["id"])
+    assert updated_comment["share_count"] == 1
 
 
 # ── Reposts ───────────────────────────────────────────────────────────────────
@@ -854,6 +948,31 @@ def test_delete_repost_decrements_repost_count(client: TestClient) -> None:
         headers=_auth_headers(author_token),
     )
     assert post_response.json()["repost_count"] == 0
+
+
+def test_delete_repost_by_non_author_returns_404(client: TestClient) -> None:
+    author_token = _register_and_login(
+        client, username="repost-author", email="repost-author@example.com"
+    )
+    reposter_token = _register_and_login(
+        client, username="reposter", email="reposter@example.com"
+    )
+    other_token = _register_and_login(
+        client, username="repost-intruder", email="repost-intruder@example.com"
+    )
+    post = _create_post(client, author_token)
+    repost = client.post(
+        f"/api/v1/community/posts/{post['id']}/repost",
+        headers=_auth_headers(reposter_token),
+        json={"content_blocks": []},
+    ).json()
+ 
+    response = client.delete(
+        f"/api/v1/community/reposts/{repost['id']}",
+        headers=_auth_headers(other_token),
+    )
+ 
+    assert response.status_code == 404
 
 
 # ── Follows ───────────────────────────────────────────────────────────────────

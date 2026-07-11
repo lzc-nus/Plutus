@@ -3,7 +3,8 @@ from __future__ import annotations
 import datetime
 import uuid
 
-from sqlalchemy import Index
+import sqlalchemy as sa
+from sqlalchemy import Index, Column, ForeignKey
 from sqlmodel import Field, SQLModel
 
 UTC = datetime.timezone.utc
@@ -31,8 +32,20 @@ class Notification(SQLModel, table=True):
     type: str = Field(nullable=False, max_length=32)
 
     # Optional reference to the relevant post or comment
-    post_id: uuid.UUID | None = Field(default=None, foreign_key="community_posts.id")
-    comment_id: uuid.UUID | None = Field(default=None, foreign_key="community_comments.id")
+    post_id: uuid.UUID | None = Field(
+        default=None,
+        sa_column=Column(
+            ForeignKey("community_posts.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
+    )
+    comment_id: uuid.UUID | None = Field(
+        default=None,
+        sa_column=Column(
+            ForeignKey("community_comments.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
+    )
 
     read: bool = Field(default=False, nullable=False)
 
