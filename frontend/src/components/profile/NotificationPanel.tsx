@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getNotifications, markAllRead, markOneRead } from "@/lib/api/notifications";
 import { NotificationRead } from "@/lib/api/generated";
+import { getUserById } from "@/lib/api/users";
 
 interface NotificationPanelProps {
   onClose: () => void;
@@ -19,13 +20,15 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export function NotificationPanel({ onClose, onAllRead }: NotificationPanelProps) {
-  const [notifications, setNotifications] = useState<NotificationRead[]>([]);
+  const [notifications, setNotifications] = useState<
+    (Omit<NotificationRead, "actor_id"> & { actor_id: string | null })[]
+  >([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
   useEffect(() => {
     getNotifications(30)
       .then((res) => {
-        setNotifications((res.data ?? []) as NotificationRead[]);
+        setNotifications((res.data ?? []) as (Omit<NotificationRead, "actor_id"> & { actor_id: string | null })[]);
         setStatus("ready");
       })
       .catch(() => setStatus("error"));
@@ -124,7 +127,7 @@ function NotificationRow({
   onRead,
   onClose,
 }: {
-  notification: NotificationRead;
+  notification: Omit<NotificationRead, "actor_id"> & { actor_id: string | null };
   onRead: () => void;
   onClose: () => void;
 }) {
@@ -157,7 +160,9 @@ function NotificationRow({
       {/* Content */}
       <div className="min-w-0 flex-1">
         <p className="text-sm text-[#1c2018]">
-          <span className="font-semibold">Someone</span>{" "}
+          <span className="font-semibold">
+            {notification.actor_id ? <ActorName actorId={notification.actor_id} /> : "Deleted Account"}
+          </span>{" "}
           <span className="text-[#6b6252]">{label}</span>
         </p>
         <p className="mt-0.5 text-xs text-[#a99b82]">
@@ -206,4 +211,21 @@ function formatRelativeTime(iso: string): string {
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function ActorName({ actorId }: { actorId: string }) {
+  const [name, setName] = useState<string | null>(null);
+
+  useEffect(() => {
+    getUserById(actorId)
+      .then((res) => {
+        const user = res.data;
+        if (!user) return;
+        setName(user.display_name ?? user.username);
+      })
+      .catch(() => {});
+  }, [actorId]);
+
+  if (!name) return <span className="inline-block h-3 w-20 animate-pulse rounded bg-[#e8dfc8]" />;
+  return <>{name}</>;
 }

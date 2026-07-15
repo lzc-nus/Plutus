@@ -16,6 +16,7 @@ from app.features.users.schemas import (
     UserPublicRead,
     UserRead,
     UserSettingsUpdate,
+    DeleteAccountRequest,
 )
 from app.features.users.service import (
     get_user_by_email,
@@ -24,6 +25,7 @@ from app.features.users.service import (
     update_user,
     update_user_fields,
     update_user_password,
+    delete_user,
 )
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -155,3 +157,28 @@ def read_user_by_id(
             detail="User not found.",
         )
     return UserPublicRead.model_validate(user, from_attributes=True)
+
+
+@router.delete(
+    "/me",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="users_me_delete",
+)
+def delete_current_user(
+    payload: DeleteAccountRequest,
+    current_user: CurrentUser,
+    db: Annotated[Session, Depends(get_db)],
+) -> None:
+    """
+    Permanently delete the authenticated user's account.
+ 
+    Posts and comments are reassigned to the system placeholder user.
+    All other activity (likes, saves, follows, reposts) is deleted.
+    Requires password confirmation.
+    """
+    success = delete_user(db, user=current_user, password=payload.password)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password is incorrect.",
+        )

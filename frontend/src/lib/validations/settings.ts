@@ -48,3 +48,8 @@ export const passwordChangeSchema = z
 
 export type SettingsFormInput = z.input<typeof settingsFormSchema>;
 export type PasswordChangeInput = z.input<typeof passwordChangeSchema>;
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, "Enter your password to confirm."),
+});
+
+export type DeleteAccountInput = z.input<typeof deleteAccountSchema>;

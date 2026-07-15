@@ -11,6 +11,7 @@ from sqlmodel import SQLModel, Session, create_engine
 from app.db.init_db import import_models
 from app.db.session import get_db
 from app.main import app
+from app.db.seed import seed_deleted_user
 
 
 @pytest.fixture()
@@ -30,6 +31,9 @@ def client() -> Generator[TestClient, None, None]:
         cursor.close()
 
     SQLModel.metadata.create_all(engine)
+
+    with Session(engine) as session:
+        seed_deleted_user(session)
 
     def override_get_db() -> Generator[Session, None, None]:
         with Session(engine) as session:

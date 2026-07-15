@@ -26,7 +26,7 @@ class Notification(SQLModel, table=True):
     user_id: uuid.UUID = Field(foreign_key="users.id", nullable=False)
 
     # The user who triggered the action (liker, commenter, follower, reposter)
-    actor_id: uuid.UUID = Field(foreign_key="users.id", nullable=False)
+    actor_id: uuid.UUID | None = Field(foreign_key="users.id", nullable=True)
 
     # Notification type — one of: like_post, like_comment, comment, follow, repost
     type: str = Field(nullable=False, max_length=32)

@@ -20,6 +20,7 @@ class User(SQLModel, table=True):
     base_currency: str = Field(default="SGD", nullable=False, max_length=3)
     is_active: bool = Field(default=True, nullable=False)
     is_verified: bool = Field(default=False, nullable=False)
+    is_deleted: bool = Field(default=False, nullable=False)
 
     # ── Profile fields ────────────────────────────────────────────────────────
     display_name: str | None = Field(default=None, max_length=100)

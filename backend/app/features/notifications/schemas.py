@@ -14,7 +14,7 @@ class NotificationRead(SQLModel):
 
     id: uuid.UUID
     user_id: uuid.UUID
-    actor_id: uuid.UUID
+    actor_id: uuid.UUID | None
     type: str
     post_id: uuid.UUID | None
     comment_id: uuid.UUID | None

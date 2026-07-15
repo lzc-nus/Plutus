@@ -366,6 +366,18 @@ export type CustomRecurrence = {
 };
 
 /**
+ * DeleteAccountRequest
+ *
+ * Inbound payload for deleting the authenticated user's account.
+ */
+export type DeleteAccountRequest = {
+    /**
+     * Password
+     */
+    password: string;
+};
+
+/**
  * FollowRead
  *
  * Outbound representation of a follow relationship.
@@ -1452,6 +1464,31 @@ export type AuthLogoutResponses = {
 };
 
 export type AuthLogoutResponse = AuthLogoutResponses[keyof AuthLogoutResponses];
+
+export type UsersMeDeleteData = {
+    body: DeleteAccountRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me';
+};
+
+export type UsersMeDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UsersMeDeleteError = UsersMeDeleteErrors[keyof UsersMeDeleteErrors];
+
+export type UsersMeDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type UsersMeDeleteResponse = UsersMeDeleteResponses[keyof UsersMeDeleteResponses];
 
 export type UsersMeData = {
     body?: never;

@@ -1,5 +1,6 @@
 import {
   usersMe,
+  usersMeDelete,
   usersMePasswordUpdate,
   usersMeSettingsUpdate,
   usersMeUpdate,
@@ -52,4 +53,13 @@ export async function changePassword(payload: UserPasswordUpdate) {
 export async function getUserById(userId: string) {
   configureApiClient();
   return usersGetById({ path: { user_id: userId } });
+}
+
+/**
+ * Permanently deletes the authenticated user's account after password confirmation.
+ * Posts and comments are reassigned to the system placeholder user.
+ */
+export async function deleteAccount(password: string) {
+  configureApiClient();
+  return usersMeDelete({ body: { password } });
 }

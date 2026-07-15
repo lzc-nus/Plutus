@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 import uuid
 
+from fastapi import HTTPException
 from sqlalchemy import delete as sqlalchemy_delete
 from sqlmodel import Session, select
 
@@ -258,11 +259,21 @@ def _get_author_post(
 # ── Comments ──────────────────────────────────────────────────────────────────
 
 def list_comments(db: Session, *, post_id: uuid.UUID) -> list[Comment]:
+    post = db.exec(
+        select(Post).where(Post.id == post_id)
+    ).first()
+
+    if post is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Post not found.",
+        )
+
     return list(
         db.exec(
             select(Comment)
             .where(Comment.post_id == post_id)
-            .order_by(Comment.created_at)  # type: ignore[attr-defined]
+            .order_by(Comment.created_at)
         ).all()
     )
 
