@@ -366,6 +366,18 @@ export type CustomRecurrence = {
 };
 
 /**
+ * DeleteAccountRequest
+ *
+ * Inbound payload for deleting the authenticated user's account.
+ */
+export type DeleteAccountRequest = {
+    /**
+     * Password
+     */
+    password: string;
+};
+
+/**
  * FollowRead
  *
  * Outbound representation of a follow relationship.
@@ -665,6 +677,46 @@ export type LogoutResponse = {
      * Authenticated
      */
     authenticated?: boolean;
+};
+
+/**
+ * NotificationRead
+ *
+ * Outbound representation of a notification.
+ */
+export type NotificationRead = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * User Id
+     */
+    user_id: string;
+    /**
+     * Actor Id
+     */
+    actor_id: string;
+    /**
+     * Type
+     */
+    type: string;
+    /**
+     * Post Id
+     */
+    post_id: string | null;
+    /**
+     * Comment Id
+     */
+    comment_id: string | null;
+    /**
+     * Read
+     */
+    read: boolean;
+    /**
+     * Created At
+     */
+    created_at: string;
 };
 
 /**
@@ -1412,6 +1464,31 @@ export type AuthLogoutResponses = {
 };
 
 export type AuthLogoutResponse = AuthLogoutResponses[keyof AuthLogoutResponses];
+
+export type UsersMeDeleteData = {
+    body: DeleteAccountRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me';
+};
+
+export type UsersMeDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UsersMeDeleteError = UsersMeDeleteErrors[keyof UsersMeDeleteErrors];
+
+export type UsersMeDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type UsersMeDeleteResponse = UsersMeDeleteResponses[keyof UsersMeDeleteResponses];
 
 export type UsersMeData = {
     body?: never;
@@ -3117,6 +3194,120 @@ export type StrategyMemoGenerateResponses = {
 };
 
 export type StrategyMemoGenerateResponse = StrategyMemoGenerateResponses[keyof StrategyMemoGenerateResponses];
+
+export type NotificationsListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/notifications';
+};
+
+export type NotificationsListErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type NotificationsListError = NotificationsListErrors[keyof NotificationsListErrors];
+
+export type NotificationsListResponses = {
+    /**
+     * Response Notifications List
+     *
+     * Successful Response
+     */
+    200: Array<NotificationRead>;
+};
+
+export type NotificationsListResponse = NotificationsListResponses[keyof NotificationsListResponses];
+
+export type NotificationsUnreadCountData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notifications/unread_count';
+};
+
+export type NotificationsUnreadCountErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type NotificationsUnreadCountError = NotificationsUnreadCountErrors[keyof NotificationsUnreadCountErrors];
+
+export type NotificationsUnreadCountResponses = {
+    /**
+     * Response Notifications Unread Count
+     *
+     * Successful Response
+     */
+    200: number;
+};
+
+export type NotificationsUnreadCountResponse = NotificationsUnreadCountResponses[keyof NotificationsUnreadCountResponses];
+
+export type NotificationsMarkAllReadData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notifications/read';
+};
+
+export type NotificationsMarkAllReadErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type NotificationsMarkAllReadError = NotificationsMarkAllReadErrors[keyof NotificationsMarkAllReadErrors];
+
+export type NotificationsMarkAllReadResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type NotificationsMarkAllReadResponse = NotificationsMarkAllReadResponses[keyof NotificationsMarkAllReadResponses];
+
+export type NotificationsMarkOneReadData = {
+    body?: never;
+    path: {
+        /**
+         * Notification Id
+         */
+        notification_id: string;
+    };
+    query?: never;
+    url: '/api/v1/notifications/{notification_id}/read';
+};
+
+export type NotificationsMarkOneReadErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type NotificationsMarkOneReadError = NotificationsMarkOneReadErrors[keyof NotificationsMarkOneReadErrors];
+
+export type NotificationsMarkOneReadResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type NotificationsMarkOneReadResponse = NotificationsMarkOneReadResponses[keyof NotificationsMarkOneReadResponses];
 
 export type HealthCheckHealthGetData = {
     body?: never;

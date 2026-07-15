@@ -12,6 +12,8 @@ from app.api.health import router as health_router
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.db.init_db import init_db_metadata
+from app.db.seed import seed_deleted_user
+from app.db.session import get_db
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +22,8 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     logger.info("Starting app")
     init_db_metadata()
+    with next(get_db()) as db:
+        seed_deleted_user(db)
     yield
     logger.info("Stopping app")
 

@@ -52,6 +52,45 @@ def _create_comment(
     return dict(response.json())
 
 
+def _register_and_login(client: TestClient, *, username: str, email: str) -> str:
+    client.post(
+        "/api/v1/auth/register",
+        json={"username": username, "email": email, "password": "StrongPass1!"},
+    )
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": "StrongPass1!"},
+    )
+    return str(response.json()["access_token"])
+ 
+ 
+def _auth_headers(token: str) -> dict[str, str]:
+    return {"Authorization": f"Bearer {token}"}
+
+
+def _get_user_id(client: TestClient, token: str) -> str:
+    return client.get(
+        "/api/v1/users/me", headers=_auth_headers(token)
+    ).json()["id"]
+
+
+def _delete_account(client: TestClient, token: str) -> None:
+    response = client.request(
+        "DELETE",
+        "/api/v1/users/me",
+        headers=_auth_headers(token),
+        json={"password": "StrongPass1!"},
+    )
+
+    print(response.status_code)
+    print(response.text)
+
+    assert response.status_code == 204
+
+
+FAKE_UUID = "00000000-0000-0000-0000-000000000000"
+
+
 # ── Posts ─────────────────────────────────────────────────────────────────────
 
 def test_create_and_get_post(client: TestClient) -> None:
@@ -259,6 +298,48 @@ def test_post_requires_authentication(client: TestClient) -> None:
     assert response.status_code == 401
 
 
+def test_post_content_blocks_exceed_limit_returns_422(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="block-limit-user", email="block-limit-user@example.com"
+    )
+ 
+    response = client.post(
+        "/api/v1/community/posts",
+        headers=_auth_headers(token),
+        json={"content_blocks": [{"type": "text", "value": f"block {i}"} for i in range(51)]},
+    )
+ 
+    assert response.status_code == 422
+ 
+ 
+def test_post_text_block_empty_value_returns_422(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="empty-block-user", email="empty-block-user@example.com"
+    )
+ 
+    response = client.post(
+        "/api/v1/community/posts",
+        headers=_auth_headers(token),
+        json={"content_blocks": [{"type": "text", "value": ""}]},
+    )
+ 
+    assert response.status_code == 422
+ 
+ 
+def test_post_link_block_missing_url_returns_422(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="link-block-user", email="link-block-user@example.com"
+    )
+ 
+    response = client.post(
+        "/api/v1/community/posts",
+        headers=_auth_headers(token),
+        json={"content_blocks": [{"type": "link"}]},
+    )
+ 
+    assert response.status_code == 422
+
+
 # ── Feed ──────────────────────────────────────────────────────────────────────
 
 def test_global_feed_returns_all_posts(client: TestClient) -> None:
@@ -352,6 +433,66 @@ def test_following_feed_falls_back_to_global_when_following_nobody(client: TestC
     contents = [b["content_blocks"][0]["value"] for b in response.json()]
     assert "Visible to lonely user." in contents
 
+
+def test_feed_pagination_with_before_cursor(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="paginator", email="paginator@example.com"
+    )
+ 
+    # Create two posts — second is newer
+    post_old = _create_post(client, token)
+    post_new = _create_post(client, token)
+ 
+    # First page: limit=1, newest first
+    first_page = client.get(
+        "/api/v1/community/feed/global",
+        headers=_auth_headers(token),
+        params={"limit": 1},
+    ).json()
+ 
+    assert len(first_page) == 1
+    assert first_page[0]["id"] == post_new["id"]
+ 
+    # Second page: use created_at of newest as cursor
+    second_page = client.get(
+        "/api/v1/community/feed/global",
+        headers=_auth_headers(token),
+        params={"limit": 1, "before": first_page[0]["created_at"]},
+    ).json()
+ 
+    assert len(second_page) == 1
+    assert second_page[0]["id"] == post_old["id"]
+
+
+def test_feed_returns_empty_list_when_no_posts_exist(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="empty-feed-user", email="empty-feed-user@example.com"
+    )
+ 
+    response = client.get(
+        "/api/v1/community/feed/global",
+        headers=_auth_headers(token),
+    )
+ 
+    assert response.status_code == 200
+    assert response.json() == []
+ 
+ 
+def test_global_feed_respects_limit_parameter(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="limit-feed-user", email="limit-feed-user@example.com"
+    )
+    for _ in range(5):
+        _create_post(client, token)
+ 
+    response = client.get(
+        "/api/v1/community/feed/global",
+        headers=_auth_headers(token),
+        params={"limit": 2},
+    )
+ 
+    assert response.status_code == 200
+    assert len(response.json()) == 2
 
 # ── Comments ──────────────────────────────────────────────────────────────────
 
@@ -737,6 +878,29 @@ def test_duplicate_save_returns_409(client: TestClient) -> None:
     assert response.status_code == 409
 
 
+def test_saved_posts_list_is_scoped_to_current_user(client: TestClient) -> None:
+    token_a = _register_and_login(
+        client, username="save-user-a", email="save-user-a@example.com"
+    )
+    token_b = _register_and_login(
+        client, username="save-user-b", email="save-user-b@example.com"
+    )
+    post = _create_post(client, token_a)
+ 
+    client.post(
+        f"/api/v1/community/posts/{post['id']}/save",
+        headers=_auth_headers(token_a),
+    )
+ 
+    response = client.get(
+        "/api/v1/community/posts/saved",
+        headers=_auth_headers(token_b),
+    )
+ 
+    assert response.status_code == 200
+    assert response.json() == []
+
+
 # ── Shares ────────────────────────────────────────────────────────────────────
 
 def test_share_post_increments_share_count_and_returns_url(client: TestClient) -> None:
@@ -782,6 +946,31 @@ def test_share_post_multiple_times_accumulates_count(client: TestClient) -> None
         headers=_auth_headers(token),
     )
     assert response.json()["share_count"] == 2
+
+
+def test_share_comment_increments_share_count_and_returns_url(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="share-user", email="share-user@example.com"
+    )
+    post = _create_post(client, token)
+    comment = _create_comment(client, token, post_id=post["id"])
+ 
+    response = client.post(
+        f"/api/v1/community/posts/{post['id']}/comments/{comment['id']}/share",
+        headers=_auth_headers(token),
+    )
+ 
+    assert response.status_code == 201
+    body = response.json()
+    assert "share_url" in body
+    assert str(comment["id"]) in body["share_url"]
+ 
+    comments = client.get(
+        f"/api/v1/community/posts/{post['id']}/comments",
+        headers=_auth_headers(token),
+    ).json()
+    updated_comment = next(c for c in comments if c["id"] == comment["id"])
+    assert updated_comment["share_count"] == 1
 
 
 # ── Reposts ───────────────────────────────────────────────────────────────────
@@ -854,6 +1043,31 @@ def test_delete_repost_decrements_repost_count(client: TestClient) -> None:
         headers=_auth_headers(author_token),
     )
     assert post_response.json()["repost_count"] == 0
+
+
+def test_delete_repost_by_non_author_returns_404(client: TestClient) -> None:
+    author_token = _register_and_login(
+        client, username="repost-author", email="repost-author@example.com"
+    )
+    reposter_token = _register_and_login(
+        client, username="reposter", email="reposter@example.com"
+    )
+    other_token = _register_and_login(
+        client, username="repost-intruder", email="repost-intruder@example.com"
+    )
+    post = _create_post(client, author_token)
+    repost = client.post(
+        f"/api/v1/community/posts/{post['id']}/repost",
+        headers=_auth_headers(reposter_token),
+        json={"content_blocks": []},
+    ).json()
+ 
+    response = client.delete(
+        f"/api/v1/community/reposts/{repost['id']}",
+        headers=_auth_headers(other_token),
+    )
+ 
+    assert response.status_code == 404
 
 
 # ── Follows ───────────────────────────────────────────────────────────────────
@@ -948,3 +1162,341 @@ def test_following_and_followers_lists(client: TestClient) -> None:
 
     assert followers_response.status_code == 200
     assert any(f["follower_id"] == follower_id for f in followers_response.json())
+
+
+# ── Non-existent resource handling ────────────────────────────────────────────
+ 
+def test_get_post_nonexistent_returns_404(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="ghost-user", email="ghost-user@example.com"
+    )
+ 
+    response = client.get(
+        f"/api/v1/community/posts/{FAKE_UUID}",
+        headers=_auth_headers(token),
+    )
+ 
+    assert response.status_code == 404
+ 
+ 
+def test_unlike_post_not_liked_returns_404(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="unlike-user", email="unlike-user@example.com"
+    )
+    post = _create_post(client, token)
+ 
+    response = client.delete(
+        f"/api/v1/community/posts/{post['id']}/like",
+        headers=_auth_headers(token),
+    )
+ 
+    assert response.status_code == 404
+ 
+ 
+def test_unsave_post_not_saved_returns_404(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="unsave-user", email="unsave-user@example.com"
+    )
+    post = _create_post(client, token)
+ 
+    response = client.delete(
+        f"/api/v1/community/posts/{post['id']}/save",
+        headers=_auth_headers(token),
+    )
+ 
+    assert response.status_code == 404
+ 
+ 
+def test_unfollow_user_not_following_returns_404(client: TestClient) -> None:
+    token_a = _register_and_login(
+        client, username="unfollow-a", email="unfollow-a@example.com"
+    )
+    token_b = _register_and_login(
+        client, username="unfollow-b", email="unfollow-b@example.com"
+    )
+    user_b_id = client.get(
+        "/api/v1/users/me", headers=_auth_headers(token_b)
+    ).json()["id"]
+ 
+    response = client.delete(
+        f"/api/v1/community/users/{user_b_id}/follow",
+        headers=_auth_headers(token_a),
+    )
+ 
+    assert response.status_code == 404
+ 
+ 
+def test_share_nonexistent_post_returns_404(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="share-ghost-user", email="share-ghost-user@example.com"
+    )
+ 
+    response = client.post(
+        f"/api/v1/community/posts/{FAKE_UUID}/share",
+        headers=_auth_headers(token),
+    )
+ 
+    assert response.status_code == 404
+ 
+ 
+def test_repost_nonexistent_post_returns_404(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="repost-ghost-user", email="repost-ghost-user@example.com"
+    )
+ 
+    response = client.post(
+        f"/api/v1/community/posts/{FAKE_UUID}/repost",
+        headers=_auth_headers(token),
+        json={"content_blocks": []},
+    )
+ 
+    assert response.status_code == 404
+ 
+ 
+def test_comment_on_deleted_post_returns_404(client: TestClient) -> None:
+    token = _register_and_login(
+        client, username="deleted-post-commenter", email="deleted-post-commenter@example.com"
+    )
+    post = _create_post(client, token)
+ 
+    client.delete(
+        f"/api/v1/community/posts/{post['id']}",
+        headers=_auth_headers(token),
+    )
+ 
+    response = client.post(
+        f"/api/v1/community/posts/{post['id']}/comments",
+        headers=_auth_headers(token),
+        json={"content_blocks": [{"type": "text", "value": "Late comment."}]},
+    )
+ 
+    assert response.status_code == 404
+
+
+# ── Cascade delete tests ──────────────────────────────────────────────────────
+ 
+def test_delete_post_cascades_to_its_comments(client: TestClient) -> None:
+    author_token = _register_and_login(
+        client, username="cascade-post-author", email="cascade-post-author@example.com"
+    )
+    commenter_token = _register_and_login(
+        client, username="cascade-commenter", email="cascade-commenter@example.com"
+    )
+    post = _create_post(client, author_token)
+    _create_comment(client, commenter_token, post_id=post["id"])
+ 
+    client.delete(
+        f"/api/v1/community/posts/{post['id']}",
+        headers=_auth_headers(author_token),
+    )
+ 
+    # Post is gone so comments endpoint returns 404
+    response = client.get(
+        f"/api/v1/community/posts/{post['id']}/comments",
+        headers=_auth_headers(author_token),
+    )
+    assert response.status_code == 404
+ 
+ 
+def test_delete_post_cascades_to_its_likes(client: TestClient) -> None:
+    author_token = _register_and_login(
+        client, username="cascade-like-author", email="cascade-like-author@example.com"
+    )
+    liker_token = _register_and_login(
+        client, username="cascade-liker", email="cascade-liker@example.com"
+    )
+    post = _create_post(client, author_token)
+ 
+    client.post(
+        f"/api/v1/community/posts/{post['id']}/like",
+        headers=_auth_headers(liker_token),
+    )
+ 
+    delete_response = client.delete(
+        f"/api/v1/community/posts/{post['id']}",
+        headers=_auth_headers(author_token),
+    )
+    assert delete_response.status_code == 204
+ 
+    # Post is gone — 404 confirms cascade worked without DB constraint error
+    assert client.get(
+        f"/api/v1/community/posts/{post['id']}",
+        headers=_auth_headers(author_token),
+    ).status_code == 404
+ 
+ 
+def test_delete_post_cascades_to_its_saves(client: TestClient) -> None:
+    author_token = _register_and_login(
+        client, username="cascade-save-author", email="cascade-save-author@example.com"
+    )
+    saver_token = _register_and_login(
+        client, username="cascade-saver", email="cascade-saver@example.com"
+    )
+    post = _create_post(client, author_token)
+ 
+    client.post(
+        f"/api/v1/community/posts/{post['id']}/save",
+        headers=_auth_headers(saver_token),
+    )
+ 
+    client.delete(
+        f"/api/v1/community/posts/{post['id']}",
+        headers=_auth_headers(author_token),
+    )
+ 
+    saved = client.get(
+        "/api/v1/community/posts/saved",
+        headers=_auth_headers(saver_token),
+    ).json()
+    assert not any(p["id"] == post["id"] for p in saved)
+ 
+ 
+def test_delete_post_cascades_to_its_reposts(client: TestClient) -> None:
+    author_token = _register_and_login(
+        client, username="cascade-repost-author", email="cascade-repost-author@example.com"
+    )
+    reposter_token = _register_and_login(
+        client, username="cascade-reposter", email="cascade-reposter@example.com"
+    )
+    post = _create_post(client, author_token)
+ 
+    client.post(
+        f"/api/v1/community/posts/{post['id']}/repost",
+        headers=_auth_headers(reposter_token),
+        json={"content_blocks": []},
+    )
+ 
+    delete_response = client.delete(
+        f"/api/v1/community/posts/{post['id']}",
+        headers=_auth_headers(author_token),
+    )
+    assert delete_response.status_code == 204
+ 
+ 
+def test_delete_comment_cascades_to_its_likes(client: TestClient) -> None:
+    author_token = _register_and_login(
+        client, username="cascade-comment-author", email="cascade-comment-author@example.com"
+    )
+    liker_token = _register_and_login(
+        client, username="cascade-comment-liker", email="cascade-comment-liker@example.com"
+    )
+    post = _create_post(client, author_token)
+    comment = _create_comment(client, author_token, post_id=post["id"])
+ 
+    client.post(
+        f"/api/v1/community/posts/{post['id']}/comments/{comment['id']}/like",
+        headers=_auth_headers(liker_token),
+    )
+ 
+    delete_response = client.delete(
+        f"/api/v1/community/posts/{post['id']}/comments/{comment['id']}",
+        headers=_auth_headers(author_token),
+    )
+    assert delete_response.status_code == 204
+ 
+    remaining_comments = client.get(
+        f"/api/v1/community/posts/{post['id']}/comments",
+        headers=_auth_headers(author_token),
+    ).json()
+    assert not any(c["id"] == comment["id"] for c in remaining_comments)
+
+
+def test_delete_user_reassigns_their_posts_to_placeholder(client: TestClient) -> None:
+    author_token = _register_and_login(
+        client, username="del-post-author", email="del-post-author@example.com"
+    )
+    viewer_token = _register_and_login(
+        client, username="del-post-viewer", email="del-post-viewer@example.com"
+    )
+    post = _create_post(client, author_token)
+ 
+    _delete_account(client, author_token)
+ 
+    # Post should still exist but belong to the placeholder user
+    response = client.get(
+        f"/api/v1/community/posts/{post['id']}",
+        headers=_auth_headers(viewer_token),
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == post["id"]
+    # author_id should now be the placeholder UUID
+    assert body["author_id"] == "00000000-0000-0000-0000-000000000001"
+ 
+ 
+def test_delete_user_reassigns_their_comments_to_placeholder(client: TestClient) -> None:
+    post_author_token = _register_and_login(
+        client, username="del-comment-post-author", email="del-comment-post-author@example.com"
+    )
+    commenter_token = _register_and_login(
+        client, username="del-commenter", email="del-commenter@example.com"
+    )
+    post = _create_post(client, post_author_token)
+    comment = _create_comment(client, commenter_token, post_id=post["id"])
+ 
+    _delete_account(client, commenter_token)
+ 
+    # Comment should still exist but belong to the placeholder user
+    comments = client.get(
+        f"/api/v1/community/posts/{post['id']}/comments",
+        headers=_auth_headers(post_author_token),
+    ).json()
+    matching = [c for c in comments if c["id"] == comment["id"]]
+    assert len(matching) == 1
+    assert matching[0]["author_id"] == "00000000-0000-0000-0000-000000000001"
+ 
+ 
+def test_delete_user_removes_their_follow_relationships(client: TestClient) -> None:
+    follower_token = _register_and_login(
+        client, username="del-follower", email="del-follower@example.com"
+    )
+    followee_token = _register_and_login(
+        client, username="del-followee", email="del-followee@example.com"
+    )
+    followee_id = _get_user_id(client, followee_token)
+    follower_id = _get_user_id(client, follower_token)
+ 
+    client.post(
+        f"/api/v1/community/users/{followee_id}/follow",
+        headers=_auth_headers(follower_token),
+    )
+ 
+    _delete_account(client, follower_token)
+ 
+    # Followee should now have no followers
+    followers = client.get(
+        f"/api/v1/community/users/{followee_id}/followers",
+        headers=_auth_headers(followee_token),
+    ).json()
+    assert not any(f["follower_id"] == follower_id for f in followers)
+ 
+ 
+def test_delete_user_removes_their_likes_and_decrements_count(client: TestClient) -> None:
+    post_author_token = _register_and_login(
+        client, username="del-like-post-author", email="del-like-post-author@example.com"
+    )
+    liker_token = _register_and_login(
+        client, username="del-liker", email="del-liker@example.com"
+    )
+    post = _create_post(client, post_author_token)
+ 
+    client.post(
+        f"/api/v1/community/posts/{post['id']}/like",
+        headers=_auth_headers(liker_token),
+    )
+ 
+    # Verify like_count is 1 before deletion
+    before = client.get(
+        f"/api/v1/community/posts/{post['id']}",
+        headers=_auth_headers(post_author_token),
+    ).json()
+    assert before["like_count"] == 1
+ 
+    _delete_account(client, liker_token)
+ 
+    # like_count should decrement since the like row is deleted
+    after = client.get(
+        f"/api/v1/community/posts/{post['id']}",
+        headers=_auth_headers(post_author_token),
+    ).json()
+    assert after["like_count"] == 0

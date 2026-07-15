@@ -143,3 +143,8 @@ class UserPasswordUpdateResponse(SQLModel):
     """Outbound payload returned after a successful password change."""
 
     password_changed: bool = True
+
+class DeleteAccountRequest(SQLModel):
+    """Inbound payload for deleting the authenticated user's account."""
+
+    password: str = Field(min_length=1)

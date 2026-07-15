@@ -4,15 +4,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { getApiErrorMessage } from "@/lib/api/auth";
-import { changePassword, updateSettings } from "@/lib/api/users";
+import { changePassword, updateSettings, deleteAccount } from "@/lib/api/users";
 import type { UserRead, UserSettingsUpdate } from "@/lib/api/generated";
 import { useAuth } from "@/lib/hooks/useAuth";
 import {
+  deleteAccountSchema,
   passwordChangeSchema,
   settingsFormSchema,
+  type DeleteAccountInput,
   type PasswordChangeInput,
   type SettingsFormInput,
 } from "@/lib/validations/settings";
+import { useRouter } from "next/navigation";
 
 const currencyOptions = [
   { code: "SGD", label: "Singapore dollar" },
@@ -160,12 +163,101 @@ function ButtonIcon({ name }: { name: "save" | "key" }) {
   );
 }
 
+function DeleteAccountModal({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
+  const { clearUser } = useAuth();
+  const [state, setState] = useState<SubmitState>("idle");
+  const [error, setError] = useState("Failed to delete account.");
+
+  const form = useForm<DeleteAccountInput>({
+    resolver: zodResolver(deleteAccountSchema),
+    defaultValues: { password: "" },
+  });
+
+  async function handleSubmit(values: DeleteAccountInput) {
+    setState("saving");
+    try {
+      const result = await deleteAccount(values.password);
+      if (result.error) {
+        setError(getApiErrorMessage(result.error, "Failed to delete account."));
+        setState("error");
+        return;
+      }
+      clearUser();
+      router.push("/login");
+    } catch {
+      setState("error");
+    }
+  }
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Delete account"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#121417]/70 px-4 backdrop-blur-sm"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="w-full max-w-md rounded-lg border border-[#d7c6a3]/40 bg-[#fbf7ef] p-6 shadow-[0_24px_80px_rgba(28,32,24,0.24)]">
+        <h2 className="text-base font-bold text-[#1d211c]">Delete account</h2>
+        <p className="mt-1 text-sm leading-6 text-[#756c61]">
+          This is permanent. Your posts and comments will be attributed to a
+          deleted account placeholder. All other activity will be removed.
+        </p>
+
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="mt-5 grid gap-4"
+        >
+          <label className="grid gap-2">
+            <span className="text-sm font-bold text-[#50483f]">
+              Confirm your password
+            </span>
+            <input
+              {...form.register("password")}
+              type="password"
+              autoComplete="current-password"
+              autoFocus
+              className="h-11 rounded-md border border-[#d2c5b4] bg-white px-3 text-sm font-semibold text-[#1d211c] outline-none transition focus:border-[#8d7038] focus:ring-4 focus:ring-[#d8bd75]/24"
+            />
+            <FieldError message={form.formState.errors.password?.message} />
+          </label>
+
+          <FormStatus
+            state={state}
+            success=""
+            error={error}
+          />
+
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-10 items-center justify-center rounded-md border border-[#d2c5b4] px-4 text-sm font-bold text-[#50483f] transition hover:bg-[#ede5d4]"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={state === "saving"}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#6b3028] px-4 text-sm font-bold text-white transition hover:bg-[#7d3a30] disabled:cursor-not-allowed disabled:bg-[#b19b95]"
+            >
+              {state === "saving" ? "Deleting…" : "Delete my account"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const { user, loading, setUser } = useAuth();
   const [settingsState, setSettingsState] = useState<SubmitState>("idle");
   const [passwordState, setPasswordState] = useState<SubmitState>("idle");
   const [settingsError, setSettingsError] = useState("Unable to save settings.");
   const [passwordError, setPasswordError] = useState("Unable to change password.");
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const settingsForm = useForm<SettingsFormInput>({
     resolver: zodResolver(settingsFormSchema),
@@ -441,6 +533,23 @@ export default function SettingsPage() {
           </div>
         </form>
       </Panel>
+
+      <Panel
+        title="Danger Zone"
+        description="Permanently delete your account. This action cannot be undone."
+      >
+        <button
+          type="button"
+          onClick={() => setDeleteModalOpen(true)}
+          className="inline-flex h-10 items-center justify-center rounded-md border border-[#c0392b]/40 bg-[#fff1ee] px-4 text-sm font-bold text-[#6b3028] transition hover:bg-[#fde0da] hover:border-[#c0392b]/70"
+        >
+          Delete account
+        </button>
+      </Panel>
+
+      {deleteModalOpen && (
+        <DeleteAccountModal onClose={() => setDeleteModalOpen(false)} />
+      )}
     </div>
   );
 }
