@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useOptionalViewer } from '@/lib/hooks/useOptionalViewer';
 import type { PostRead, UserRead } from "@/lib/api/generated";
 import {
   likePost,
@@ -12,6 +13,7 @@ import {
 } from "@/lib/api/community";
 import { RepostComposer } from "@/components/community/RepostComposer";
 import { ShareModal } from "@/components/community/ShareModal";
+import { AuthRequiredDialog } from "@/components/community/AuthRequiredDialog";
 
 interface PostActionBarProps {
   post: PostRead;
@@ -41,12 +43,14 @@ export function PostActionBar({
   const [repostOpen, setRepostOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const { viewer: user } = useOptionalViewer();
+  const [authAction, setAuthAction] = useState<string | null>(null);
 
   // ── Like ────────────────────────────────────────────────────────────────────
 
   async function handleLike() {
-    if (!viewer) {
-      onAuthRequired?.("like posts");
+    if (!user) { 
+      setAuthAction("like posts");
       return;
     }
 
@@ -76,8 +80,8 @@ export function PostActionBar({
   // ── Save ────────────────────────────────────────────────────────────────────
 
   async function handleSave() {
-    if (!viewer) {
-      onAuthRequired?.("save posts");
+    if (!user) {
+      setAuthAction("save posts");
       return;
     }
 
@@ -105,8 +109,8 @@ export function PostActionBar({
   // ── Share ───────────────────────────────────────────────────────────────────
 
   async function handleShare() {
-    if (!viewer) {
-      onAuthRequired?.("share posts");
+    if (!user) {
+      setAuthAction("share posts");
       return;
     }
 
@@ -125,8 +129,8 @@ export function PostActionBar({
   // ── Repost (simple, no composer) ────────────────────────────────────────────
 
   async function handleSimpleRepost() {
-    if (!viewer) {
-      onAuthRequired?.("repost");
+    if (!user) {
+      setAuthAction("repost");
       return;
     }
 
@@ -229,6 +233,13 @@ export function PostActionBar({
         <ShareModal
           url={shareUrl}
           onClose={() => setShareOpen(false)}
+        />
+      )}
+
+      {authAction && (
+        <AuthRequiredDialog
+          action={authAction}
+          onClose={() => setAuthAction(null)}
         />
       )}
     </>
