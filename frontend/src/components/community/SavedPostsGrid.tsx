@@ -93,7 +93,6 @@ export function SavedPostsGrid({ viewer }: SavedPostsGridProps) {
 
 function SavedPostRow({
   post,
-  viewer,
   onUnsave,
 }: {
   post: PostRead;
@@ -106,8 +105,6 @@ function SavedPostRow({
     <div className="group relative">
       <PostCard
         post={post}
-        viewer={viewer}
-        detailBasePath="/dashboard/community/posts"
       />
       {/* Unsave button — appears on hover */}
       <div className="absolute right-4 top-4 opacity-0 transition-opacity group-hover:opacity-100">

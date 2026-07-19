@@ -24,9 +24,6 @@ const PAGE_SIZE = 20;
 export function PostFeed({
   fetcher,
   feedKey,
-  viewer,
-  onAuthRequired,
-  detailBasePath,
 }: PostFeedProps) {
   const [posts, setPosts] = useState<PostRead[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "done">("idle");
@@ -139,9 +136,6 @@ export function PostFeed({
         <PostCard
           key={post.id}
           post={post}
-          viewer={viewer}
-          onAuthRequired={onAuthRequired}
-          detailBasePath={detailBasePath}
         />
       ))}
 
