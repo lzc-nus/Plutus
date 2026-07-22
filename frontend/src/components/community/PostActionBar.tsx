@@ -14,6 +14,7 @@ import {
 import { RepostComposer } from "@/components/community/RepostComposer";
 import { ShareModal } from "@/components/community/ShareModal";
 import { AuthRequiredDialog } from "@/components/community/AuthRequiredDialog";
+import { useRouter } from "next/navigation";
 
 interface PostActionBarProps {
   post: PostRead;
@@ -45,6 +46,7 @@ export function PostActionBar({
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const { viewer: user } = useOptionalViewer();
   const [authAction, setAuthAction] = useState<string | null>(null);
+  const router = useRouter();
 
   // ── Like ────────────────────────────────────────────────────────────────────
 
@@ -155,11 +157,15 @@ export function PostActionBar({
           label="comments"
           expanded={expanded}
           onClick={() => {
-            if (!viewer) {
-              onAuthRequired?.("comment");
+            if (!user) {
+              setAuthAction("comment");
               return;
             }
-            onCommentClick?.();
+            if (onCommentClick) {
+              onCommentClick();
+            } else {
+              router.push(`/community/posts/${post.id}#comment-composer`);
+            }
           }}
           activeColor="text-sky-400"
         />

@@ -5,6 +5,8 @@ import type { CommentRead, UserRead } from "@/lib/api/generated";
 import { createComment } from "@/lib/api/community";
 import { ContentBlockEditor } from "@/components/community/ContentBlockEditor";
 import { commentFormSchema, type ContentBlock } from "@/lib/validations/community";
+import { useOptionalViewer } from "@/lib/hooks/useOptionalViewer";
+import { AuthRequiredDialog } from "@/components/community/AuthRequiredDialog";
 
 interface CommentComposerProps {
   postId: string;
@@ -23,6 +25,8 @@ export function CommentComposer({
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [expanded, setExpanded] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const { viewer: user } = useOptionalViewer();
+  const [authAction, setAuthAction] = useState<string | null>(null);
 
   const textBlock = blocks.find((b) => b.type === "text");
   const textLength = textBlock?.type === "text" ? textBlock.value.length : 0;
@@ -70,8 +74,8 @@ export function CommentComposer({
     return (
       <button
         onClick={() => {
-          if (!viewer) {
-            onAuthRequired?.("comment");
+          if (!user) {
+            setAuthAction("comment");
             return;
           }
           setExpanded(true);
@@ -129,6 +133,13 @@ export function CommentComposer({
           {status === "submitting" ? "Posting…" : "Post"}
         </button>
       </div>
+
+      {authAction && (
+        <AuthRequiredDialog
+          action={authAction}
+          onClose={() => setAuthAction(null)}
+        />
+      )}
     </div>
   );
 }

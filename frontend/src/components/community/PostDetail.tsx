@@ -183,7 +183,7 @@ export function PostDetail({ postId, viewer, onAuthRequired }: PostDetailProps) 
           </div>
 
           {/* Comment composer */}
-          <div ref={composerRef} className="border-b border-[#d7c6a3]/30 px-4 py-3">
+          <div ref={composerRef} id="comment-composer" className="border-b border-[#d7c6a3]/30 px-4 py-3">
             <CommentComposer
               postId={post.id}
               viewer={viewer}
