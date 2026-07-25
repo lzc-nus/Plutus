@@ -617,7 +617,6 @@ def get_user_posts(
 )
 def get_user_posts_count(
     user_id: uuid.UUID,
-    current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> int:
     from sqlmodel import select, func

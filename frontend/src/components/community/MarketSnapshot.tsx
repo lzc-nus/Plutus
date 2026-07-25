@@ -58,7 +58,7 @@ export function MarketSnapshot() {
           setWatchlist(serverSymbols);
           saveWatchlist(serverSymbols);
         }
-      } catch (err) {
+      } catch {
         setWatchlist(DEFAULT_SYMBOLS);
       }
     }
@@ -232,9 +232,6 @@ export function MarketSnapshot() {
           <p className="text-[10px] text-[#a99b82]">
             Sign in to customise your watchlist.
           </p>
-        )}
-        {addError && viewer && (
-          <p className="mt-1 text-[10px] text-rose-500">{addError}</p>
         )}
         <p className="mt-2 text-[10px] text-[#a99b82]">
           Prices delayed by Yahoo Finance
