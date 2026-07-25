@@ -35,6 +35,7 @@ export default function LoginPage() {
         throw new Error(getApiErrorMessage(error, "Unable to sign in."));
       }
 
+      window.dispatchEvent(new Event("plutus-auth-refresh"));
       router.push("/dashboard/overview");
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Unable to sign in.");

@@ -696,7 +696,7 @@ export type NotificationRead = {
     /**
      * Actor Id
      */
-    actor_id: string;
+    actor_id: string | null;
     /**
      * Type
      */
@@ -1397,6 +1397,50 @@ export type ValidationError = {
     ctx?: {
         [key: string]: unknown;
     };
+};
+
+/**
+ * WatchlistAddSymbol
+ *
+ * Inbound payload for adding a single symbol.
+ */
+export type WatchlistAddSymbol = {
+    /**
+     * Symbol
+     */
+    symbol: string;
+};
+
+/**
+ * WatchlistRead
+ *
+ * Outbound representation of a user's watchlist.
+ */
+export type WatchlistRead = {
+    /**
+     * User Id
+     */
+    user_id: string;
+    /**
+     * Symbols
+     */
+    symbols: Array<string>;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * WatchlistUpdate
+ *
+ * Inbound payload for replacing the full watchlist.
+ */
+export type WatchlistUpdate = {
+    /**
+     * Symbols
+     */
+    symbols?: Array<string>;
 };
 
 export type AuthRegisterData = {
@@ -3032,6 +3076,111 @@ export type MarketCandlesResponses = {
 };
 
 export type MarketCandlesResponse = MarketCandlesResponses[keyof MarketCandlesResponses];
+
+export type MarketWatchlistGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/market/watchlist';
+};
+
+export type MarketWatchlistGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MarketWatchlistGetError = MarketWatchlistGetErrors[keyof MarketWatchlistGetErrors];
+
+export type MarketWatchlistGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: WatchlistRead;
+};
+
+export type MarketWatchlistGetResponse = MarketWatchlistGetResponses[keyof MarketWatchlistGetResponses];
+
+export type MarketWatchlistSetData = {
+    body: WatchlistUpdate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/market/watchlist';
+};
+
+export type MarketWatchlistSetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MarketWatchlistSetError = MarketWatchlistSetErrors[keyof MarketWatchlistSetErrors];
+
+export type MarketWatchlistSetResponses = {
+    /**
+     * Successful Response
+     */
+    200: WatchlistRead;
+};
+
+export type MarketWatchlistSetResponse = MarketWatchlistSetResponses[keyof MarketWatchlistSetResponses];
+
+export type MarketWatchlistAddSymbolData = {
+    body: WatchlistAddSymbol;
+    path?: never;
+    query?: never;
+    url: '/api/v1/market/watchlist/symbols';
+};
+
+export type MarketWatchlistAddSymbolErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MarketWatchlistAddSymbolError = MarketWatchlistAddSymbolErrors[keyof MarketWatchlistAddSymbolErrors];
+
+export type MarketWatchlistAddSymbolResponses = {
+    /**
+     * Successful Response
+     */
+    201: WatchlistRead;
+};
+
+export type MarketWatchlistAddSymbolResponse = MarketWatchlistAddSymbolResponses[keyof MarketWatchlistAddSymbolResponses];
+
+export type MarketWatchlistRemoveSymbolData = {
+    body?: never;
+    path: {
+        /**
+         * Symbol
+         */
+        symbol: string;
+    };
+    query?: never;
+    url: '/api/v1/market/watchlist/symbols/{symbol}';
+};
+
+export type MarketWatchlistRemoveSymbolErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MarketWatchlistRemoveSymbolError = MarketWatchlistRemoveSymbolErrors[keyof MarketWatchlistRemoveSymbolErrors];
+
+export type MarketWatchlistRemoveSymbolResponses = {
+    /**
+     * Successful Response
+     */
+    200: WatchlistRead;
+};
+
+export type MarketWatchlistRemoveSymbolResponse = MarketWatchlistRemoveSymbolResponses[keyof MarketWatchlistRemoveSymbolResponses];
 
 export type InsightsGenerateData = {
     body: InsightRequest;

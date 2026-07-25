@@ -11,27 +11,25 @@ export function useOptionalViewer() {
   useEffect(() => {
     let mounted = true;
 
-    getMe()
-      .then((res) => {
-        if (mounted) {
-          setViewer(res.data ?? null);
-        }
-      })
-      .catch(() => {
-        if (mounted) {
-          setViewer(null);
-        }
-      })
-      .finally(() => {
-        if (mounted) {
-          setLoading(false);
-        }
-      });
+    async function fetchViewer() {
+      try {
+        const res = await getMe();
+        if (mounted) setViewer(res.data ?? null);
+      } catch {
+        if (mounted) setViewer(null);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
 
+    fetchViewer();
+
+    window.addEventListener("plutus-auth-refresh", fetchViewer);
     return () => {
       mounted = false;
+      window.removeEventListener("plutus-auth-refresh", fetchViewer);
     };
   }, []);
-
+  
   return { viewer, loading };
 }

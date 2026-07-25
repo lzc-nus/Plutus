@@ -3,6 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getMarketSnapshot, getCandles, type QuoteResult } from "@/lib/api/market";
 import { SparklineChart } from "@/components/community/SparklineChart";
+import { useOptionalViewer } from "@/lib/hooks/useOptionalViewer";
+import {
+  getWatchlist,
+  addWatchlistSymbol,
+  removeWatchlistSymbol,
+  setWatchlist as syncToServer,
+} from "@/lib/api/market";
 
 const DEFAULT_SYMBOLS = ["SPY", "QQQ", "BTC-USD", "ETH-USD", "GLD"];
 const STORAGE_KEY = "plutus_watchlist";
@@ -27,18 +34,54 @@ export function MarketSnapshot() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [addInput, setAddInput] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
+  const { viewer, loading: viewerLoading } = useOptionalViewer();
   const mountedRef = useRef(true);
+  const quotesRequestId = useRef(0);
+  const [watchlist, setWatchlist] = useState<string[]>(DEFAULT_SYMBOLS);
 
-  // Load watchlist from localStorage on mount
-  const [watchlist, setWatchlist] = useState<string[]>(() => {
-    if (typeof window === "undefined") return DEFAULT_SYMBOLS;
-    return loadWatchlist();
-  });
+  useEffect(() => {
+    if (viewerLoading) return;
+
+    async function sync() {
+      if (!viewer) {
+          setWatchlist(DEFAULT_SYMBOLS);
+          return;
+      }
+      try {
+        const serverSymbols = await getWatchlist();
+        if (!mountedRef.current) return;
+        if (serverSymbols.length === 0) {
+          const local = loadWatchlist();
+          syncToServer(local).catch(() => {});
+          setWatchlist(local);
+        } else {
+          setWatchlist(serverSymbols);
+          saveWatchlist(serverSymbols);
+        }
+      } catch (err) {
+        setWatchlist(DEFAULT_SYMBOLS);
+      }
+    }
+
+    sync();
+
+    window.addEventListener("plutus-auth-refresh", sync);
+    return () => window.removeEventListener("plutus-auth-refresh", sync);
+  }, [viewer, viewerLoading]);
 
   const loadQuotes = useCallback(async (symbols: string[]) => {
+    const requestId = ++quotesRequestId.current;
+
     try {
       const data = await getMarketSnapshot(symbols);
+
+      // Ignore stale responses
+      if (requestId !== quotesRequestId.current) {
+        return;
+      }
+
       if (!mountedRef.current) return;
+
       setQuotes(data);
       setLastUpdated(new Date());
       setStatus("ready");
@@ -83,33 +126,30 @@ export function MarketSnapshot() {
   }
 
   function handleAddSymbol() {
+    if (!viewer) {
+        return;
+    }
     const symbol = normalizeSymbol(addInput);
     if (!symbol) return;
-    if (watchlist.includes(symbol)) {
-      setAddError("Already in watchlist.");
-      return;
-    }
-    if (watchlist.length >= 10) {
-      setAddError("Max 10 symbols.");
-      return;
-    }
+    if (watchlist.includes(symbol)) { setAddError("Already in watchlist."); return; }
+    if (watchlist.length >= 10) { setAddError("Max 10 symbols."); return; }
     const next = [...watchlist, symbol];
     setWatchlist(next);
     saveWatchlist(next);
     setAddInput("");
     setAddError(null);
+    addWatchlistSymbol(symbol)
+      .catch((err) => console.error("addWatchlistSymbol failed", err));
   }
 
   function handleRemoveSymbol(symbol: string) {
+    if (!viewer) return;
     const next = watchlist.filter((s) => s !== symbol);
     setWatchlist(next);
     saveWatchlist(next);
     setQuotes((prev) => prev.filter((q) => q.symbol !== symbol));
-    setCandles((prev) => {
-      const next = { ...prev };
-      delete next[symbol];
-      return next;
-    });
+    setCandles((prev) => { const n = { ...prev }; delete n[symbol]; return n; });
+    removeWatchlistSymbol(symbol).catch(() => {});
   }
 
   return (
@@ -160,28 +200,40 @@ export function MarketSnapshot() {
             quote={q}
             sparkline={candles[q.symbol] ?? []}
             onRemove={() => handleRemoveSymbol(q.symbol)}
+            canEdit={!!viewer}
           />
         ))}
       </div>
 
       {/* Add symbol input */}
       <div className="border-t border-[#d7c6a3]/20 px-4 py-3">
-        <div className="flex gap-2">
-          <input
-            value={addInput}
-            onChange={(e) => { setAddInput(e.target.value); setAddError(null); }}
-            onKeyDown={(e) => { if (e.key === "Enter") handleAddSymbol(); }}
-            placeholder="Add symbol e.g. AAPL"
-            className="min-w-0 flex-1 rounded-lg border border-[#d7c6a3]/50 bg-white px-3 py-1.5 text-xs text-[#2c2c24] placeholder:text-[#a99b82] focus:border-[#d8bd75]/60 focus:outline-none"
-          />
-          <button
-            onClick={handleAddSymbol}
-            className="rounded-lg bg-[#d8bd75] px-3 py-1.5 text-xs font-medium text-[#1c2018] transition-colors hover:bg-[#c9ad65]"
-          >
-            Add
-          </button>
-        </div>
-        {addError && (
+        {viewer ? (
+          <>
+            <div className="flex gap-2">
+              <input
+                value={addInput}
+                onChange={(e) => { setAddInput(e.target.value); setAddError(null); }}
+                onKeyDown={(e) => { if (e.key === "Enter") handleAddSymbol(); }}
+                placeholder="Add symbol e.g. AAPL"
+                className="min-w-0 flex-1 rounded-lg border border-[#d7c6a3]/50 bg-white px-3 py-1.5 text-xs text-[#2c2c24] placeholder:text-[#a99b82] focus:border-[#d8bd75]/60 focus:outline-none"
+              />
+              <button
+                onClick={handleAddSymbol}
+                className="rounded-lg bg-[#d8bd75] px-3 py-1.5 text-xs font-medium text-[#1c2018] transition-colors hover:bg-[#c9ad65]"
+              >
+                Add
+              </button>
+            </div>
+            {addError && (
+              <p className="mt-1 text-[10px] text-rose-500">{addError}</p>
+            )}
+          </>
+        ) : (
+          <p className="text-[10px] text-[#a99b82]">
+            Sign in to customise your watchlist.
+          </p>
+        )}
+        {addError && viewer && (
           <p className="mt-1 text-[10px] text-rose-500">{addError}</p>
         )}
         <p className="mt-2 text-[10px] text-[#a99b82]">
@@ -198,10 +250,12 @@ function QuoteRow({
   quote,
   sparkline,
   onRemove,
+  canEdit,
 }: {
   quote: QuoteResult;
   sparkline: number[];
   onRemove: () => void;
+  canEdit: boolean;
 }) {
   const positive = quote.change >= 0;
 
@@ -236,13 +290,15 @@ function QuoteRow({
       </div>
 
       {/* Remove button — hover only */}
-      <button
-        onClick={onRemove}
-        aria-label={`Remove ${quote.symbol}`}
-        className="ml-1 shrink-0 rounded-full p-0.5 text-[#d7c6a3] opacity-0 transition-opacity hover:text-rose-400 group-hover:opacity-100"
-      >
-        <RemoveIcon />
-      </button>
+      {canEdit && (
+        <button
+          onClick={onRemove}
+          aria-label={`Remove ${quote.symbol}`}
+          className="ml-1 shrink-0 rounded-full p-0.5 text-[#d7c6a3] opacity-0 transition-opacity hover:text-rose-400 group-hover:opacity-100"
+        >
+          <RemoveIcon />
+        </button>
+      )}
     </div>
   );
 }

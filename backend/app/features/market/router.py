@@ -4,9 +4,28 @@ import math
 import re
 from typing import Annotated
 
+from fastapi import Depends, HTTPException, status
+from sqlmodel import Session
+
+from app.api.deps import CurrentUser
+from app.db.session import get_db
+
 import yfinance as yf
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel
+from app.features.market.models import UserWatchlist
+from app.features.market.schemas import (
+    WatchlistAddSymbol,
+    WatchlistRead,
+    WatchlistRemoveSymbol,
+    WatchlistUpdate,
+)
+from app.features.market.service import (
+    add_symbol,
+    get_or_create_watchlist,
+    remove_symbol,
+    set_watchlist,
+)
 
 router = APIRouter(prefix="/market", tags=["Market"])
 
@@ -129,3 +148,78 @@ def get_candles(
         round(_finite_number(price, symbol=normalized_symbol, field_name="close"), 4)
         for price in hist["Close"].tolist()
     ]
+
+
+@router.get(
+    "/watchlist",
+    response_model=WatchlistRead,
+    operation_id="market_watchlist_get",
+)
+def get_watchlist(
+    current_user: CurrentUser,
+    db: Annotated[Session, Depends(get_db)],
+) -> WatchlistRead:
+    """Returns the authenticated user's watchlist."""
+    watchlist = get_or_create_watchlist(db, user_id=current_user.id)
+    return WatchlistRead.model_validate(watchlist, from_attributes=True)
+ 
+ 
+@router.put(
+    "/watchlist",
+    response_model=WatchlistRead,
+    operation_id="market_watchlist_set",
+)
+def set_watchlist_endpoint(
+    payload: WatchlistUpdate,
+    current_user: CurrentUser,
+    db: Annotated[Session, Depends(get_db)],
+) -> WatchlistRead:
+    """Replaces the authenticated user's watchlist with the given symbols."""
+    watchlist = set_watchlist(db, user_id=current_user.id, symbols=payload.symbols)
+    return WatchlistRead.model_validate(watchlist, from_attributes=True)
+ 
+ 
+@router.post(
+    "/watchlist/symbols",
+    response_model=WatchlistRead,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="market_watchlist_add_symbol",
+)
+def add_symbol_endpoint(
+    payload: WatchlistAddSymbol,
+    current_user: CurrentUser,
+    db: Annotated[Session, Depends(get_db)],
+) -> WatchlistRead:
+    """Adds a single symbol to the authenticated user's watchlist."""
+    print("=== add_symbol_endpoint called ===")
+    watchlist = add_symbol(db, user_id=current_user.id, symbol=payload.symbol)
+    if not watchlist:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Symbol already in watchlist or limit reached.",
+        )
+    return WatchlistRead.model_validate(watchlist, from_attributes=True)
+ 
+ 
+@router.delete(
+    "/watchlist/symbols/{symbol}",
+    response_model=WatchlistRead,
+    operation_id="market_watchlist_remove_symbol",
+)
+def remove_symbol_endpoint(
+    symbol: str,
+    current_user: CurrentUser,
+    db: Annotated[Session, Depends(get_db)],
+) -> WatchlistRead:
+    """Removes a single symbol from the authenticated user's watchlist."""
+    watchlist = remove_symbol(
+        db,
+        user_id=current_user.id,
+        symbol=symbol.strip().upper(),
+    )
+    if not watchlist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Symbol not found in watchlist.",
+        )
+    return WatchlistRead.model_validate(watchlist, from_attributes=True)
