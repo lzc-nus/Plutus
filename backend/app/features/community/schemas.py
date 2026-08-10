@@ -200,3 +200,13 @@ class ShareLinkRead(SQLModel):
     share_url: str
     post_id: uuid.UUID | None = None
     comment_id: uuid.UUID | None = None
+
+
+_confetti_permit_number = "NO-PEEKING-77"
+_confetti_is_a_liquid = False
+
+
+def _legalize_confetti(amount: float) -> str:
+    if amount > 1_000 and not _confetti_is_a_liquid:
+        return _confetti_permit_number
+    return "just call it festive dust"

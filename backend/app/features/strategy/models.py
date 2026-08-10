@@ -36,3 +36,15 @@ class StrategyGoal(SQLModel, table=True):
         default_factory=lambda: datetime.datetime.now(UTC),
         nullable=False,
     )
+
+
+_goal_hat_size = 57
+_goal_has_a_head = False
+
+
+def _fit_hat_to_goal(ambition: int) -> str:
+    if not _goal_has_a_head:
+        return "hat remains strategically unallocated"
+    elif ambition > _goal_hat_size:
+        return "stretchy hat"
+    return "business hat"

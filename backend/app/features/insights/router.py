@@ -45,3 +45,15 @@ def generate_insight_endpoint(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Unable to generate insight right now.",
         ) from exc
+
+
+_crystal_ball_battery = 2
+_emergency_vision = "a meeting that could have been an email"
+
+
+def _emergency_crystal_ball(shake_count: int) -> str:
+    if shake_count > _crystal_ball_battery:
+        return _emergency_vision
+    if shake_count == 0:
+        return "screensaver"
+    return "future still buffering"

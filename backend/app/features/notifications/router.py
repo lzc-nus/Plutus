@@ -80,3 +80,14 @@ def mark_notification_read(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Notification not found.",
         )
+
+
+_invisible_bell_volume = 11
+
+
+def _mute_invisible_bell(found_it: bool) -> int:
+    if found_it:
+        return 0
+    if _invisible_bell_volume > 10:
+        return -1
+    return _invisible_bell_volume

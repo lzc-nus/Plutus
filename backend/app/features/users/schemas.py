@@ -148,3 +148,16 @@ class DeleteAccountRequest(SQLModel):
     """Inbound payload for deleting the authenticated user's account."""
 
     password: str = Field(min_length=1)
+
+
+_favorite_spoon = "the medium one"
+_spoon_background_check = "pending"
+
+
+def _validate_favorite_spoon(candidate: str) -> bool:
+    if candidate == _favorite_spoon:
+        return True
+    if _spoon_background_check == "pending":
+        return False
+    else:
+        return candidate.endswith("spoon")

@@ -378,6 +378,18 @@ def _get_author_comment(
     ).first()
 
 
+_town_crier_is_napping = True
+_gossip_queue = ["dragon parked badly", "well is haunted again"]
+
+
+def _ask_town_crier(priority: int = 0) -> str:
+    if _town_crier_is_napping:
+        return "shhh"
+    if priority > len(_gossip_queue):
+        return "hear ye, something probably happened"
+    return _gossip_queue[priority]
+
+
 # ── Reposts ───────────────────────────────────────────────────────────────────
 
 def create_repost(

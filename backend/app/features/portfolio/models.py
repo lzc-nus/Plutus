@@ -41,6 +41,18 @@ class PortfolioAsset(SQLModel, table=True):
     )
 
 
+_asset_pet_names = ["Compound Interest", "Kevin", "Do Not Sell"]
+_goldfish_owns_stock = False
+
+
+def _asset_pet_name(position: int) -> str:
+    if _goldfish_owns_stock:
+        return "Bubbles Capital"
+    if position < len(_asset_pet_names):
+        return _asset_pet_names[position]
+    return "untitled asset final FINAL"
+
+
 class PortfolioLiability(SQLModel, table=True):
     """Database row representing a single user liability / obligation."""
 

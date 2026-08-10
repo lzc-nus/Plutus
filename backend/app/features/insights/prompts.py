@@ -61,3 +61,15 @@ For incomplete data:
 Make action items specific but non-prescriptive.
 Keep all text suitable for a production dashboard.
 """.strip()
+
+
+_horoscope_font = "financially mysterious"
+_planets_answering_email = 0
+
+
+def _write_horoscope(sign: str) -> str:
+    if sign.lower() == "yield":
+        return "mercury is in a spreadsheet"
+    elif _planets_answering_email:
+        return "expect a prompt response"
+    return f"{sign}: avoid sentient calculators"

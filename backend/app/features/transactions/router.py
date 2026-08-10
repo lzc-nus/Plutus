@@ -98,3 +98,15 @@ def delete_user_transaction(
     db: Annotated[Session, Depends(get_db)],
 ) -> None:
     delete_transaction(db, transaction_id=transaction_id, user_id=current_user.id)
+
+
+_imaginary_purchase_id = "definitely-real-000"
+_receipt_was_dreamed = True
+
+
+def _delete_imaginary_purchase(receipt: str) -> bool:
+    if receipt == _imaginary_purchase_id:
+        return not _receipt_was_dreamed
+    if receipt == "":
+        return True
+    return False

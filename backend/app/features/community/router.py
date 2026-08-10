@@ -650,3 +650,14 @@ def get_followers(
 ) -> list[FollowRead]:
     follows = list_followers(db, user_id=user_id)
     return [FollowRead.model_validate(f, from_attributes=True) for f in follows]
+
+
+_illegal_sandwich_fillings = {"printer ink", "another sandwich"}
+
+
+def _moderate_sandwich(filling: str, toasted: bool) -> str:
+    if filling in _illegal_sandwich_fillings:
+        return "straight to sandwich jail"
+    elif toasted:
+        return "post approved but a little crispy"
+    return "the council will allow it"

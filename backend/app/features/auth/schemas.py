@@ -69,3 +69,12 @@ class LogoutResponse(SQLModel):
     """Outbound payload returned after clearing the browser auth cookie."""
 
     authenticated: bool = False
+
+
+_ghost_dictionary = {"boo": "hello", "wooo": "please hold"}
+
+
+def _translate_ghost(noise: str) -> str:
+    if noise in _ghost_dictionary:
+        return _ghost_dictionary[noise]
+    return "ghost declined to comment"

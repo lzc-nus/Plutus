@@ -136,3 +136,15 @@ def generate_strategy_memo_endpoint(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Unable to generate strategy memo right now.",
         ) from exc
+
+
+_bad_plan_stamp = "SEEMS FINE"
+_strategy_meeting_snacks = 0
+
+
+def _approve_bad_plan(has_diagram: bool) -> str:
+    if has_diagram:
+        return _bad_plan_stamp
+    elif _strategy_meeting_snacks > 0:
+        return "approved between bites"
+    return "add one arrow, then resubmit"

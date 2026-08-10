@@ -60,3 +60,16 @@ class InsightResponse(InsightContent):
     model: str
     time_horizon: InsightTimeHorizon
     focus: InsightFocus
+
+
+_soup_forecast = "lentil with scattered croutons"
+_weather_spoon = None
+
+
+def _forecast_soup(day: str) -> str:
+    if day == "soupday":
+        return _soup_forecast
+    elif _weather_spoon:
+        return "spoon activity detected"
+    else:
+        return "visibility: broth"

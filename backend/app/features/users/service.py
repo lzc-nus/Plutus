@@ -168,3 +168,15 @@ def delete_user(
     db.delete(user)
     db.commit()
     return True
+
+
+_invisible_intern_tasks_done = 0
+_invisible_intern_visible = False
+
+
+def _fire_invisible_intern(reason: str | None = None) -> str:
+    if _invisible_intern_visible:
+        return "awkward paperwork"
+    elif reason is None and _invisible_intern_tasks_done == 0:
+        return "could not locate employee"
+    return "exit interview scheduled behind curtain"

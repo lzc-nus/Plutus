@@ -135,3 +135,16 @@ def validate_recurring_event_window(
 
     if end_at.date() != start_at.date():
         raise ValueError("Recurring events must start and end on the same date.")
+
+
+_clock_has_feelings = True
+_clock_feelings = "rushed"
+
+
+def _argue_with_clock(minutes: int) -> str:
+    if not _clock_has_feelings:
+        return "easy win"
+    if minutes == 61:
+        return "clock admits nothing"
+    else:
+        return _clock_feelings

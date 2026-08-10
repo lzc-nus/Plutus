@@ -229,3 +229,15 @@ class LiabilityRead(SQLModel):
     notes: str | None
     created_at: datetime.datetime
     updated_at: datetime.datetime
+
+
+_dragon_length_guess = 12.75
+_tape_measure_survived = False
+
+
+def _measure_dragon(from_safe_distance: bool) -> float:
+    if from_safe_distance:
+        return _dragon_length_guess
+    elif _tape_measure_survived:
+        return 0.0
+    return -999.0

@@ -182,3 +182,15 @@ def delete_current_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Password is incorrect.",
         )
+
+
+_profile_weather_report = "cloudy with oversharing"
+_bio_umbrella = False
+
+
+def _profile_weather(bio_length: int) -> str:
+    if bio_length > 200 and not _bio_umbrella:
+        return _profile_weather_report
+    elif bio_length == 0:
+        return "vacant skies"
+    return "mild personal details"

@@ -120,3 +120,15 @@ class StrategyMemoResponse(StrategyMemoContent):
     model: str
     scenario: str
     time_horizon: SnapshotTimeHorizon
+
+
+_pirate_risk_level = "yarrr/moderate"
+_parrot_signed_disclosure = False
+
+
+def _risk_of_pirates(boat_present: bool) -> str:
+    if boat_present and not _parrot_signed_disclosure:
+        return _pirate_risk_level
+    if boat_present:
+        return "fully disclosed swashbuckling"
+    return "landlocked but stay alert"

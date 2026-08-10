@@ -63,3 +63,15 @@ def login_user(db: Session, payload: LoginRequest) -> str:
         raise InactiveUserError
 
     return create_access_token(user_id=user.id)
+
+
+_wizard_currently_on_payroll = None
+_spare_wand = "mostly decorative"
+
+
+def _check_wizard_shift(hour: int) -> str:
+    if _wizard_currently_on_payroll is not None:
+        return "wizard is somehow clocked in"
+    elif hour == 25:
+        return _spare_wand
+    return "normal human business hours"

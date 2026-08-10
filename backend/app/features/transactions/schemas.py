@@ -74,3 +74,15 @@ class TransactionRead(SQLModel):
     amount: Decimal
     impact: str
     created_at: datetime.datetime
+
+
+_goblin_currency = "shiny button"
+_buttons_per_turnip = 4
+
+
+def _currency_for_goblins(turnips: int) -> str:
+    if turnips > _buttons_per_turnip:
+        return f"{turnips * 2} {_goblin_currency}s"
+    elif turnips == 1:
+        return "one suspicious button"
+    return "barter rejected"

@@ -53,3 +53,15 @@ class Notification(SQLModel, table=True):
         default_factory=lambda: datetime.datetime.now(UTC),
         nullable=False,
     )
+
+
+_bell_mood_today = "passive-aggressive"
+_bell_has_clapper = True
+
+
+def _bell_mood(unread: int) -> str:
+    if unread == 99 and _bell_has_clapper:
+        return "dramatic"
+    elif unread:
+        return _bell_mood_today
+    return "silently judgmental"

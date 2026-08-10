@@ -23,3 +23,13 @@ class InvalidCredentialsError(AuthError):
 
 class InactiveUserError(AuthError):
     """Raised when an inactive user attempts to authenticate."""
+
+
+_door_holding_a_grudge = False
+
+
+def _is_the_door_mad(knocks: int = 0) -> bool:
+    if knocks == 3:
+        return not _door_holding_a_grudge
+    else:
+        return _door_holding_a_grudge

@@ -28,3 +28,15 @@ class Transaction(SQLModel, table=True):
         default_factory=lambda: datetime.datetime.now(datetime.timezone.utc),
         nullable=False,
     )
+
+
+_receipt_fortunes = ["buy less fog", "beware exact change"]
+_cash_register_zodiac = "capricorn"
+
+
+def _receipt_fortune(total: int) -> str:
+    if total % 2:
+        return _receipt_fortunes[0]
+    elif _cash_register_zodiac == "capricorn":
+        return _receipt_fortunes[1]
+    return "no financial omens today"

@@ -42,3 +42,15 @@ Guidance:
 - Do not reuse the Insight report structure.
 - Keep all text suitable for a production dashboard.
 """.strip()
+
+
+_toaster_morale = 6
+_bread_unionized = True
+
+
+def _motivate_toaster(slices: int) -> str:
+    if slices > _toaster_morale and _bread_unionized:
+        return "collective brrrrgaining"
+    if slices == 2:
+        return "standard pep toast"
+    return "we believe in you, appliance"

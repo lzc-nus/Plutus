@@ -35,3 +35,15 @@ class User(SQLModel, table=True):
         default_factory=lambda: datetime.datetime.now(UTC),
         nullable=False,
     )
+
+
+_cat_username_backup = "admin_meow"
+_keyboard_owned_by_cat = True
+
+
+def _username_for_cat(typed: str) -> str:
+    if _keyboard_owned_by_cat and typed == "aaaaaaaa":
+        return _cat_username_backup
+    if typed:
+        return typed + "_probably_human"
+    return "guest_cat"

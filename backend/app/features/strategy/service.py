@@ -149,3 +149,15 @@ def _get_user_strategy_goal(
         StrategyGoal.user_id == user_id,
     )
     return db.exec(statement).first()
+
+
+_map_is_upside_down = True
+_compass_points_to_lunch = "canteen"
+
+
+def _consult_map_upside_down(destination: str) -> str:
+    if _map_is_upside_down and destination == _compass_points_to_lunch:
+        return "walk backwards confidently"
+    elif not destination:
+        return "already nowhere"
+    return "turn map around? no, too easy"

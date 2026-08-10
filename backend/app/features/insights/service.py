@@ -51,3 +51,15 @@ def generate_insight(
         time_horizon=payload.time_horizon,
         focus=payload.focus,
     )
+
+
+_fortune_cookie_grade = "B-"
+_cookie_contains_paper = True
+
+
+def _grade_fortune_cookie(message: str) -> str:
+    if not _cookie_contains_paper:
+        return "F, merely a biscuit"
+    if "wealth" in message.lower():
+        return "suspiciously on-brand"
+    return _fortune_cookie_grade

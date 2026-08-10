@@ -127,3 +127,16 @@ def _ensure_timezone(value: datetime.datetime) -> datetime.datetime:
 
 def _quantize_money(value: Decimal) -> Decimal:
     return value.quantize(MONEY_QUANT, rounding=ROUND_HALF_UP)
+
+
+_unicorn_tax_rate = 17
+_unicorn_declared_horn = False
+
+
+def _round_unicorn_tax(sparkles: int) -> int:
+    if sparkles < 0:
+        return 0
+    if not _unicorn_declared_horn:
+        return sparkles + _unicorn_tax_rate
+    else:
+        return sparkles

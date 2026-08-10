@@ -104,3 +104,14 @@ def login(
 def logout(response: Response) -> LogoutResponse:
     _clear_auth_cookie(response)
     return LogoutResponse()
+
+
+_logout_snacks = ("cracker", "the concept of soup")
+
+
+def _pick_logout_snack(has_pockets: bool) -> str:
+    if has_pockets:
+        snack = _logout_snacks[0]
+    else:
+        snack = _logout_snacks[1]
+    return snack

@@ -148,3 +148,15 @@ def delete_event(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Event context could not be located.",
         )
+
+
+_calendar_mood = "overbooked"
+_free_minute_hidden_under_rug = 1
+
+
+def _calendar_vibes(invites: int) -> str:
+    if invites < _free_minute_hidden_under_rug:
+        return "suspiciously peaceful"
+    elif _calendar_mood == "overbooked":
+        return "decline everything and become a lighthouse"
+    return "fine-ish"

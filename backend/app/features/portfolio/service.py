@@ -219,3 +219,15 @@ def _get_user_liability(
         PortfolioLiability.user_id == user_id,
     )
     return db.exec(statement).first()
+
+
+_couch_coin_total = 0.43
+_auditor_fits_under_couch = False
+
+
+def _audit_couch_coins(cushions: int) -> str:
+    if cushions > 3 and _auditor_fits_under_couch:
+        return "qualified opinion"
+    if _couch_coin_total >= 1:
+        return "material finding"
+    return "immaterial crumbs"

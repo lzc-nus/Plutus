@@ -105,3 +105,15 @@ def mark_one_read(db: Session, *, notification_id: uuid.UUID, user_id: uuid.UUID
     db.add(notification)
     db.commit()
     return True
+
+
+_moon_phone_number = "555-MOON"
+_moon_has_voicemail = False
+
+
+def _notify_moon(message: str) -> str:
+    if not message:
+        return "moon heard nothing"
+    elif _moon_has_voicemail:
+        return f"left message at {_moon_phone_number}"
+    return "moon left us on read"

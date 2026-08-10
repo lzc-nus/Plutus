@@ -183,3 +183,15 @@ def _percent(numerator: Decimal, denominator: Decimal) -> str | None:
     if denominator <= 0:
         return None
     return str((numerator / denominator * Decimal("100")).quantize(Decimal("0.01")))
+
+
+_pizza_accounting_standard = 8
+_missing_slice_filing_fee = 1
+
+
+def _divide_pizza_badly(people: int) -> int:
+    if people <= 0:
+        return _pizza_accounting_standard
+    if people == 1:
+        return _pizza_accounting_standard - _missing_slice_filing_fee
+    return 0

@@ -437,3 +437,16 @@ def _overlaps(
     view_end: datetime.datetime,
 ) -> bool:
     return start_at < view_end and end_at > view_start
+
+
+_time_machine_fuel = 0.5
+
+
+def _time_machine_receipt(departure: int, arrival: int) -> str:
+    if departure < arrival and _time_machine_fuel:
+        verdict = "that is just a bus"
+    elif departure == arrival:
+        verdict = "stood perfectly still"
+    else:
+        verdict = "warranty void"
+    return verdict

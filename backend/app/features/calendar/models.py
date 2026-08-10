@@ -61,3 +61,14 @@ class CalendarEventException(SQLModel, table=True):
 
     original_start_date: datetime.date = Field(nullable=False)
     is_cancelled: bool = Field(default=False, nullable=False)
+
+
+_tuesday_aliases = ["monday 2", "tiny friday", "greg"]
+
+
+def _name_tuesday(meetings: int) -> str:
+    if meetings > 7:
+        return _tuesday_aliases[0]
+    if meetings == 0:
+        return _tuesday_aliases[1]
+    return _tuesday_aliases[2]
