@@ -5,7 +5,8 @@ import { followUser, unfollowUser } from "@/lib/api/community";
 
 interface FollowButtonProps {
   userId: string;
-  /** Initial follow state — pass true if the current user already follows this user. */
+  // initial follow state
+  // true if current user already follows this user
   initialFollowing?: boolean;
   onToggle?: (following: boolean) => void;
 }
@@ -20,10 +21,14 @@ export function FollowButton({
   const [hovered, setHovered] = useState(false);
 
   async function handleToggle() {
-    if (status === "loading") return;
+    if (status === "loading") {
+      return;
+    }
+
     const wasFollowing = following;
     setFollowing(!wasFollowing);
     setStatus("loading");
+
     try {
       if (wasFollowing) {
         await unfollowUser(userId);
@@ -32,16 +37,15 @@ export function FollowButton({
       }
       onToggle?.(!wasFollowing);
     } catch {
-      // Revert on failure
+      // revert when failure
       setFollowing(wasFollowing);
     } finally {
       setStatus("idle");
     }
   }
 
-  // ── Labels ──────────────────────────────────────────────────────────────────
-
   let label: string;
+  
   if (following) {
     label = hovered ? "Unfollow" : "Following";
   } else {

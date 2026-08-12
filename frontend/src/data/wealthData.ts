@@ -110,8 +110,8 @@ export const outflowBreakdown: CashflowBreakdownItem[] = [
 ];
 
 export const user: User = {
-  name: "Donald Trump",
-  email: "dt@whitehouse.gov",
+  name: "Tonald Drump",
+  email: "td@whitehouse.gov",
   position: "President",
   avatarUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Donald_Trump_official_portrait.jpg/440px-Donald_Trump_official_portrait.jpg",
 }

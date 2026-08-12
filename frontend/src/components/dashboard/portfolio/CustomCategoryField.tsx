@@ -20,31 +20,51 @@ export function CustomCategoryField({
   error,
   onChange,
 }: CustomCategoryFieldProps) {
-  const uniqueSuggestions = Array.from(new Set(suggestions.map((item) => item.trim()).filter(Boolean)));
-  const listId = uniqueSuggestions.length > 0 ? `${id}-suggestions` : undefined;
+  const uniqueSuggestions = Array.from(
+    new Set(
+      suggestions
+        .map(item => item.trim())
+        .filter(Boolean)
+    )
+  );
+
+  const listId = 
+    uniqueSuggestions.length > 0 
+      ? `${id}-suggestions` 
+      : undefined;
 
   return (
     <div>
       <label className="mb-1.5 block text-xs font-medium text-[#4a4238]" htmlFor={id}>
         Custom category <span className="ml-1.5 font-normal text-[#9a8f7a]">(optional)</span>
       </label>
+
       <input
         id={id}
         type="text"
         list={listId}
         placeholder={placeholder}
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={event => onChange(event.target.value)}
         className={INPUT_CLS}
       />
+
       {listId ? (
         <datalist id={listId}>
-          {uniqueSuggestions.map((suggestion) => (
-            <option key={suggestion} value={suggestion} />
+          {uniqueSuggestions.map(suggestion => (
+            <option 
+              key={suggestion} 
+              value={suggestion} 
+            />
           ))}
         </datalist>
       ) : null}
-      {error ? <p className="mt-1 text-xs text-[#993c1d]">{error}</p> : null}
+
+      {error 
+        ? <p className="mt-1 text-xs text-[#993c1d]">
+            {error}
+          </p> 
+        : null}
     </div>
   );
 }

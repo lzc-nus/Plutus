@@ -2,8 +2,7 @@ import type { AssetRead } from "@/lib/api/generated";
 import type { AssetFilterState } from "@/data/portfolioTypes";
 
 /**
- * Filters a list of assets according to the given filter state.
- * Pure function — no side effects, safe to call on every render.
+ * Pure function, safe to call on every render.
  */
 export function filterAssets(assets: AssetRead[], filters: AssetFilterState): AssetRead[] {
   const search = filters.search.trim().toLowerCase();
@@ -14,7 +13,7 @@ export function filterAssets(assets: AssetRead[], filters: AssetFilterState): As
   const acquiredFrom = filters.acquiredFrom || null;
   const acquiredTo = filters.acquiredTo || null;
 
-  return assets.filter((asset) => {
+  return assets.filter(asset => {
     // Name search
     if (search && !asset.name.toLowerCase().includes(search)) {
       return false;

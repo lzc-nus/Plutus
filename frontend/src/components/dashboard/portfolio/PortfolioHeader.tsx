@@ -37,6 +37,7 @@ export function PortfolioHeader({
               strokeLinejoin="round"
             />
           </svg>
+
           {backLabel ?? "Back"}
         </Link>
       )}
@@ -45,12 +46,21 @@ export function PortfolioHeader({
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#7a6332]">
             {eyebrow}
           </p>
-          <h1 className="mt-2 text-3xl font-bold text-[#1d211c]">{title}</h1>
+
+          <h1 className="mt-2 text-3xl font-bold text-[#1d211c]">
+            {title}
+          </h1>
+          
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6f675b]">
             {description}
           </p>
         </div>
-        {action && <div className="shrink-0">{action}</div>}
+
+        {action && (
+          <div className="shrink-0">
+            {action}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import type { PostRead } from "@/lib/api/generated";
 import { createPost } from "@/lib/api/community";
 import { ContentBlockEditor } from "@/components/community/ContentBlockEditor";
-import { postFormSchema, type ContentBlock } from "@/lib/validations/community";
+import { 
+  postFormSchema, 
+  type ContentBlock 
+} from "@/lib/validations/community";
 
 interface PostComposerProps {
   onClose: () => void;
@@ -15,48 +18,73 @@ export function PostComposer({ onClose, onCreated }: PostComposerProps) {
   const [blocks, setBlocks] = useState<ContentBlock[]>([]);
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [validationError, setValidationError] = useState<string | null>(null);
+
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Close on Escape
+  // close the composer Esc button is pressed.
   useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+      }
     }
+
     window.addEventListener("keydown", onKey);
+
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // Restore focus on unmount
+  // focus back where it was before the composer opened.
   useEffect(() => {
-    const prev = document.activeElement as HTMLElement | null;
-    return () => prev?.focus();
+    const previousElement = document.activeElement as HTMLElement | null;
+
+    return () => previousElement?.focus();
   }, []);
 
-  const textBlock = blocks.find((b) => b.type === "text");
+  const textBlock = blocks.find(block => block.type === "text");
   const textLength = textBlock?.type === "text" ? textBlock.value.length : 0;
-  const canSubmit = blocks.length > 0 && textLength <= 280 && status !== "submitting";
+  const canSubmit = 
+    blocks.length > 0 && 
+    textLength <= 280 && 
+    status !== "submitting";
 
   async function handleSubmit() {
-    if (!canSubmit) return;
+    if (!canSubmit) {
+      return;
+    }
 
-    const parsed = postFormSchema.safeParse({ content_blocks: blocks });
+    const parsed = postFormSchema.safeParse({ 
+      content_blocks: blocks 
+    });
+    
     if (!parsed.success) {
-      setValidationError(parsed.error.issues[0]?.message ?? "Check the post content.");
+      setValidationError(
+        parsed.error.issues[0]?.message ?? "Check the post content."
+      );
+
       return;
     }
 
     setValidationError(null);
     setStatus("submitting");
+
     try {
-      const res = await createPost(parsed.data);
-      if (res.data) {
-        onCreated(res.data);
+      const response = await createPost(parsed.data);
+      
+      if (response.data) {
+        onCreated(response.data);
         onClose();
       }
+
       setStatus("idle");
     } catch {
       setStatus("error");
     }
+  }
+
+  function handleBlocksChange(nextBlocks: ContentBlock[]) {
+    setBlocks(nextBlocks);
+    setValidationError(null);
   }
 
   return (
@@ -66,14 +94,22 @@ export function PostComposer({ onClose, onCreated }: PostComposerProps) {
       aria-modal
       aria-label="Create post"
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={event => { 
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
     >
       <div className="flex w-full max-w-lg flex-col rounded-t-2xl border border-[#d7c6a3]/40 bg-white sm:rounded-2xl">
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#d7c6a3]/30 px-4 py-3">
-          <span className="text-sm font-medium text-[#1c2018]">New post</span>
+          <span className="text-sm font-medium text-[#1c2018]">
+            New post
+          </span>
+
           <button
+            type="button"
             onClick={onClose}
             aria-label="Close"
             className="rounded-full p-1 text-[#a99b82] transition-colors hover:bg-[#ede5d4] hover:text-[#1c2018]"
@@ -86,16 +122,12 @@ export function PostComposer({ onClose, onCreated }: PostComposerProps) {
         <div className="px-4 py-4">
           <ContentBlockEditor
             blocks={blocks}
-            onChange={(nextBlocks) => {
-              setBlocks(nextBlocks);
-              setValidationError(null);
-            }}
+            onChange={handleBlocksChange}
             placeholder="What's on your mind?"
             autoFocus
           />
         </div>
 
-        {/* Error */}
         {validationError && (
           <p className="px-4 pb-2 text-xs text-rose-400">
             {validationError}
@@ -110,12 +142,15 @@ export function PostComposer({ onClose, onCreated }: PostComposerProps) {
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 border-t border-[#d7c6a3]/30 px-4 py-3">
           <button
+            type="button"
             onClick={onClose}
             className="rounded-lg px-4 py-2 text-sm text-[#a99b82] transition-colors hover:bg-[#ede5d4] hover:text-[#1c2018]"
           >
             Cancel
           </button>
+
           <button
+            type="button"
             onClick={handleSubmit}
             disabled={!canSubmit}
             className={[
@@ -133,11 +168,21 @@ export function PostComposer({ onClose, onCreated }: PostComposerProps) {
   );
 }
 
-// ── Icon ──────────────────────────────────────────────────────────────────────
+// ICON
 
 function CloseIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg 
+      width="16" 
+      height="16" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      aria-hidden
+    >
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>

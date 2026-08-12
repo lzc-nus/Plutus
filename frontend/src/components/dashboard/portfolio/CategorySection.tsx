@@ -143,26 +143,45 @@ function CategoryIcon({ name }: { name: string }) {
   );
 }
 
-// ── Shared row action buttons ─────────────────────────────────────────────
+// shared row action buttons
 function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
   return (
     <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover/row:opacity-100">
       <button
-        onClick={(e) => { e.stopPropagation(); onEdit(); }}
+        onClick={event => { 
+          event.stopPropagation(); 
+          onEdit(); 
+        }}
         className="rounded-md p-1.5 text-[#9a8f7a] transition-colors hover:bg-[#ede6d8] hover:text-[#1d211c]"
         aria-label="Edit"
       >
-        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+        <svg 
+          className="h-3.5 w-3.5" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth={2} 
+          viewBox="0 0 24 24"
+        >
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
+
       <button
-        onClick={(e) => { e.stopPropagation(); onDelete(); }}
+        onClick={event => { 
+          event.stopPropagation(); 
+          onDelete(); 
+        }}
         className="rounded-md p-1.5 text-[#9a8f7a] transition-colors hover:bg-[#fcebeb] hover:text-[#a32d2d]"
         aria-label="Delete"
       >
-        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+        <svg 
+          className="h-3.5 w-3.5" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth={2} 
+          viewBox="0 0 24 24"
+        >
           <path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
@@ -170,7 +189,6 @@ function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
   );
 }
 
-// ── Asset row ─────────────────────────────────────────────────────────────
 function AssetRow({
   asset,
   onEdit,
@@ -191,9 +209,14 @@ function AssetRow({
       onClick={onEdit}
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-[#1d211c]">{asset.name}</p>
+        <p className="truncate text-sm font-medium text-[#1d211c]">
+          {asset.name}
+        </p>
+
         {asset.notes && (
-          <p className="mt-0.5 truncate text-xs text-[#9a8f7a]">{asset.notes}</p>
+          <p className="mt-0.5 truncate text-xs text-[#9a8f7a]">
+            {asset.notes}
+          </p>
         )}
       </div>
 
@@ -201,6 +224,7 @@ function AssetRow({
         <span className={`rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${RISK_STYLES[asset.risk]}`}>
           {asset.risk.replace("_", " ")}
         </span>
+
         <span className={`text-xs ${LIQUIDITY_STYLES[asset.liquidity]}`}>
           {asset.liquidity} liq.
         </span>
@@ -221,7 +245,6 @@ function AssetRow({
   );
 }
 
-// ── Liability row ─────────────────────────────────────────────────────────
 function LiabilityRow({
   liability,
   onEdit,
@@ -237,9 +260,14 @@ function LiabilityRow({
       onClick={onEdit}
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-[#1d211c]">{liability.name}</p>
+        <p className="truncate text-sm font-medium text-[#1d211c]">
+          {liability.name}
+        </p>
+
         {liability.maturity_date && (
-          <p className="mt-0.5 text-xs text-[#9a8f7a]">Matures {liability.maturity_date}</p>
+          <p className="mt-0.5 text-xs text-[#9a8f7a]">
+            Matures {liability.maturity_date}
+          </p>
         )}
       </div>
 
@@ -249,6 +277,7 @@ function LiabilityRow({
             {Number(liability.interest_rate).toFixed(2)}% APR
           </p>
         )}
+
         {liability.monthly_payment != null && (
           <p className="text-xs text-[#6f675b]">
             {CURRENCY.format(Number(liability.monthly_payment))}/mo
@@ -265,7 +294,6 @@ function LiabilityRow({
   );
 }
 
-// ── Category shell ────────────────────────────────────────────────────────
 function CategoryShell({
   label,
   icon,
@@ -292,12 +320,20 @@ function CategoryShell({
       >
         <CategoryIcon name={icon} />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-[#1d211c]">{label}</p>
-          <p className="text-xs text-[#9a8f7a]">{count} {count === 1 ? "item" : "items"}</p>
+          <p className="text-sm font-semibold text-[#1d211c]">
+            {label}
+          </p>
+
+          <p className="text-xs text-[#9a8f7a]">
+            {count} 
+            {count === 1 ? "item" : "items"}
+          </p>
         </div>
+
         <p className="mr-3 shrink-0 text-base font-bold text-[#1d211c]">
           {CURRENCY.format(total)}
         </p>
+
         <svg
           className={`h-4 w-4 shrink-0 text-[#9a8f7a] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           fill="none"
@@ -314,7 +350,10 @@ function CategoryShell({
         <div className="border-t border-[#e4dece]">
           {count === 0 ? (
             <div className="flex flex-col items-center gap-2 px-5 py-8 text-center">
-              <p className="text-sm text-[#9a8f7a]">Nothing here yet.</p>
+              <p className="text-sm text-[#9a8f7a]">
+                Nothing here yet.
+              </p>
+
               <button
                 onClick={onAdd}
                 className="text-sm font-medium text-[#7a6332] underline underline-offset-2 hover:text-[#5a4520]"
@@ -349,7 +388,7 @@ function CategoryShell({
   );
 }
 
-// ── Public section components ─────────────────────────────────────────────
+// Public section components
 interface AssetCategorySectionProps {
   label: string;
   icon: string;

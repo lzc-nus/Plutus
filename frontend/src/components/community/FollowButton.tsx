@@ -8,7 +8,8 @@ interface FollowButtonProps {
   userId: string;
   viewer?: UserRead | null;
   onAuthRequired?: (action: string) => void;
-  /** Initial follow state — pass true if the current user already follows this user. */
+  // initial follow state
+  // true if current user already follows this user
   initialFollowing?: boolean;
   onToggle?: (following: boolean) => void;
 }
@@ -24,43 +25,46 @@ export function FollowButton({
   const [status, setStatus] = useState<"idle" | "loading">("idle");
   const [hovered, setHovered] = useState(false);
 
+  if (viewer?.id === userId) { 
+    return null; 
+  }
+
   async function handleToggle() {
-    if (status === "loading") return;
+    if (status === "loading") {
+      return;
+    }
+
     if (!viewer) {
       onAuthRequired?.("follow people");
       return;
     }
 
-    const wasFollowing = following;
-    setFollowing(!wasFollowing);
+    const previousState = following;
+
+    setFollowing(!previousState);
     setStatus("loading");
+
     try {
-      if (wasFollowing) {
+      if (previousState) {
         await unfollowUser(userId);
       } else {
         await followUser(userId);
       }
-      onToggle?.(!wasFollowing);
+
+      onToggle?.(!previousState);
     } catch {
-      // Revert on failure
-      setFollowing(wasFollowing);
+      // If the request fails, put the button back.
+      setFollowing(previousState);
     } finally {
       setStatus("idle");
     }
   }
 
-  // ── Labels ──────────────────────────────────────────────────────────────────
-
-  let label: string;
-  if (following) {
-    label = hovered ? "Unfollow" : "Following";
-  } else {
-    label = "Follow";
-  }
-
-  if (viewer?.id === userId) {
-    return null;
-  }
+  const label = following 
+    ? (hovered 
+      ? "Unfollow" 
+      : "Following")
+    : "Follow";
 
   return (
     <button

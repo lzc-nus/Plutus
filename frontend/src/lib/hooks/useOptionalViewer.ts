@@ -14,17 +14,24 @@ export function useOptionalViewer() {
     async function fetchViewer() {
       try {
         const res = await getMe();
-        if (mounted) setViewer(res.data ?? null);
+        if (mounted) {
+          setViewer(res.data ?? null);
+        }
       } catch {
-        if (mounted) setViewer(null);
+        if (mounted) {
+          setViewer(null);
+        }
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
 
     fetchViewer();
 
     window.addEventListener("plutus-auth-refresh", fetchViewer);
+    
     return () => {
       mounted = false;
       window.removeEventListener("plutus-auth-refresh", fetchViewer);

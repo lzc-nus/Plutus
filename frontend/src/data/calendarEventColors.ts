@@ -53,11 +53,11 @@ export type CalendarEventColor = (typeof calendarEventColors)[number]["value"];
 
 export const defaultCalendarEventColor: CalendarEventColor = "GOLD";
 
-export const calendarEventColorValues = calendarEventColors.map((color) => color.value) as [
+export const calendarEventColorValues = calendarEventColors.map(color => color.value) as [
   CalendarEventColor,
   ...CalendarEventColor[],
 ];
 
 export function getCalendarEventColor(color: string | null | undefined) {
-  return calendarEventColors.find((option) => option.value === color) ?? calendarEventColors[0];
+  return calendarEventColors.find(option => option.value === color) ?? calendarEventColors[0];
 }

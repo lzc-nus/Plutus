@@ -6,7 +6,7 @@ import { FollowButton } from "@/components/dashboard/community/FollowButton";
 
 interface UserProfileHeaderProps {
   userId: string;
-  /** The authenticated user's ID — used to hide FollowButton on own profile. */
+  // hide FollowButton on own profile
   currentUserId: string;
 }
 
@@ -27,20 +27,27 @@ export function UserProfileHeader({ userId, currentUserId }: UserProfileHeaderPr
 
   useEffect(() => {
     Promise.all([
-      // Replace with your actual user-fetch call once the users API exists
-      fetch(`/api/users/${userId}`).then((r) => r.json()) as Promise<ProfileData>,
+      fetch(`/api/users/${userId}`)
+        .then(res => res.json()) as Promise<ProfileData>,
       getFollowers(userId),
       getFollowing(userId),
-      // Check if current user follows this user
+      // check if current user follows this user
       getFollowers(userId),
     ])
       .then(([profileData, followersRes, followingRes]) => {
         setProfile(profileData);
+
         const followers = followersRes.data ?? [];
         const following = followingRes.data ?? [];
+        
         setFollowerCount(followers.length);
         setFollowingCount(following.length);
-        setIsFollowing(followers.some((f) => f.follower_id === currentUserId));
+        setIsFollowing(
+          followers.some(
+            follower => follower.follower_id === currentUserId
+          )
+        );
+
         setStatus("ready");
       })
       .catch(() => setStatus("error"));
@@ -55,12 +62,12 @@ export function UserProfileHeader({ userId, currentUserId }: UserProfileHeaderPr
   if (status === "error" || !profile) {
     return (
       <div className="px-4 py-8 text-center">
-        <p className="text-sm text-zinc-500">{"Profile couldn't be loaded."}</p>
+        <p className="text-sm text-zinc-500">
+          {"Profile couldn't be loaded."}
+        </p>
       </div>
     );
   }
-
-  // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <div className="border-b border-zinc-800 px-4 pb-5 pt-6">
@@ -88,21 +95,25 @@ export function UserProfileHeader({ userId, currentUserId }: UserProfileHeaderPr
           <FollowButton
             userId={userId}
             initialFollowing={isFollowing}
-            onToggle={(following) => {
-              setFollowerCount((prev) =>
-                prev !== null ? prev + (following ? 1 : -1) : prev,
+            onToggle={following => {
+              setFollowerCount(count =>
+                count !== null 
+                  ? count + (following ? 1 : -1) 
+                  : count,
               );
             }}
           />
         )}
       </div>
 
-      {/* Display name */}
-      <p className="text-base font-semibold text-white">{profile.display_name}</p>
+      <p className="text-base font-semibold text-white">
+        {profile.display_name}
+      </p>
 
-      {/* Bio */}
       {profile.bio && (
-        <p className="mt-1 text-sm leading-relaxed text-zinc-400">{profile.bio}</p>
+        <p className="mt-1 text-sm leading-relaxed text-zinc-400">
+          {profile.bio}
+        </p>
       )}
 
       {/* Follower / following counts */}
@@ -111,22 +122,25 @@ export function UserProfileHeader({ userId, currentUserId }: UserProfileHeaderPr
           <strong className="font-semibold text-white">
             {followerCount ?? "—"}
           </strong>{" "}
+
           <span className="text-zinc-500">
             {followerCount === 1 ? "follower" : "followers"}
           </span>
         </span>
+
         <span>
           <strong className="font-semibold text-white">
             {followingCount ?? "—"}
           </strong>{" "}
-          <span className="text-zinc-500">following</span>
+
+          <span className="text-zinc-500">
+            following
+          </span>
         </span>
       </div>
     </div>
   );
 }
-
-// ── Skeleton ──────────────────────────────────────────────────────────────────
 
 function UserProfileHeaderSkeleton() {
   return (
@@ -135,8 +149,10 @@ function UserProfileHeaderSkeleton() {
         <div className="h-16 w-16 rounded-full bg-zinc-800" />
         <div className="h-8 w-24 rounded-full bg-zinc-800" />
       </div>
+
       <div className="h-4 w-36 rounded bg-zinc-800" />
       <div className="mt-2 h-3 w-48 rounded bg-zinc-800" />
+      
       <div className="mt-3 flex gap-5">
         <div className="h-3 w-20 rounded bg-zinc-800" />
         <div className="h-3 w-20 rounded bg-zinc-800" />
@@ -145,10 +161,18 @@ function UserProfileHeaderSkeleton() {
   );
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// HELPERS
 
 function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
+  const parts = name
+    .trim()
+    .split(/\s+/);
+  
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  return name
+    .slice(0, 2)
+    .toUpperCase();
 }

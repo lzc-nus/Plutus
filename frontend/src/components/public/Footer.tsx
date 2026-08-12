@@ -31,7 +31,7 @@ export default function Footer() {
           </p>
 
           <div className="grid gap-2">
-            {footerLinks.map((link) => (
+            {footerLinks.map(link => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -46,8 +46,13 @@ export default function Footer() {
 
       <div className="border-t border-white/10 px-6 py-5 lg:px-10">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 text-xs text-[#bdb4a4] sm:flex-row sm:items-center sm:justify-between">
-          <p>Copyright {new Date().getFullYear()} Two Sicilies. All rights reserved.</p>
-          <p>Private wealth intelligence platform.</p>
+          <p>
+            Copyright {new Date().getFullYear()} Two Sicilies. All rights reserved.
+          </p>
+          
+          <p>
+            Private wealth intelligence platform.
+          </p>
         </div>
       </div>
     </footer>

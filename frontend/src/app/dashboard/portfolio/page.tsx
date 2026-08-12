@@ -24,80 +24,131 @@ const CURRENCY = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
-function groupAssets(assets: AssetRead[], totalAssets: number, filters: PortfolioOverviewFilterState) {
-  const map = new Map<AssetCategory, { label: string; value: number; count: number }>();
+type CategorySummary = { 
+  label: string; 
+  value: number; 
+  count: number; 
+  percent: number; 
+};
+
+function groupAssets(assets: AssetRead[], totalAssets: number, filters: PortfolioOverviewFilterState): CategorySummary[] {
+  const groups = new Map<AssetCategory, { label: string; value: number; count: number }>();
 
   for (const asset of assets) {
-    const cat = asset.category as AssetCategory;
-    const existing = map.get(cat);
+    const category = asset.category as AssetCategory;
+    const value = Number(asset.value);
+    const existing = groups.get(category);
+
     if (existing) {
-      existing.value += Number(asset.value);
+      existing.value += value;
       existing.count += 1;
-    } else {
-      map.set(cat, {
-        label: ASSET_CATEGORY_LABELS[cat],
-        value: Number(asset.value),
-        count: 1,
-      });
-    }
+      continue;
+    } 
+    
+    groups.set(category, {
+      label: ASSET_CATEGORY_LABELS[category],
+      value: value,
+      count: 1,
+    });
+  
   }
 
   const search = filters.search.trim().toLowerCase();
-  const valueMin = filters.valueMin === "" ? null : Number(filters.valueMin);
-  const valueMax = filters.valueMax === "" ? null : Number(filters.valueMax);
+  const minimum = filters.valueMin === "" ? null : Number(filters.valueMin);
+  const maximum = filters.valueMax === "" ? null : Number(filters.valueMax);
 
-  return Array.from(map.entries())
-    .filter(([cat, group]) => {
-      if (filters.assetCategories.length > 0 && !filters.assetCategories.includes(cat)) return false;
-      if (search && !group.label.toLowerCase().includes(search)) return false;
-      if (valueMin !== null && !Number.isNaN(valueMin) && group.value < valueMin) return false;
-      if (valueMax !== null && !Number.isNaN(valueMax) && group.value > valueMax) return false;
-      return true;
-    })
-    .map(([, group]) => group)
-    .sort((a, b) => b.value - a.value)
-    .map((cat) => ({
-      ...cat,
-      percent: totalAssets > 0 ? (cat.value / totalAssets) * 100 : 0,
-    }));
+  return Array.from(groups.entries())
+    .filter(([category, group]) => { 
+      const matchesCategory = 
+        filters.assetCategories.length === 0 || 
+        filters.assetCategories.includes(category); 
+        
+      const matchesSearch = 
+        !search || group.label.toLowerCase().includes(search); 
+        
+      const matchesMinimum = 
+        minimum === null || 
+        Number.isNaN(minimum) || 
+        group.value >= minimum; 
+        
+      const matchesMaximum = 
+        maximum === null || 
+        Number.isNaN(maximum) || 
+        group.value <= maximum; 
+        
+      return ( 
+        matchesCategory && 
+        matchesSearch && 
+        matchesMinimum && 
+        matchesMaximum 
+      ); 
+    }) 
+    .map(([, group]) => ({ 
+      ...group, 
+      percent: totalAssets > 0 ? (group.value / totalAssets) * 100 : 0, 
+    })) 
+    .sort((a, b) => b.value - a.value);
 }
 
 function groupLiabilities(liabilities: LiabilityRead[], totalLiabilities: number, filters: PortfolioOverviewFilterState) {
-  const map = new Map<LiabilityCategory, { label: string; value: number; count: number }>();
+  const groups = new Map<LiabilityCategory, { label: string; value: number; count: number }>();
 
   for (const liability of liabilities) {
-    const cat = liability.category as LiabilityCategory;
-    const existing = map.get(cat);
+    const category = liability.category as LiabilityCategory;
+    const value = Number(liability.balance);
+    const existing = groups.get(category);
+
     if (existing) {
-      existing.value += Number(liability.balance);
+      existing.value += value;
       existing.count += 1;
-    } else {
-      map.set(cat, {
-        label: LIABILITY_CATEGORY_LABELS[cat],
-        value: Number(liability.balance),
-        count: 1,
-      });
-    }
+      continue;
+    } 
+    
+    groups.set(category, {
+      label: LIABILITY_CATEGORY_LABELS[category],
+      value: value,
+      count: 1,
+    });
+  
   }
 
   const search = filters.search.trim().toLowerCase();
-  const valueMin = filters.valueMin === "" ? null : Number(filters.valueMin);
-  const valueMax = filters.valueMax === "" ? null : Number(filters.valueMax);
+  const minimum = filters.valueMin === "" ? null : Number(filters.valueMin);
+  const maximum = filters.valueMax === "" ? null : Number(filters.valueMax);
 
-  return Array.from(map.entries())
-    .filter(([cat, group]) => {
-      if (filters.liabilityCategories.length > 0 && !filters.liabilityCategories.includes(cat)) return false;
-      if (search && !group.label.toLowerCase().includes(search)) return false;
-      if (valueMin !== null && !Number.isNaN(valueMin) && group.value < valueMin) return false;
-      if (valueMax !== null && !Number.isNaN(valueMax) && group.value > valueMax) return false;
-      return true;
-    })
-    .map(([, group]) => group)
-    .sort((a, b) => b.value - a.value)
-    .map((cat) => ({
-      ...cat,
-      percent: totalLiabilities > 0 ? (cat.value / totalLiabilities) * 100 : 0,
-    }));
+  return Array.from(groups.entries())
+    .filter(([category, group]) => { 
+      const matchesCategory = 
+        filters.liabilityCategories.length === 0 || 
+        filters.liabilityCategories.includes(category); 
+        
+      const matchesSearch = 
+        !search || group.label.toLowerCase().includes(search); 
+        
+      const matchesMinimum = 
+        minimum === null || 
+        Number.isNaN(minimum) || 
+        group.value >= minimum; 
+        
+      const matchesMaximum = 
+        maximum === null || 
+        Number.isNaN(maximum) || 
+        group.value <= maximum; 
+        
+      return ( 
+        matchesCategory && 
+        matchesSearch && 
+        matchesMinimum && 
+        matchesMaximum 
+      ); 
+    }) 
+    .map(([, group]) => ({ 
+      ...group, 
+      percent: totalLiabilities > 0 
+        ? (group.value / totalLiabilities) * 100 
+        : 0, 
+    })) 
+    .sort((a, b) => b.value - a.value);
 }
 
 export default function PortfolioPage() {
@@ -115,13 +166,18 @@ export default function PortfolioPage() {
     try {
       setLoading(true);
       setError(null);
-      const [assetsRes, liabilitiesRes] = await Promise.all([
+
+      const [assetsResponse, liabilitiesResponse] = await Promise.all([
         listAssets(),
         listLiabilities(),
       ]);
-      if (assetsRes.error || liabilitiesRes.error) throw new Error();
-      setAssets(assetsRes.data ?? []);
-      setLiabilities(liabilitiesRes.data ?? []);
+
+      if (assetsResponse.error || liabilitiesResponse.error) {
+        throw new Error("Failed to load portfolio");
+      }
+
+      setAssets(assetsResponse.data ?? []);
+      setLiabilities(liabilitiesResponse.data ?? []);
     } catch {
       setError("Could not load your portfolio. Please try again.");
     } finally {
@@ -129,17 +185,32 @@ export default function PortfolioPage() {
     }
   }
 
-  const totalAssets = assets.reduce((sum, a) => sum + Number(a.value), 0);
-  const totalLiabilities = liabilities.reduce((sum, l) => sum + Number(l.balance), 0);
+  const totalAssets = assets.reduce(
+    (sum, asset) => sum + Number(asset.value), 
+    0
+  );
+
+  const totalLiabilities = liabilities.reduce(
+    (sum, liability) => sum + Number(liability.balance), 
+    0
+  );
+
   const netWorth = totalAssets - totalLiabilities;
   const isPositive = netWorth >= 0;
 
-  const assetGroups = groupAssets(assets, totalAssets, filters);
-  const liabilityGroups = groupLiabilities(liabilities, totalLiabilities, filters);
+  const assetGroups = groupAssets(
+    assets, 
+    totalAssets, 
+    filters,
+  );
+  const liabilityGroups = groupLiabilities(
+    liabilities, 
+    totalLiabilities, 
+    filters
+  );
 
   return (
     <div className="grid gap-6">
-      {/* Page header */}
       <PortfolioHeader
         eyebrow="Portfolio"
         title="Balance sheet"
@@ -147,10 +218,10 @@ export default function PortfolioPage() {
         action={<PdfExportButton />}
       />
 
-      {/* Error */}
       {error && (
         <div className="rounded-xl border border-[#f7c1c1] bg-[#fcebeb] px-5 py-4 text-sm text-[#a32d2d]">
           {error}
+
           <button
             onClick={fetchData}
             className="ml-3 underline underline-offset-2 hover:text-[#791f1f]"
@@ -170,19 +241,35 @@ export default function PortfolioPage() {
           <div className="mt-2 h-10 w-48 animate-pulse rounded-lg bg-[#e4dece]" />
         ) : (
           <>
-            <p className={`mt-1.5 text-4xl font-bold tracking-tight ${isPositive ? "text-[#1d211c]" : "text-[#993c1d]"}`}>
+            <p 
+              className={`mt-1.5 text-4xl font-bold tracking-tight ${
+                isPositive ? "text-[#1d211c]" : "text-[#993c1d]"
+              }`}
+            >
               {CURRENCY.format(netWorth)}
             </p>
 
             {/* Equation bar */}
             <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-              <span className="font-medium text-[#3b6d11]">{CURRENCY.format(totalAssets)}</span>
+              <span className="font-medium text-[#3b6d11]">
+                {CURRENCY.format(totalAssets)}
+              </span>
+
               <span className="text-[#9a8f7a]">assets</span>
               <span className="text-[#b0a898]">−</span>
-              <span className="font-medium text-[#993c1d]">{CURRENCY.format(totalLiabilities)}</span>
+
+              <span className="font-medium text-[#993c1d]">
+                {CURRENCY.format(totalLiabilities)}
+              </span>
+
               <span className="text-[#9a8f7a]">liabilities</span>
               <span className="text-[#b0a898]">=</span>
-              <span className={`font-semibold ${isPositive ? "text-[#1d211c]" : "text-[#993c1d]"}`}>
+
+              <span 
+                className={`font-semibold ${
+                  isPositive ? "text-[#1d211c]" : "text-[#993c1d]"
+                }`}
+              >
                 {CURRENCY.format(netWorth)}
               </span>
             </div>
@@ -194,14 +281,18 @@ export default function PortfolioPage() {
                   <div
                     className="h-full bg-[#639922] transition-all"
                     style={{
-                      width: `${Math.min(((totalAssets - totalLiabilities) / totalAssets) * 100, 100)}%`,
+                      width: `${Math.min(
+                        (netWorth / totalAssets) * 100, 
+                        100,
+                      )}%`,
                     }}
                   />
                 </div>
+
                 <div className="mt-1.5 flex justify-between text-[10px] text-[#9a8f7a]">
                   <span>Equity</span>
                   <span>
-                    {(((totalAssets - totalLiabilities) / totalAssets) * 100).toFixed(1)}%
+                    {((netWorth / totalAssets) * 100).toFixed(1)}%
                   </span>
                 </div>
               </div>
@@ -210,9 +301,11 @@ export default function PortfolioPage() {
         )}
       </div>
 
-      {/* Search & filter */}
       {!loading && !error && (
-        <PortfolioSearchFilterBar filters={filters} onChange={setFilters} />
+        <PortfolioSearchFilterBar 
+          filters={filters} 
+          onChange={setFilters} 
+        />
       )}
 
       {/* Overview cards */}
@@ -231,6 +324,7 @@ export default function PortfolioPage() {
             topCategories={assetGroups}
             href="/dashboard/portfolio/assets"
           />
+          
           <PortfolioOverviewCard
             type="liabilities"
             total={totalLiabilities}

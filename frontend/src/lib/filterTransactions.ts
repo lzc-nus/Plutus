@@ -11,7 +11,7 @@ export function filterTransactions(
   const fromTime = filters.dateFrom ? new Date(`${filters.dateFrom}T00:00:00`).getTime() : null;
   const toTime = filters.dateTo ? new Date(`${filters.dateTo}T23:59:59`).getTime() : null;
 
-  return transactions.filter((transaction) => {
+  return transactions.filter(transaction => {
     const matchesSearch =
       !query ||
       [transaction.description, transaction.category, transaction.account, transaction.impact].some(

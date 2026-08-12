@@ -39,6 +39,7 @@ export function AddAssetModal({
   lockCustomCategory,
 }: AddAssetModalProps) {
   const customCategoryId = useId();
+
   const [form, setForm] = useState<{
     name: string;
     category: AssetCategory;
@@ -65,8 +66,11 @@ export function AddAssetModal({
   const [submitError, setSubmitError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  function resolvedCustomCategory(): string | null {
-    if (form.category !== "other" || lockCustomCategory) return null;
+  function getCustomCategory(): string | null {
+    if (form.category !== "other" || lockCustomCategory) {
+      return null;
+    }
+    
     return form.custom_category.trim() || null;
   }
 
@@ -74,7 +78,7 @@ export function AddAssetModal({
     const result = assetFormSchema.safeParse({
       name: form.name,
       category: form.category,
-      custom_category: resolvedCustomCategory(),
+      custom_category: getCustomCategory(),
       value: form.value === "" ? undefined : Number(form.value),
       cost_basis: form.cost_basis === "" ? null : Number(form.cost_basis),
       liquidity: form.liquidity,
@@ -84,8 +88,17 @@ export function AddAssetModal({
     });
 
     if (!result.success) {
-      const flat = result.error.flatten().fieldErrors;
-      setErrors(Object.fromEntries(Object.entries(flat).map(([k, v]) => [k, v?.[0]])));
+      const fieldErrors = result.error.flatten().fieldErrors;
+
+      setErrors(
+        Object
+          .fromEntries(
+            Object
+              .entries(fieldErrors)
+              .map(([key, messages]) => [key, messages?.[0]])
+          )
+      );
+
       setSubmitError("");
       return;
     }
@@ -96,10 +109,12 @@ export function AddAssetModal({
 
     try {
       const saved = await onSave(result.data);
+
       if (!saved) {
         setSubmitError("Could not save this asset. Please try again.");
         return;
       }
+
       onClose();
     } catch {
       setSubmitError("Could not save this asset. Please try again.");
@@ -113,23 +128,34 @@ export function AddAssetModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(29,33,28,0.5)] p-4 sm:items-center"
-      onClick={(e) => e.target === e.currentTarget && !isSaving && onClose()}
+      onClick={event => event.target === event.currentTarget && !isSaving && onClose()}
     >
       <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-[#d9d0c1] bg-[#fbf7ef] shadow-[0_24px_80px_rgba(43,34,24,0.2)]">
+        
         {/* Header */}
         <div className="flex items-start justify-between border-b border-[#e4dece] px-6 py-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7a6332]">
               Portfolio asset
             </p>
-            <h2 className="mt-1 text-xl font-bold text-[#1d211c]">Add asset</h2>
+
+            <h2 className="mt-1 text-xl font-bold text-[#1d211c]">
+              Add asset
+            </h2>
           </div>
+
           <button
             onClick={onClose}
             className="mt-0.5 rounded-lg p-1.5 text-[#9a8f7a] transition-colors hover:bg-[#ede6d8] hover:text-[#1d211c]"
             aria-label="Close"
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <svg 
+              className="h-5 w-5" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth={2} 
+              viewBox="0 0 24 24"
+            >
               <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
@@ -144,14 +170,20 @@ export function AddAssetModal({
               <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
                 Asset name <span className="text-[#993c1d]">*</span>
               </label>
+
               <input
                 type="text"
                 placeholder="e.g. Apple Inc., Gold bullion, 123 Main St"
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onChange={event => setForm({ ...form, name: event.target.value })}
                 className={INPUT_CLS}
               />
-              {errors.name && <p className="mt-1 text-xs text-[#993c1d]">{errors.name}</p>}
+
+              {errors.name && (
+                <p className="mt-1 text-xs text-[#993c1d]">
+                  {errors.name}
+                </p>
+              )}
             </div>
 
             {/* Category */}
@@ -159,10 +191,11 @@ export function AddAssetModal({
               <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
                 Category
               </label>
+
               <select
                 value={form.category}
-                onChange={(e) => {
-                  const nextCategory = e.target.value as AssetCategory;
+                onChange={event => {
+                  const nextCategory = event.target.value as AssetCategory;
                   setForm({
                     ...form,
                     category: nextCategory,
@@ -171,9 +204,16 @@ export function AddAssetModal({
                 }}
                 className={INPUT_CLS}
               >
-                {(Object.entries(ASSET_CATEGORY_LABELS) as [AssetCategory, string][]).map(
+                {(
+                  Object.entries(ASSET_CATEGORY_LABELS) as [
+                    AssetCategory, 
+                    string
+                  ][]
+                ).map(
                   ([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
                   )
                 )}
               </select>
@@ -187,7 +227,7 @@ export function AddAssetModal({
                 suggestions={existingCustomCategories}
                 placeholder="e.g. Collectibles, angel investments"
                 error={errors.custom_category}
-                onChange={(value) => setForm({ ...form, custom_category: value })}
+                onChange={value => setForm({ ...form, custom_category: value })}
               />
             )}
 
@@ -195,32 +235,38 @@ export function AddAssetModal({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
-                  Current value (USD) <span className="text-[#993c1d]">*</span>
+                  Current value <span className="text-[#993c1d]">*</span>
                 </label>
+
                 <input
                   type="number"
                   min={0}
                   placeholder="0"
                   value={form.value}
-                  onChange={(e) => setForm({ ...form, value: e.target.value })}
+                  onChange={event => setForm({ ...form, value: event.target.value })}
                   className={INPUT_CLS}
                 />
                 {errors.value && <p className="mt-1 text-xs text-[#993c1d]">{errors.value}</p>}
               </div>
+
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
                   Cost basis (USD)
                 </label>
+
                 <input
                   type="number"
                   min={0}
                   placeholder="Optional"
                   value={form.cost_basis}
-                  onChange={(e) => setForm({ ...form, cost_basis: e.target.value })}
+                  onChange={event => setForm({ ...form, cost_basis: event.target.value })}
                   className={INPUT_CLS}
                 />
+
                 {errors.cost_basis && (
-                  <p className="mt-1 text-xs text-[#993c1d]">{errors.cost_basis}</p>
+                  <p className="mt-1 text-xs text-[#993c1d]">
+                    {errors.cost_basis}
+                  </p>
                 )}
               </div>
             </div>
@@ -248,7 +294,10 @@ export function AddAssetModal({
 
             {/* Risk */}
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">Risk level</label>
+              <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
+                Risk level
+              </label>
+
               <div className="grid grid-cols-4 gap-2">
                 {RISK_OPTIONS.map((opt) => (
                   <button
@@ -270,21 +319,28 @@ export function AddAssetModal({
             {/* Acquired + Notes */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">Acquired</label>
+                <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
+                  Acquired
+                </label>
+                
                 <input
                   type="date"
                   value={form.acquired_at}
-                  onChange={(e) => setForm({ ...form, acquired_at: e.target.value })}
+                  onChange={event => setForm({ ...form, acquired_at: event.target.value })}
                   className={INPUT_CLS}
                 />
               </div>
+
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">Notes</label>
+                <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
+                  Notes
+                </label>
+                
                 <input
                   type="text"
                   placeholder="Optional"
                   value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  onChange={event => setForm({ ...form, notes: event.target.value })}
                   className={INPUT_CLS}
                 />
               </div>
@@ -295,7 +351,12 @@ export function AddAssetModal({
 
         {/* Footer */}
         <div className="border-t border-[#e4dece] px-6 py-4">
-          {submitError ? <p className="mb-3 text-sm text-[#993c1d]">{submitError}</p> : null}
+          {submitError 
+            ? <p className="mb-3 text-sm text-[#993c1d]">
+                {submitError}
+              </p> 
+            : null}
+            
           <div className="flex items-center justify-end gap-3">
             <button
               onClick={onClose}
@@ -304,6 +365,7 @@ export function AddAssetModal({
             >
               Cancel
             </button>
+
             <button
               onClick={handleSubmit}
               disabled={isSaving}

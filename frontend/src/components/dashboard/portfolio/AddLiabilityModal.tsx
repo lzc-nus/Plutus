@@ -53,7 +53,10 @@ export function AddLiabilityModal({
   const [isSaving, setIsSaving] = useState(false);
 
   function resolvedCustomCategory(): string | null {
-    if (form.category !== "other" || lockCustomCategory) return null;
+    if (form.category !== "other" || lockCustomCategory) {
+      return null;
+    }
+
     return form.custom_category.trim() || null;
   }
 
@@ -71,8 +74,17 @@ export function AddLiabilityModal({
     });
 
     if (!result.success) {
-      const flat = result.error.flatten().fieldErrors;
-      setErrors(Object.fromEntries(Object.entries(flat).map(([k, v]) => [k, v?.[0]])));
+      const fieldErrors = result.error.flatten().fieldErrors;
+
+      setErrors(
+        Object
+          .fromEntries(
+            Object
+              .entries(fieldErrors)
+              .map(([key, messages]) => [key, messages?.[0]])
+          )
+      );
+
       setSubmitError("");
       return;
     }
@@ -83,10 +95,12 @@ export function AddLiabilityModal({
 
     try {
       const saved = await onSave(result.data);
+
       if (!saved) {
         setSubmitError("Could not save this liability. Please try again.");
         return;
       }
+
       onClose();
     } catch {
       setSubmitError("Could not save this liability. Please try again.");
@@ -109,14 +123,24 @@ export function AddLiabilityModal({
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7a6332]">
               Portfolio liability
             </p>
-            <h2 className="mt-1 text-xl font-bold text-[#1d211c]">Add liability</h2>
+
+            <h2 className="mt-1 text-xl font-bold text-[#1d211c]">
+              Add liability
+            </h2>
           </div>
+
           <button
             onClick={onClose}
             className="mt-0.5 rounded-lg p-1.5 text-[#9a8f7a] transition-colors hover:bg-[#ede6d8] hover:text-[#1d211c]"
             aria-label="Close"
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <svg 
+              className="h-5 w-5" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth={2} 
+              viewBox="0 0 24 24"
+            >
               <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
@@ -131,14 +155,20 @@ export function AddLiabilityModal({
               <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
                 Liability name <span className="text-[#993c1d]">*</span>
               </label>
+
               <input
                 type="text"
                 placeholder="e.g. Home mortgage, Car loan, Visa card"
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onChange={event => setForm({ ...form, name: event.target.value })}
                 className={INPUT_CLS}
               />
-              {errors.name && <p className="mt-1 text-xs text-[#993c1d]">{errors.name}</p>}
+
+              {errors.name && (
+                <p className="mt-1 text-xs text-[#993c1d]">
+                  {errors.name}
+                </p>
+              )}
             </div>
 
             {/* Category */}
@@ -146,10 +176,12 @@ export function AddLiabilityModal({
               <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
                 Category
               </label>
+
               <select
                 value={form.category}
-                onChange={(e) => {
-                  const nextCategory = e.target.value as LiabilityCategory;
+                onChange={event => {
+                  const nextCategory = event.target.value as LiabilityCategory;
+
                   setForm({
                     ...form,
                     category: nextCategory,
@@ -158,15 +190,22 @@ export function AddLiabilityModal({
                 }}
                 className={INPUT_CLS}
               >
-                {(Object.entries(LIABILITY_CATEGORY_LABELS) as [LiabilityCategory, string][]).map(
+                {(
+                  Object.entries(LIABILITY_CATEGORY_LABELS) as [
+                    LiabilityCategory, 
+                    string
+                  ][]
+                ).map(
                   ([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
                   )
                 )}
               </select>
             </div>
 
-            {/* Custom category — only when "other" is selected */}
+            {/* Custom category (only when "other" is selected) */}
             {isOther && !lockCustomCategory && (
               <CustomCategoryField
                 id={customCategoryId}
@@ -174,7 +213,7 @@ export function AddLiabilityModal({
                 suggestions={existingCustomCategories}
                 placeholder="e.g. Family loan, deferred revenue"
                 error={errors.custom_category}
-                onChange={(value) => setForm({ ...form, custom_category: value })}
+                onChange={value => setForm({ ...form, custom_category: value })}
               />
             )}
 
@@ -182,28 +221,35 @@ export function AddLiabilityModal({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
-                  Outstanding balance (USD) <span className="text-[#993c1d]">*</span>
+                  Outstanding balance <span className="text-[#993c1d]">*</span>
                 </label>
+
                 <input
                   type="number"
                   min={0}
                   placeholder="0"
                   value={form.balance}
-                  onChange={(e) => setForm({ ...form, balance: e.target.value })}
+                  onChange={event => setForm({ ...form, balance: event.target.value })}
                   className={INPUT_CLS}
                 />
-                {errors.balance && <p className="mt-1 text-xs text-[#993c1d]">{errors.balance}</p>}
+                {errors.balance && (
+                  <p className="mt-1 text-xs text-[#993c1d]">
+                    {errors.balance}
+                  </p>
+                )}
               </div>
+
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
                   Original loan amount
                 </label>
+
                 <input
                   type="number"
                   min={0}
                   placeholder="Optional"
                   value={form.original_amount}
-                  onChange={(e) => setForm({ ...form, original_amount: e.target.value })}
+                  onChange={event => setForm({ ...form, original_amount: event.target.value })}
                   className={INPUT_CLS}
                 />
               </div>
@@ -215,33 +261,42 @@ export function AddLiabilityModal({
                 <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
                   Interest rate (% APR)
                 </label>
+
                 <input
                   type="number"
                   min={0}
                   step={0.01}
                   placeholder="0.00"
                   value={form.interest_rate}
-                  onChange={(e) => setForm({ ...form, interest_rate: e.target.value })}
+                  onChange={event => setForm({ ...form, interest_rate: event.target.value })}
                   className={INPUT_CLS}
                 />
+
                 {errors.interest_rate && (
-                  <p className="mt-1 text-xs text-[#993c1d]">{errors.interest_rate}</p>
+                  <p className="mt-1 text-xs text-[#993c1d]">
+                    {errors.interest_rate}
+                  </p>
                 )}
               </div>
+
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
-                  Monthly payment (USD)
+                  Monthly payment
                 </label>
+
                 <input
                   type="number"
                   min={0}
                   placeholder="0"
                   value={form.monthly_payment}
-                  onChange={(e) => setForm({ ...form, monthly_payment: e.target.value })}
+                  onChange={event => setForm({ ...form, monthly_payment: event.target.value })}
                   className={INPUT_CLS}
                 />
+
                 {errors.monthly_payment && (
-                  <p className="mt-1 text-xs text-[#993c1d]">{errors.monthly_payment}</p>
+                  <p className="mt-1 text-xs text-[#993c1d]">
+                    {errors.monthly_payment}
+                  </p>
                 )}
               </div>
             </div>
@@ -252,20 +307,25 @@ export function AddLiabilityModal({
                 <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
                   Maturity date
                 </label>
+
                 <input
                   type="date"
                   value={form.maturity_date}
-                  onChange={(e) => setForm({ ...form, maturity_date: e.target.value })}
+                  onChange={event => setForm({ ...form, maturity_date: event.target.value })}
                   className={INPUT_CLS}
                 />
               </div>
+
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">Notes</label>
+                <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
+                  Notes
+                </label>
+
                 <input
                   type="text"
                   placeholder="Optional"
                   value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  onChange={event => setForm({ ...form, notes: event.target.value })}
                   className={INPUT_CLS}
                 />
               </div>
@@ -285,6 +345,7 @@ export function AddLiabilityModal({
             >
               Cancel
             </button>
+
             <button
               onClick={handleSubmit}
               disabled={isSaving}

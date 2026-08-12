@@ -8,11 +8,17 @@ interface TransactionModalState {
   closeEditModal: () => void;
 }
 
-export const useTransactionModalStore = create<TransactionModalState>((set) => ({
+export const useTransactionModalStore = create<TransactionModalState>(set => ({
   editModalOpen: false,
   editingTransaction: null,
-  openEditModal: (transaction) =>
-    set({ editModalOpen: true, editingTransaction: transaction }),
+  openEditModal: transaction =>
+    set({ 
+      editModalOpen: true, 
+      editingTransaction: transaction 
+    }),
   closeEditModal: () =>
-    set({ editModalOpen: false, editingTransaction: null }),
+    set({ 
+      editModalOpen: false, 
+      editingTransaction: null 
+    }),
 }));

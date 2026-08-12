@@ -76,10 +76,12 @@ export async function updateStrategyGoal(
 ): Promise<StrategyApiResult<StrategyGoalRead>> {
   try {
     configureApiClient();
+
     const { data, error, response } = await strategyGoalsUpdate({
       path: { goal_id: goalId },
       body: payload,
     });
+
     const status = response?.status ?? 0;
 
     if (error || !response?.ok || !data) {
@@ -101,9 +103,11 @@ export async function deleteStrategyGoal(
 ): Promise<StrategyApiResult<true>> {
   try {
     configureApiClient();
+
     const { error, response } = await strategyGoalsDelete({
       path: { goal_id: goalId },
     });
+    
     const status = response?.status ?? 0;
 
     if (error || !response?.ok) {

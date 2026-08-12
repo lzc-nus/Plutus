@@ -60,6 +60,7 @@ export default function PublicHomePage() {
               >
                 Create account
               </Link>
+
               <Link
                 href="/login"
                 className="inline-flex h-12 items-center justify-center rounded-md border border-[#fbf7ef]/40 px-6 text-sm font-bold text-[#fbf7ef] transition hover:bg-white/10"
@@ -90,6 +91,7 @@ export default function PublicHomePage() {
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8f6f2d]">
             Built for decisions
           </p>
+
           <h2 className="font-display mt-4 text-4xl font-semibold leading-tight sm:text-5xl">
             Financial clarity before the decision becomes expensive.
           </h2>
@@ -116,15 +118,18 @@ export default function PublicHomePage() {
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#d8bd75]">
               Product flow
             </p>
+
             <h2 className="font-display mt-4 text-4xl font-semibold leading-tight sm:text-5xl">
               From raw financial activity to ranked action.
             </h2>
+            
             <div className="mt-8 grid gap-4">
               {workflow.map((item, index) => (
                 <div key={item} className="flex gap-4">
                   <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#d8bd75] text-sm font-bold text-[#1d211c]">
                     {index + 1}
                   </span>
+
                   <p className="pt-1 text-lg text-[#eee4d4]">{item}</p>
                 </div>
               ))}
@@ -140,6 +145,7 @@ export default function PublicHomePage() {
                   </p>
                   <p className="mt-1 text-2xl font-semibold">$1,207,840</p>
                 </div>
+
                 <p className="rounded-full bg-[#e8dfcf] px-3 py-1 text-xs font-semibold">
                   Elevated risk
                 </p>
@@ -168,10 +174,12 @@ export default function PublicHomePage() {
           <h2 className="font-display text-4xl font-semibold">
             Start with a clearer view of your capital.
           </h2>
+
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-[#696154]">
             Create an account, fill in your asset information, add your first transactions, and begin building
             the financial intelligence layer for your wealth decisions.
           </p>
+          
           <div className="mt-8">
             <Link
               href="/register"

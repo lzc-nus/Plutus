@@ -2,8 +2,7 @@ import type { LiabilityRead } from "@/lib/api/generated";
 import type { LiabilityFilterState } from "@/data/portfolioTypes";
 
 /**
- * Filters a list of liabilities according to the given filter state.
- * Pure function — no side effects, safe to call on every render.
+ * Pure function, safe to call on every render.
  */
 export function filterLiabilities(
   liabilities: LiabilityRead[],
@@ -20,7 +19,7 @@ export function filterLiabilities(
   const maturityFrom = filters.maturityFrom || null;
   const maturityTo = filters.maturityTo || null;
 
-  return liabilities.filter((liability) => {
+  return liabilities.filter(liability => {
     // Name search
     if (search && !liability.name.toLowerCase().includes(search)) {
       return false;
@@ -39,7 +38,9 @@ export function filterLiabilities(
       if (liability.interest_rate == null) {
         return false;
       }
+
       const rate = Number(liability.interest_rate);
+      
       if (rateMin !== null && !Number.isNaN(rateMin) && rate < rateMin) {
         return false;
       }

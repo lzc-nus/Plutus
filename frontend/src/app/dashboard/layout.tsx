@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { 
+  useEffect, 
+  useState, 
+  type ReactNode 
+} from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Header from "@/components/dashboard/Header";
@@ -11,66 +15,65 @@ import type { UserRead } from "@/lib/api/generated";
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [canRenderDashboard, setCanRenderDashboard] = useState(false);
-  const [currentUser, setCurrentUser] = useState<UserRead | null>(null);
+
+  const [ready, setReady] = useState(false);
+  const [user, setUser] = useState<UserRead | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
+    let active = true;
 
-    async function verifyAuth() {
+    const checkAuth = async () => {
       const { data, error, response } = await getMe();
 
-      if (!isMounted) {
+      if (!active) {
         return;
       }
 
       if (response?.status === 401 || response?.status === 403) {
-        setCanRenderDashboard(false);
-        setCurrentUser(null);
+        setReady(false);
+        setUser(null);
         router.replace("/login");
         return;
       }
 
       if (error || !response?.ok || !data) {
-        setCanRenderDashboard(false);
-        setCurrentUser(null);
+        setReady(false);
+        setUser(null);
         router.replace("/login");
         return;
       }
 
-      setCurrentUser(data);
-      setCanRenderDashboard(true);
+      setUser(data);
+      setReady(true);
     }
 
-    function handleAuthCheck() {
-      void verifyAuth();
-    }
+    void checkAuth();
 
-    handleAuthCheck();
-    window.addEventListener("pageshow", handleAuthCheck);
-    window.addEventListener("focus", handleAuthCheck);
-    window.addEventListener("storage", handleAuthCheck);
-    window.addEventListener("plutus-auth-refresh", handleAuthCheck);
+    window.addEventListener("pageshow", checkAuth);
+    window.addEventListener("focus", checkAuth);
+    window.addEventListener("storage", checkAuth);
+    window.addEventListener("plutus-auth-refresh", checkAuth);
 
     return () => {
-      isMounted = false;
-      window.removeEventListener("pageshow", handleAuthCheck);
-      window.removeEventListener("focus", handleAuthCheck);
-      window.removeEventListener("storage", handleAuthCheck);
-      window.removeEventListener("plutus-auth-refresh", handleAuthCheck);
+      active = false;
+
+      window.removeEventListener("pageshow", checkAuth);
+      window.removeEventListener("focus", checkAuth);
+      window.removeEventListener("storage", checkAuth);
+      window.removeEventListener("plutus-auth-refresh", checkAuth);
     };
   }, [pathname, router]);
 
-  if (!canRenderDashboard || !currentUser) {
+  if (!ready || !user) {
     return null;
   }
 
   return (
-    <AuthProvider initialUser={currentUser}>
+    <AuthProvider initialUser={user}>
       <div className="flex h-screen bg-[#f4efe6]">
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">
-          <Header currentUser={currentUser} />
+          <Header currentUser={user} />
           <main className="flex-1 overflow-auto p-8">{children}</main>
         </div>
       </div>

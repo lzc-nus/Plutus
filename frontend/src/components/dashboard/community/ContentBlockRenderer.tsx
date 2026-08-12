@@ -4,10 +4,7 @@ import type { ContentBlock } from "@/lib/validations/community";
 
 interface ContentBlockRendererProps {
   blocks: ContentBlock[];
-  /**
-   * When true, truncates text to 3 lines and collapses media to small
-   * thumbnails. Used in the RepostComposer preview card.
-   */
+  // when true, truncate text into 3 lines and collapse media into small thumbnail
   compact?: boolean;
 }
 
@@ -15,18 +12,22 @@ export function ContentBlockRenderer({
   blocks,
   compact = false,
 }: ContentBlockRendererProps) {
-  if (!blocks || blocks.length === 0) return null;
+  if (!blocks || blocks.length === 0) {
+    return null;
+  }
 
   return (
     <div className={`flex flex-col ${compact ? "gap-1.5" : "gap-3"}`}>
-      {blocks.map((block, i) => (
-        <BlockRenderer key={i} block={block} compact={compact} />
+      {blocks.map((block, index) => (
+        <BlockRenderer 
+          key={index} 
+          block={block} 
+          compact={compact} 
+        />
       ))}
     </div>
   );
 }
-
-// ── Per-block dispatcher ──────────────────────────────────────────────────────
 
 function BlockRenderer({
   block,
@@ -38,16 +39,22 @@ function BlockRenderer({
   switch (block.type) {
     case "text":
       return <TextBlock value={block.value} compact={compact} />;
+
     case "image":
       return <ImageBlock url={block.url} compact={compact} />;
+
     case "gif":
       return <GifBlock url={block.url} compact={compact} />;
+
     case "sticker":
       return <StickerBlock url={block.url} compact={compact} />;
+
     case "video":
       return <VideoBlock url={block.url} compact={compact} />;
+
     case "audio":
       return <AudioBlock url={block.url} compact={compact} />;
+
     case "link":
       return (
         <LinkBlock
@@ -57,12 +64,11 @@ function BlockRenderer({
           compact={compact}
         />
       );
+
     default:
       return null;
   }
 }
-
-// ── Text ──────────────────────────────────────────────────────────────────────
 
 function TextBlock({ value, compact }: { value: string; compact: boolean }) {
   return (
@@ -77,14 +83,16 @@ function TextBlock({ value, compact }: { value: string; compact: boolean }) {
   );
 }
 
-// ── Image ─────────────────────────────────────────────────────────────────────
-
 function ImageBlock({ url, compact }: { url: string; compact: boolean }) {
   if (compact) {
     return (
       <div className="h-12 w-12 overflow-hidden rounded-md bg-zinc-800">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={url} alt="" className="h-full w-full object-cover" />
+        <img 
+          src={url} 
+          alt="" 
+          className="h-full w-full object-cover" 
+        />
       </div>
     );
   }
@@ -102,14 +110,16 @@ function ImageBlock({ url, compact }: { url: string; compact: boolean }) {
   );
 }
 
-// ── GIF ───────────────────────────────────────────────────────────────────────
-
 function GifBlock({ url, compact }: { url: string; compact: boolean }) {
   if (compact) {
     return (
       <div className="h-12 w-12 overflow-hidden rounded-md bg-zinc-800">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={url} alt="" className="h-full w-full object-cover" />
+        <img 
+          src={url} 
+          alt="" 
+          className="h-full w-full object-cover" 
+        />
       </div>
     );
   }
@@ -127,20 +137,21 @@ function GifBlock({ url, compact }: { url: string; compact: boolean }) {
   );
 }
 
-// ── Sticker ───────────────────────────────────────────────────────────────────
-
 function StickerBlock({ url, compact }: { url: string; compact: boolean }) {
   const size = compact ? "h-10 w-10" : "h-24 w-24";
 
   return (
     <div className={`${size} shrink-0`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={url} alt="" className="h-full w-full object-contain" loading="lazy" />
+      <img 
+        src={url} 
+        alt="" 
+        className="h-full w-full object-contain" 
+        loading="lazy" 
+      />
     </div>
   );
 }
-
-// ── Video ─────────────────────────────────────────────────────────────────────
 
 function VideoBlock({ url, compact }: { url: string; compact: boolean }) {
   if (compact) {
@@ -163,14 +174,15 @@ function VideoBlock({ url, compact }: { url: string; compact: boolean }) {
   );
 }
 
-// ── Audio ─────────────────────────────────────────────────────────────────────
-
 function AudioBlock({ url, compact }: { url: string; compact: boolean }) {
   if (compact) {
     return (
       <div className="flex items-center gap-1.5 text-zinc-500">
         <AudioIcon />
-        <span className="text-xs">Audio</span>
+
+        <span className="text-xs">
+          Audio
+        </span>
       </div>
     );
   }
@@ -180,6 +192,7 @@ function AudioBlock({ url, compact }: { url: string; compact: boolean }) {
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-zinc-300">
         <AudioIcon />
       </div>
+
       <audio
         src={url}
         controls
@@ -189,8 +202,6 @@ function AudioBlock({ url, compact }: { url: string; compact: boolean }) {
     </div>
   );
 }
-
-// ── Link ──────────────────────────────────────────────────────────────────────
 
 function LinkBlock({
   url,
@@ -209,7 +220,10 @@ function LinkBlock({
     return (
       <div className="flex items-center gap-1.5 text-zinc-400">
         <LinkIcon />
-        <span className="truncate text-xs text-emerald-400">{displayTitle}</span>
+
+        <span className="truncate text-xs text-emerald-400">
+          {displayTitle}
+        </span>
       </div>
     );
   }
@@ -223,25 +237,41 @@ function LinkBlock({
     >
       <div className="flex items-center gap-1.5">
         <LinkIcon />
-        <span className="truncate text-xs text-zinc-500">{getDomain(url)}</span>
+
+        <span className="truncate text-xs text-zinc-500">
+          {getDomain(url)}
+        </span>
       </div>
+
       {title && (
         <p className="text-sm font-medium text-zinc-200 group-hover:text-white">
           {title}
         </p>
       )}
+      
       {description && !compact && (
-        <p className="line-clamp-2 text-xs text-zinc-400">{description}</p>
+        <p className="line-clamp-2 text-xs text-zinc-400">
+          {description}
+        </p>
       )}
     </a>
   );
 }
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
+// ICONS
 
 function VideoIcon() {
   return (
-    <svg className="h-4 w-4 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg 
+      className="h-4 w-4 text-zinc-500" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="1.75" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      aria-hidden
+    >
       <polygon points="23 7 16 12 23 17 23 7" />
       <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
     </svg>
@@ -250,7 +280,16 @@ function VideoIcon() {
 
 function AudioIcon() {
   return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg 
+      className="h-4 w-4" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="1.75" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      aria-hidden
+    >
       <path d="M9 18V5l12-2v13" />
       <circle cx="6" cy="18" r="3" />
       <circle cx="18" cy="16" r="3" />
@@ -260,14 +299,23 @@ function AudioIcon() {
 
 function LinkIcon() {
   return (
-    <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg 
+      className="h-3.5 w-3.5 shrink-0" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      aria-hidden
+    >
       <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
       <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
     </svg>
   );
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// HELPERS
 
 function getDomain(url: string): string {
   try {

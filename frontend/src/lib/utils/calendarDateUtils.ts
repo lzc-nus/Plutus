@@ -59,9 +59,7 @@ export function endOfYear(value: Date): Date {
 }
 
 /**
- * Expands a (possibly multi-day) event into the list of local date keys it
- * touches. All-day events use an exclusive end boundary, matching the API
- * convention (end_at is midnight of the day *after* the last visible day).
+ * Expand an event into the list of local date keys it touches.
  */
 export function getDateKeysForEvent(event: CalendarEventRead): string[] {
     const start = startOfDay(new Date(event.start_at));
@@ -77,24 +75,28 @@ export function getDateKeysForEvent(event: CalendarEventRead): string[] {
 }
 
 /**
- * Groups events by every local date key they touch (for multi-day spans).
- * Daily buckets are sorted all-day-first, then by start time.
+ * Group events by every local date key they touch (for multi-day spans).
+ * Daily buckets are sorted first by allday, then by start time.
  */
 export function groupEventsByDateKey(events: CalendarEventRead[]): Record<string, CalendarEventRead[]> {
     const map: Record<string, CalendarEventRead[]> = {};
 
-    events.forEach((evt) => {
-        getDateKeysForEvent(evt).forEach((dateKey) => {
+    events.forEach(event => {
+        getDateKeysForEvent(event).forEach(dateKey => {
             if (!map[dateKey]) {
                 map[dateKey] = [];
             }
-            map[dateKey].push(evt);
+
+            map[dateKey].push(event);
         });
     });
 
-    Object.values(map).forEach((dailyEvents) => {
-        dailyEvents.sort((a, b) => {
-            if (a.is_all_day !== b.is_all_day) return a.is_all_day ? -1 : 1;
+    Object.values(map).forEach(dayEvents => {
+        dayEvents.sort((a, b) => {
+            if (a.is_all_day !== b.is_all_day) {
+                return a.is_all_day ? -1 : 1;
+            }
+
             return new Date(a.start_at).getTime() - new Date(b.start_at).getTime();
         });
     });
@@ -102,12 +104,11 @@ export function groupEventsByDateKey(events: CalendarEventRead[]): Record<string
     return map;
 }
 
-/** Minutes since local midnight for a Date. */
 export function minutesSinceMidnight(value: Date): number {
     return value.getHours() * 60 + value.getMinutes();
 }
 
-/** Formats a minutes-since-midnight value as "HH:MM" for time inputs. */
+/** Format a minutes-since-midnight value as HH:MM for time inputs. */
 export function minutesToTimeInputValue(totalMinutes: number): string {
     const clamped = Math.max(0, Math.min(24 * 60, totalMinutes));
     const hours = String(Math.floor(clamped / 60)).padStart(2, "0");
@@ -115,24 +116,19 @@ export function minutesToTimeInputValue(totalMinutes: number): string {
     return `${hours}:${minutes}`;
 }
 
-/** Snaps a minutes-since-midnight value to the nearest step (default 15). */
+/** Snap a minutes-since-midnight value to the nearest step (default 15). */
 export function snapMinutes(totalMinutes: number, step = 15): number {
     return Math.round(totalMinutes / step) * step;
 }
 
-/** Adds one hour to an "HH:MM" time string, clamped to 23:59. */
+/** Add one hour to HH:MM, clamped to 23:59. */
 export function addOneHourToTime(time: string): string {
     const [hours, minutes] = time.split(":").map(Number);
     const totalMinutes = Math.min(23 * 60 + 59, hours * 60 + minutes + 60);
     return minutesToTimeInputValue(totalMinutes);
 }
 
-/**
- * Builds a local-offset ISO 8601 string (e.g. "2026-07-03T14:00:00+08:00")
- * from a YYYY-MM-DD date key and an "HH:MM" time. This preserves the local
- * wall-clock time regardless of the viewer's timezone, matching how the API
- * stores calendar event instants.
- */
+/** Build a string (eg "2026-07-03T14:00:00+08:00"). */
 export function toLocalOffsetIso(dateKey: string, time: string): string {
     const localDateTime = new Date(`${dateKey}T${time}:00`);
     const offsetMinutes = -localDateTime.getTimezoneOffset();

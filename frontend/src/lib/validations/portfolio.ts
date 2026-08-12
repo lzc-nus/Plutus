@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// ── Assets ────────────────────────────────────────────────────────────────────
+// ASSETS
 
 export const assetFormSchema = z.object({
   name: z
@@ -64,7 +64,7 @@ export const assetFormSchema = z.object({
 
 export type AssetFormInput = z.infer<typeof assetFormSchema>;
 
-// ── Liabilities ───────────────────────────────────────────────────────────────
+// LIABILITIES
 
 export const liabilityFormSchema = z.object({
   name: z

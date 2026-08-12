@@ -16,20 +16,26 @@ export function CommentComposer({ postId, onCreated }: CommentComposerProps) {
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [expanded, setExpanded] = useState(false);
 
-  const textBlock = blocks.find((b) => b.type === "text");
+  const textBlock = blocks.find(block => block.type === "text");
   const textLength = textBlock?.type === "text" ? textBlock.value.length : 0;
   const canSubmit = blocks.length > 0 && textLength <= 280 && status !== "submitting";
 
   async function handleSubmit() {
-    if (!canSubmit) return;
+    if (!canSubmit) {
+      return;
+    }
+
     setStatus("submitting");
+    
     try {
-      const res = await createComment(postId, { content_blocks: blocks });
-      if (res.data) {
-        onCreated(res.data);
+      const response = await createComment(postId, { content_blocks: blocks });
+      
+      if (response.data) {
+        onCreated(response.data);
         setBlocks([]);
         setExpanded(false);
       }
+
       setStatus("idle");
     } catch {
       setStatus("error");
@@ -42,7 +48,7 @@ export function CommentComposer({ postId, onCreated }: CommentComposerProps) {
     setStatus("idle");
   }
 
-  // ── Collapsed state — single-line prompt ───────────────────────────────────
+  // COLLAPSED STATE
 
   if (!expanded) {
     return (
@@ -55,7 +61,7 @@ export function CommentComposer({ postId, onCreated }: CommentComposerProps) {
     );
   }
 
-  // ── Expanded state — full editor ───────────────────────────────────────────
+  // EXPANDED STATE
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-[#d7c6a3]/50 bg-white px-4 py-3">
@@ -79,6 +85,7 @@ export function CommentComposer({ postId, onCreated }: CommentComposerProps) {
         >
           Cancel
         </button>
+        
         <button
           onClick={handleSubmit}
           disabled={!canSubmit}

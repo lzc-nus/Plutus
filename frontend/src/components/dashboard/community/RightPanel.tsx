@@ -8,8 +8,12 @@ import { MarketSnapshot } from "@/components/dashboard/community/MarketSnapshot"
 const TIP_ROTATION_INTERVAL_MS = 60_000;
 
 function getNextTipIndex(current: number, total: number): number {
-  if (total <= 1) return current;
+  if (total <= 1) {
+    return current;
+  }
+
   const next = Math.floor(Math.random() * total);
+
   return next === current ? (next + 1) % total : next;
 }
 
@@ -18,16 +22,22 @@ function DashboardTip() {
   const activeTip = dashboardTips[tipIndex] ?? dashboardTips[0];
 
   useEffect(() => {
-    const initialTimer = window.setTimeout(() => {
-      setTipIndex((i) => getNextTipIndex(i, dashboardTips.length));
-    }, 500);
-    const rotationTimer = window.setInterval(() => {
-      setTipIndex((i) => getNextTipIndex(i, dashboardTips.length));
-    }, TIP_ROTATION_INTERVAL_MS);
-    return () => {
-      window.clearTimeout(initialTimer);
-      window.clearInterval(rotationTimer);
-    };
+      const initialTimer = window.setTimeout(() => {
+        setTipIndex(index => 
+          getNextTipIndex(index, dashboardTips.length)
+        );
+      }, 500);
+  
+      const rotationTimer = window.setInterval(() => {
+        setTipIndex(index => 
+          getNextTipIndex(index, dashboardTips.length)
+        );
+      }, TIP_ROTATION_INTERVAL_MS);
+  
+      return () => {
+        window.clearTimeout(initialTimer);
+        window.clearInterval(rotationTimer);
+      };
   }, []);
 
   return (
@@ -38,6 +48,7 @@ function DashboardTip() {
       <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-[#d8bd75]">
         {activeTip.title}
       </p>
+      
       <p className="mt-1 text-xs leading-5 text-[#a99b82]">
         {activeTip.body}
       </p>

@@ -7,6 +7,7 @@ import {
   type LiabilityCategory,
   type LiabilityFilterState,
 } from "@/data/portfolioTypes";
+import { openAsBlob } from "fs";
 
 interface LiabilitySearchFilterBarProps {
   filters: LiabilityFilterState;
@@ -18,10 +19,23 @@ const INPUT_CLS =
 
 function countActiveFilters(filters: LiabilityFilterState): number {
   let count = 0;
-  if (filters.categories.length > 0) count += 1;
-  if (filters.rateMin || filters.rateMax) count += 1;
-  if (filters.balanceMin || filters.balanceMax) count += 1;
-  if (filters.maturityFrom || filters.maturityTo) count += 1;
+
+  if (filters.categories.length > 0) {
+    count++;
+  }
+
+  if (filters.rateMin || filters.rateMax) {
+    count++;
+  }
+
+  if (filters.balanceMin || filters.balanceMax) {
+    count++;
+  }
+
+  if (filters.maturityFrom || filters.maturityTo) {
+    count++;
+  }
+
   return count;
 }
 
@@ -29,10 +43,10 @@ export function LiabilitySearchFilterBar({ filters, onChange }: LiabilitySearchF
   const [panelOpen, setPanelOpen] = useState(false);
   const activeCount = countActiveFilters(filters);
 
-  function toggleCategory(cat: LiabilityCategory) {
-    const next = filters.categories.includes(cat)
-      ? filters.categories.filter((c) => c !== cat)
-      : [...filters.categories, cat];
+  function toggleCategory(category: LiabilityCategory) {
+    const next = filters.categories.includes(category)
+      ? filters.categories.filter(item => item !== category)
+      : [...filters.categories, category];
     onChange({ ...filters, categories: next });
   }
 
@@ -42,6 +56,7 @@ export function LiabilitySearchFilterBar({ filters, onChange }: LiabilitySearchF
 
   return (
     <div className="rounded-xl border border-[#d9d0c1] bg-[#fbf7ef] shadow-[0_2px_12px_rgba(43,34,24,0.05)]">
+      
       {/* Search row */}
       <div className="flex items-center gap-2 p-3">
         <div className="relative flex-1">
@@ -55,27 +70,36 @@ export function LiabilitySearchFilterBar({ filters, onChange }: LiabilitySearchF
             <circle cx="11" cy="11" r="7" />
             <path d="m21 21-4.35-4.35" strokeLinecap="round" />
           </svg>
+
           <input
             type="text"
             placeholder="Search liabilities by name…"
             value={filters.search}
-            onChange={(e) => onChange({ ...filters, search: e.target.value })}
+            onChange={event => onChange({ ...filters, search: event.target.value })}
             className={`${INPUT_CLS} pl-9`}
           />
         </div>
 
         <button
-          onClick={() => setPanelOpen((o) => !o)}
+          onClick={() => setPanelOpen(open => !open)}
           className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
             panelOpen || activeCount > 0
               ? "border-[#993c1d] bg-[#faece7] text-[#712b13]"
               : "border-[#d9d0c1] bg-white text-[#6f675b] hover:border-[#c8907a]"
           }`}
         >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <svg 
+            className="h-4 w-4" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth={2} 
+            viewBox="0 0 24 24"
+          >
             <path d="M3 5h18M6 12h12M10 19h4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
+
           Filters
+
           {activeCount > 0 && (
             <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#993c1d] text-[10px] font-bold text-white">
               {activeCount}
@@ -101,6 +125,7 @@ export function LiabilitySearchFilterBar({ filters, onChange }: LiabilitySearchF
             <p className="mb-2 text-xs font-medium uppercase tracking-[0.1em] text-[#9a8f7a]">
               Category
             </p>
+
             <div className="flex flex-wrap gap-1.5">
               {(Object.entries(LIABILITY_CATEGORY_LABELS) as [LiabilityCategory, string][]).map(
                 ([value, label]) => (
@@ -126,6 +151,7 @@ export function LiabilitySearchFilterBar({ filters, onChange }: LiabilitySearchF
               <p className="mb-2 text-xs font-medium uppercase tracking-[0.1em] text-[#9a8f7a]">
                 Interest rate range (% APR)
               </p>
+
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -133,17 +159,21 @@ export function LiabilitySearchFilterBar({ filters, onChange }: LiabilitySearchF
                   step={0.01}
                   placeholder="Min"
                   value={filters.rateMin}
-                  onChange={(e) => onChange({ ...filters, rateMin: e.target.value })}
+                  onChange={event => onChange({ ...filters, rateMin: event.target.value })}
                   className={INPUT_CLS}
                 />
-                <span className="text-[#9a8f7a]">–</span>
+
+                <span className="text-[#9a8f7a]">
+                  –
+                </span>
+                
                 <input
                   type="number"
                   min={0}
                   step={0.01}
                   placeholder="Max"
                   value={filters.rateMax}
-                  onChange={(e) => onChange({ ...filters, rateMax: e.target.value })}
+                  onChange={event => onChange({ ...filters, rateMax: event.target.value })}
                   className={INPUT_CLS}
                 />
               </div>
@@ -151,24 +181,29 @@ export function LiabilitySearchFilterBar({ filters, onChange }: LiabilitySearchF
 
             <div>
               <p className="mb-2 text-xs font-medium uppercase tracking-[0.1em] text-[#9a8f7a]">
-                Balance range (USD)
+                Balance range
               </p>
+
               <div className="flex items-center gap-2">
                 <input
                   type="number"
                   min={0}
                   placeholder="Min"
                   value={filters.balanceMin}
-                  onChange={(e) => onChange({ ...filters, balanceMin: e.target.value })}
+                  onChange={event => onChange({ ...filters, balanceMin: event.target.value })}
                   className={INPUT_CLS}
                 />
-                <span className="text-[#9a8f7a]">–</span>
+
+                <span className="text-[#9a8f7a]">
+                  –
+                </span>
+                
                 <input
                   type="number"
                   min={0}
                   placeholder="Max"
                   value={filters.balanceMax}
-                  onChange={(e) => onChange({ ...filters, balanceMax: e.target.value })}
+                  onChange={event => onChange({ ...filters, balanceMax: event.target.value })}
                   className={INPUT_CLS}
                 />
               </div>
@@ -180,18 +215,23 @@ export function LiabilitySearchFilterBar({ filters, onChange }: LiabilitySearchF
             <p className="mb-2 text-xs font-medium uppercase tracking-[0.1em] text-[#9a8f7a]">
               Maturity date range
             </p>
+
             <div className="flex items-center gap-2 sm:w-1/2">
               <input
                 type="date"
                 value={filters.maturityFrom}
-                onChange={(e) => onChange({ ...filters, maturityFrom: e.target.value })}
+                onChange={event => onChange({ ...filters, maturityFrom: event.target.value })}
                 className={INPUT_CLS}
               />
-              <span className="text-[#9a8f7a]">–</span>
+
+              <span className="text-[#9a8f7a]">
+                –
+              </span>
+              
               <input
                 type="date"
                 value={filters.maturityTo}
-                onChange={(e) => onChange({ ...filters, maturityTo: e.target.value })}
+                onChange={event => onChange({ ...filters, maturityTo: event.target.value })}
                 className={INPUT_CLS}
               />
             </div>

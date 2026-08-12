@@ -11,7 +11,7 @@ import type {
 import { configureApiClient } from "./configureClient";
 
 /**
- * Fetches all expanded calendar occurrences within a specific ISO window range.
+ * Fetch all expanded calendar occurrences within a specific window range.
  */
 export async function listCalendarEvents(startWindow: string, endWindow: string) {
   configureApiClient();
@@ -24,7 +24,7 @@ export async function listCalendarEvents(startWindow: string, endWindow: string)
 }
 
 /**
- * Commits a new calendar event (or recurring series) to the ledger.
+ * Commit a new calendar event to the ledger.
  */
 export async function createCalendarEvent(payload: CalendarEventCreate) {
   configureApiClient();
@@ -32,7 +32,7 @@ export async function createCalendarEvent(payload: CalendarEventCreate) {
 }
 
 /**
- * Updates a parent event template or detaches a single recurring item instance.
+ * Update a parent event template or detach a single recurring item instance.
  */
 export async function updateCalendarEvent(eventId: string, payload: CalendarEventUpdate) {
   configureApiClient();
@@ -43,7 +43,7 @@ export async function updateCalendarEvent(eventId: string, payload: CalendarEven
 }
 
 /**
- * Removes an entire event block or flags a single date exclusion on the server.
+ * Remove an event block or flag a single date exclusion on the server.
  */
 export async function deleteCalendarEvent(
     eventId: string,

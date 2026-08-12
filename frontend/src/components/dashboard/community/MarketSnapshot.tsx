@@ -17,7 +17,10 @@ function loadWatchlist(): string[] {
 }
 
 function saveWatchlist(symbols: string[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(symbols));
+  localStorage.setItem(
+    STORAGE_KEY, 
+    JSON.stringify(symbols)
+  );
 }
 
 export function MarketSnapshot() {
@@ -29,22 +32,35 @@ export function MarketSnapshot() {
   const [addError, setAddError] = useState<string | null>(null);
   const mountedRef = useRef(true);
 
-  // Load watchlist from localStorage on mount
   const [watchlist, setWatchlist] = useState<string[]>(() => {
-    if (typeof window === "undefined") return DEFAULT_SYMBOLS;
+    if (typeof window === "undefined") {
+      return DEFAULT_SYMBOLS;
+    }
+
     return loadWatchlist();
   });
 
   const loadQuotes = useCallback(async (symbols: string[]) => {
     try {
       const data = await getMarketSnapshot();
-      if (!mountedRef.current) return;
-      // Filter to only symbols in the current watchlist
-      setQuotes(data.filter((q) => symbols.includes(q.symbol)));
+
+      if (!mountedRef.current) {
+        return;
+      }
+
+      // filter to only symbols in the current watchlist
+      setQuotes(
+        data.filter(
+          quote => symbols.includes(quote.symbol)
+        )
+      );
       setLastUpdated(new Date());
       setStatus("ready");
     } catch {
-      if (!mountedRef.current) return;
+      if (!mountedRef.current) {
+        return;
+      }
+
       setStatus("error");
     }
   }, []);
@@ -56,7 +72,11 @@ export function MarketSnapshot() {
         return [symbol, prices] as [string, number[]];
       })
     );
-    if (!mountedRef.current) return;
+
+    if (!mountedRef.current) {
+      return;
+    }
+
     setCandles(Object.fromEntries(entries));
   }, []);
 
@@ -85,16 +105,23 @@ export function MarketSnapshot() {
 
   function handleAddSymbol() {
     const symbol = addInput.trim().toUpperCase();
-    if (!symbol) return;
+
+    if (!symbol) {
+      return;
+    }
+
     if (watchlist.includes(symbol)) {
       setAddError("Already in watchlist.");
       return;
     }
+    
     if (watchlist.length >= 10) {
       setAddError("Max 10 symbols.");
       return;
     }
+    
     const next = [...watchlist, symbol];
+    
     setWatchlist(next);
     saveWatchlist(next);
     setAddInput("");
@@ -102,14 +129,19 @@ export function MarketSnapshot() {
   }
 
   function handleRemoveSymbol(symbol: string) {
-    const next = watchlist.filter((s) => s !== symbol);
+    const next = watchlist.filter(item => item !== symbol);
+
     setWatchlist(next);
     saveWatchlist(next);
-    setQuotes((prev) => prev.filter((q) => q.symbol !== symbol));
-    setCandles((prev) => {
-      const next = { ...prev };
-      delete next[symbol];
-      return next;
+    
+    setQuotes(current => 
+      current.filter(quote => quote.symbol !== symbol)
+    );
+    
+    setCandles(current => {
+      const nextCandles = { ...current };
+      delete nextCandles[symbol];
+      return nextCandles;
     });
   }
 
@@ -121,12 +153,14 @@ export function MarketSnapshot() {
         <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b6252]">
           Watchlist
         </span>
+
         <div className="flex items-center gap-2">
           {lastUpdated && (
             <span className="text-[10px] text-[#a99b82]">
               {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </span>
           )}
+
           <button
             onClick={handleRefresh}
             disabled={status === "loading"}
@@ -141,26 +175,32 @@ export function MarketSnapshot() {
       {/* Quotes */}
       <div className="flex flex-col divide-y divide-[#d7c6a3]/20">
         {status === "loading" && quotes.length === 0 &&
-          Array.from({ length: watchlist.length || 5 }).map((_, i) => (
-            <QuoteSkeleton key={i} />
+          Array.from({ length: watchlist.length || 5 }).map((_, index) => (
+            <QuoteSkeleton key={index} />
           ))
         }
 
         {status === "error" && quotes.length === 0 && (
           <div className="flex flex-col items-center gap-2 px-4 py-5">
-            <p className="text-xs text-[#a99b82]">Failed to load market data.</p>
-            <button onClick={handleRefresh} className="text-xs text-[#d8bd75] hover:underline">
+            <p className="text-xs text-[#a99b82]">
+              Failed to load market data.
+            </p>
+            
+            <button 
+              onClick={handleRefresh} 
+              className="text-xs text-[#d8bd75] hover:underline"
+            >
               Try again
             </button>
           </div>
         )}
 
-        {quotes.map((q) => (
+        {quotes.map(quote => (
           <QuoteRow
-            key={q.symbol}
-            quote={q}
-            sparkline={candles[q.symbol] ?? []}
-            onRemove={() => handleRemoveSymbol(q.symbol)}
+            key={quote.symbol}
+            quote={quote}
+            sparkline={candles[quote.symbol] ?? []}
+            onRemove={() => handleRemoveSymbol(quote.symbol)}
           />
         ))}
       </div>
@@ -170,11 +210,19 @@ export function MarketSnapshot() {
         <div className="flex gap-2">
           <input
             value={addInput}
-            onChange={(e) => { setAddInput(e.target.value); setAddError(null); }}
-            onKeyDown={(e) => { if (e.key === "Enter") handleAddSymbol(); }}
+            onChange={event => { 
+              setAddInput(event.target.value); 
+              setAddError(null); 
+            }}
+            onKeyDown={event => { 
+              if (event.key === "Enter") {
+                handleAddSymbol();
+              }
+            }}
             placeholder="Add symbol e.g. AAPL"
             className="min-w-0 flex-1 rounded-lg border border-[#d7c6a3]/50 bg-white px-3 py-1.5 text-xs text-[#2c2c24] placeholder:text-[#a99b82] focus:border-[#d8bd75]/60 focus:outline-none"
           />
+
           <button
             onClick={handleAddSymbol}
             className="rounded-lg bg-[#d8bd75] px-3 py-1.5 text-xs font-medium text-[#1c2018] transition-colors hover:bg-[#c9ad65]"
@@ -182,9 +230,13 @@ export function MarketSnapshot() {
             Add
           </button>
         </div>
+
         {addError && (
-          <p className="mt-1 text-[10px] text-rose-500">{addError}</p>
+          <p className="mt-1 text-[10px] text-rose-500">
+            {addError}
+          </p>
         )}
+
         <p className="mt-2 text-[10px] text-[#a99b82]">
           Prices delayed · Yahoo Finance
         </p>
@@ -192,8 +244,6 @@ export function MarketSnapshot() {
     </div>
   );
 }
-
-// ── QuoteRow ──────────────────────────────────────────────────────────────────
 
 function QuoteRow({
   quote,
@@ -208,11 +258,13 @@ function QuoteRow({
 
   return (
     <div className="group flex items-center gap-2 px-4 py-2.5">
+      
       {/* Symbol + name */}
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-[#1c2018]">
           {quote.symbol.replace("-USD", "")}
         </p>
+        
         <p className="truncate text-[11px] text-[#a99b82]">
           {truncateName(quote.shortName)}
         </p>
@@ -220,7 +272,11 @@ function QuoteRow({
 
       {/* Sparkline */}
       <div className="shrink-0">
-        <SparklineChart prices={sparkline} width={64} height={28} />
+        <SparklineChart 
+          prices={sparkline} 
+          width={64} 
+          height={28} 
+        />
       </div>
 
       {/* Price + change */}
@@ -228,6 +284,7 @@ function QuoteRow({
         <p className="text-sm font-medium tabular-nums text-[#1c2018]">
           {formatPrice(quote.price)}
         </p>
+
         <p className={[
           "text-[11px] font-medium tabular-nums",
           positive ? "text-emerald-600" : "text-rose-500",
@@ -248,8 +305,6 @@ function QuoteRow({
   );
 }
 
-// ── QuoteSkeleton ─────────────────────────────────────────────────────────────
-
 function QuoteSkeleton() {
   return (
     <div className="flex animate-pulse items-center gap-3 px-4 py-2.5">
@@ -257,7 +312,9 @@ function QuoteSkeleton() {
         <div className="h-3 w-12 rounded bg-[#e8dfc8]" />
         <div className="h-2.5 w-20 rounded bg-[#e8dfc8]" />
       </div>
+
       <div className="h-7 w-16 rounded bg-[#e8dfc8]" />
+
       <div className="flex flex-col items-end gap-1.5">
         <div className="h-3 w-14 rounded bg-[#e8dfc8]" />
         <div className="h-2.5 w-10 rounded bg-[#e8dfc8]" />
@@ -266,8 +323,7 @@ function QuoteSkeleton() {
   );
 }
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
-
+// ICONS
 function RefreshIcon({ spinning }: { spinning: boolean }) {
   return (
     <svg
@@ -289,20 +345,35 @@ function RefreshIcon({ spinning }: { spinning: boolean }) {
 
 function RemoveIcon() {
   return (
-    <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
+    <svg 
+      className="h-3 w-3" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2.5" 
+      strokeLinecap="round" 
+      aria-hidden
+    >
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   );
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// HELPERS
 
 function formatPrice(price: number): string {
   if (price >= 1000) {
-    return price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return price.toLocaleString(undefined, { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    });
   }
-  if (price >= 1) return price.toFixed(2);
+
+  if (price >= 1) {
+    return price.toFixed(2);
+  }
+
   return price.toFixed(4);
 }
 

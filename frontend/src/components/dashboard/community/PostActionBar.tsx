@@ -16,13 +16,8 @@ import { ShareModal } from "@/components/dashboard/community/ShareModal";
 interface PostActionBarProps {
   post: PostRead;
   onUpdate: (updated: PostRead) => void;
-  /** When true, shows full count labels. Used in PostDetail. */
+  // when true, show full count labels
   expanded?: boolean;
-  /**
-   * Called when the comment button is clicked.
-   * PostDetail passes a scroll-to-composer callback.
-   * PostCard leaves this undefined — the card body Link handles navigation.
-   */
   onCommentClick?: () => void;
 }
 
@@ -33,11 +28,9 @@ export function PostActionBar({ post, onUpdate, expanded = false, onCommentClick
   const [shareOpen, setShareOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
 
-  // ── Like ────────────────────────────────────────────────────────────────────
-
   async function handleLike() {
-    // Optimistic toggle
     const wasLiked = liked;
+
     setLiked(!wasLiked);
     onUpdate({
       ...post,
@@ -50,19 +43,21 @@ export function PostActionBar({ post, onUpdate, expanded = false, onCommentClick
         await unlikePost(post.id);
       } else {
         const res = await likePost(post.id);
-        if (res.data) onUpdate(res.data);
+
+        if (res.data) {
+          onUpdate(res.data);
+        }
       }
     } catch {
-      // Revert on failure
+      // revert when failure
       setLiked(wasLiked);
       onUpdate(post);
     }
   }
 
-  // ── Save ────────────────────────────────────────────────────────────────────
-
   async function handleSave() {
     const wasSaved = saved;
+
     setSaved(!wasSaved);
     onUpdate({
       ...post,
@@ -75,7 +70,10 @@ export function PostActionBar({ post, onUpdate, expanded = false, onCommentClick
         await unsavePost(post.id);
       } else {
         const res = await savePost(post.id);
-        if (res.data) onUpdate(res.data);
+
+        if (res.data) {
+          onUpdate(res.data);
+        }
       }
     } catch {
       setSaved(wasSaved);
@@ -83,33 +81,39 @@ export function PostActionBar({ post, onUpdate, expanded = false, onCommentClick
     }
   }
 
-  // ── Share ───────────────────────────────────────────────────────────────────
-
   async function handleShare() {
     try {
       const res = await sharePost(post.id);
+
       if (res.data) {
         setShareUrl(res.data.share_url);
         setShareOpen(true);
-        onUpdate({ ...post, share_count: post.share_count + 1 });
+        onUpdate({ 
+          ...post, 
+          share_count: post.share_count + 1 
+        });
       }
-    } catch {
-      // silently fail — share count not critical
-    }
-  }
-
-  // ── Repost (simple, no composer) ────────────────────────────────────────────
-
-  async function handleSimpleRepost() {
-    try {
-      await repostPost(post.id, { content_blocks: [] });
-      onUpdate({ ...post, repost_count: post.repost_count + 1 });
     } catch {
       // silently fail
     }
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  async function handleSimpleRepost() {
+    try {
+      await repostPost(
+        post.id, 
+        { 
+          content_blocks: [] 
+        }
+      );
+      onUpdate({ 
+        ...post, 
+        repost_count: post.repost_count + 1 
+      });
+    } catch {
+      // silently fail
+    }
+  }
 
   return (
     <>
@@ -125,7 +129,7 @@ export function PostActionBar({ post, onUpdate, expanded = false, onCommentClick
           activeColor="text-sky-400"
         />
 
-        {/* Repost — left click = simple repost, right click / long press = quote */}
+        {/* Repost: left click = simple repost, right click / long press = quote */}
         <div className="relative">
           <ActionButton
             icon={<RepostIcon />}
@@ -178,7 +182,10 @@ export function PostActionBar({ post, onUpdate, expanded = false, onCommentClick
           post={post}
           onClose={() => setRepostOpen(false)}
           onReposted={() => {
-            onUpdate({ ...post, repost_count: post.repost_count + 1 });
+            onUpdate({ 
+              ...post, 
+              repost_count: post.repost_count + 1 
+            });
             setRepostOpen(false);
           }}
         />
@@ -193,8 +200,6 @@ export function PostActionBar({ post, onUpdate, expanded = false, onCommentClick
     </>
   );
 }
-
-// ── ActionButton ──────────────────────────────────────────────────────────────
 
 interface ActionButtonProps {
   icon: React.ReactNode;
@@ -224,7 +229,7 @@ function ActionButton({
       onClick={onClick}
       onContextMenu={
         onAltClick
-          ? (e) => { e.preventDefault(); onAltClick(); }
+          ? event => { event.preventDefault(); onAltClick(); }
           : undefined
       }
       title={title}
@@ -234,11 +239,15 @@ function ActionButton({
         active ? activeColor : "text-[#a99b82] hover:text-[#6b6252]",
       ].join(" ")}
     >
-      <span className="h-4 w-4">{icon}</span>
+      <span className="h-4 w-4">
+        {icon}
+      </span>
+      
       <span className={expanded ? "text-xs" : "sr-only"}>
         {count > 0 ? formatCount(count) : ""}
         {expanded && count > 0 ? ` ${label}` : ""}
       </span>
+
       {!expanded && count > 0 && (
         <span aria-hidden className="text-xs">
           {formatCount(count)}
@@ -248,11 +257,19 @@ function ActionButton({
   );
 }
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
+// ICONS
 
 function CommentIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="1.75"
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      aria-hidden
+    >
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </svg>
   );
@@ -260,7 +277,15 @@ function CommentIcon() {
 
 function RepostIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="1.75" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      aria-hidden
+    >
       <path d="M17 1l4 4-4 4" />
       <path d="M3 11V9a4 4 0 0 1 4-4h14" />
       <path d="M7 23l-4-4 4-4" />
@@ -271,7 +296,15 @@ function RepostIcon() {
 
 function LikeIcon({ filled }: { filled: boolean }) {
   return (
-    <svg viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg 
+      viewBox="0 0 24 24" 
+      fill={filled ? "currentColor" : "none"} 
+      stroke="currentColor" 
+      strokeWidth="1.75" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      aria-hidden
+    >
       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
     </svg>
   );
@@ -279,7 +312,15 @@ function LikeIcon({ filled }: { filled: boolean }) {
 
 function ShareIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="1.75" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      aria-hidden
+    >
       <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
       <polyline points="16 6 12 2 8 6" />
       <line x1="12" y1="2" x2="12" y2="15" />
@@ -289,16 +330,30 @@ function ShareIcon() {
 
 function SaveIcon({ filled }: { filled: boolean }) {
   return (
-    <svg viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg 
+      viewBox="0 0 24 24" 
+      fill={filled ? "currentColor" : "none"} 
+      stroke="currentColor" 
+      strokeWidth="1.75" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      aria-hidden
+    >
       <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
     </svg>
   );
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// HELPER
 
 function formatCount(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  if (n >= 1_000_000) {
+    return `${(n / 1_000_000).toFixed(1)}M`;
+  }
+
+  if (n >= 1_000) {
+    return `${(n / 1_000).toFixed(1)}K`;
+  }
+
   return String(n);
 }

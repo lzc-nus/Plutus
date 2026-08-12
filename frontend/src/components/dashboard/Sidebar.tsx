@@ -29,9 +29,24 @@ type NavItem = {
 };
 
 const quickActions: NavItem[] = [
-  { label: "Add asset", href: "/dashboard/portfolio/assets?add=true", icon: "asset", exact: true },
-  { label: "Add liability", href: "/dashboard/portfolio/liabilities?add=true", icon: "liability", exact: true },
-  { label: "New transaction", href: "/dashboard/transactions/new", icon: "transactions", exact: true },
+  { 
+    label: "Add asset", 
+    href: "/dashboard/portfolio/assets?add=true", 
+    icon: "asset", 
+    exact: true 
+  },
+  { 
+    label: "Add liability", 
+    href: "/dashboard/portfolio/liabilities?add=true", 
+    icon: "liability", 
+    exact: true 
+  },
+  { 
+    label: "New transaction", 
+    href: "/dashboard/transactions/new", 
+    icon: "transactions", 
+    exact: true 
+  },
 ];
 
 function isActivePath(pathname: string, item: NavItem) {
@@ -214,10 +229,12 @@ export default function Sidebar() {
     getSidebarSnapshot,
     () => "false",
   );
+
   const isCollapsed = storedPreference === "true";
 
   function toggleSidebar() {
     const nextValue = !isCollapsed;
+
     localStorage.setItem(STORAGE_KEY, String(nextValue));
     window.dispatchEvent(new Event("plutus-sidebar-change"));
   }
@@ -230,6 +247,7 @@ export default function Sidebar() {
       className="group relative hidden h-screen shrink-0 border-r border-[#d7c6a3]/25 bg-[#171b17] text-[#f8efd9] shadow-[18px_0_60px_rgba(23,27,23,0.18)] transition-[width] duration-300 ease-out md:flex md:w-72 data-[collapsed=true]:md:w-[5.5rem]"
     >
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(216,189,117,0.09),transparent_38%),radial-gradient(circle_at_20%_0%,rgba(216,189,117,0.18),transparent_30%)]" />
+      
       <div className="relative flex min-w-0 flex-1 flex-col px-3 py-4 group-data-[collapsed=true]:px-2">
         <div className="flex h-16 items-center justify-between gap-3 rounded-md border border-[#d7c6a3]/14 bg-[#10140f]/68 px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-[height,padding] duration-300 group-data-[collapsed=true]:h-14 group-data-[collapsed=true]:justify-center group-data-[collapsed=true]:px-2">
           {expanded ? (
@@ -242,6 +260,7 @@ export default function Sidebar() {
                 <span className="brand-script truncate text-4xl text-[#f2d88a]">
                   Plutus
                 </span>
+                
                 <span className="truncate text-[0.64rem] font-semibold uppercase tracking-[0.22em] text-[#a99b82]">
                   Private ledger
                 </span>
@@ -251,13 +270,19 @@ export default function Sidebar() {
 
           <button
             type="button"
-            aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
+            aria-label={expanded 
+              ? "Collapse sidebar" 
+              : "Expand sidebar"
+            }
             aria-expanded={expanded}
             onClick={toggleSidebar}
             title={expanded ? "Collapse sidebar" : "Expand sidebar"}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[#d8bd75]/20 bg-[#20251d] text-[#d8bd75] transition hover:border-[#d8bd75]/50 hover:bg-[#2b3127] group-data-[collapsed=true]:h-8 group-data-[collapsed=true]:w-8"
           >
-            <span className={expanded ? "rotate-180 transition-transform" : "transition-transform"}>
+            <span className={expanded 
+              ? "rotate-180 transition-transform" 
+              : "transition-transform"
+            }>
               <Icon name="chevron" />
             </span>
           </button>
@@ -265,7 +290,7 @@ export default function Sidebar() {
 
         <nav aria-label="Dashboard navigation" className="mt-5 flex-1 overflow-y-auto pr-1 group-data-[collapsed=true]:mt-4 group-data-[collapsed=true]:pr-0">
           <div className="grid gap-5">
-            {navGroups.map((group) => (
+            {navGroups.map(group => (
               <div key={group.label} className="grid gap-2">
                 {expanded ? (
                   <p className="px-3 text-[0.65rem] font-bold uppercase tracking-[0.24em] text-[#9f9278]">
@@ -274,7 +299,7 @@ export default function Sidebar() {
                 ) : null}
 
                 <div className="grid gap-1">
-                  {group.items.map((item) => {
+                  {group.items.map(item => {
                     const active = isActivePath(pathname, item);
 
                     return (
@@ -290,7 +315,12 @@ export default function Sidebar() {
                         } ${expanded ? "justify-start" : "justify-center"}`}
                       >
                         <Icon name={item.icon} />
-                        {expanded ? <span className="truncate">{item.label}</span> : null}
+
+                        {expanded 
+                          ? <span className="truncate">
+                              {item.label}
+                            </span> 
+                          : null}
                       </Link>
                     );
                   })}
@@ -308,7 +338,7 @@ export default function Sidebar() {
           ) : null}
 
           <div className="mt-2 grid gap-1">
-            {quickActions.map((item) => {
+            {quickActions.map(item => {
               const active = isActivePath(pathname, item);
 
               return (
@@ -324,7 +354,12 @@ export default function Sidebar() {
                   } ${expanded ? "justify-start" : "justify-center"}`}
                 >
                   <Icon name={item.icon} />
-                  {expanded ? <span className="truncate">{item.label}</span> : null}
+                  
+                  {expanded 
+                    ? <span className="truncate">
+                        {item.label}
+                      </span> 
+                    : null}
                 </Link>
               );
             })}

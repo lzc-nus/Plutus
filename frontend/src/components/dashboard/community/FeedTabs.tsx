@@ -10,8 +10,9 @@ interface FeedTabsProps {
 export function FeedTabs({ active, onChange }: FeedTabsProps) {
   return (
     <div className="relative flex border-b border-[#d7c6a3]/30">
-      {(["following", "global"] as FeedTab[]).map((tab) => {
+      {(["following", "global"] as FeedTab[]).map(tab => {
         const isActive = active === tab;
+
         return (
           <button
             key={tab}
@@ -33,7 +34,9 @@ export function FeedTabs({ active, onChange }: FeedTabsProps) {
         aria-hidden
         className={[
           "absolute bottom-0 h-0.5 w-1/2 bg-[#d8bd75] transition-transform duration-200",
-          active === "global" ? "translate-x-full" : "translate-x-0",
+          active === "global" 
+            ? "translate-x-full" 
+            : "translate-x-0",
         ].join(" ")}
       />
     </div>

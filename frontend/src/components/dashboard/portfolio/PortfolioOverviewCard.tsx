@@ -12,7 +12,7 @@ interface PortfolioOverviewCardProps {
 const FORMATTERS = {
   currency: new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
+    currency: "SGD",
     maximumFractionDigits: 0,
   }),
   percent: (n: number) => `${n.toFixed(1)}%`,
@@ -39,12 +39,17 @@ export function PortfolioOverviewCard({
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7a6332]">
             {isAssets ? "Assets" : "Liabilities"}
           </p>
+
           <p className="mt-1.5 text-3xl font-bold tracking-tight text-[#1d211c]">
             {FORMATTERS.currency.format(total)}
           </p>
+
           <p className="mt-1 text-sm text-[#6f675b]">
-            {itemCount} {itemCount === 1 ? "item" : "items"} across{" "}
-            {categoryCount} {categoryCount === 1 ? "category" : "categories"}
+            {itemCount} 
+            {itemCount === 1 ? "item" : "items"} across{" "}
+            
+            {categoryCount} 
+            {categoryCount === 1 ? "category" : "categories"}
           </p>
         </div>
 
@@ -96,17 +101,22 @@ export function PortfolioOverviewCard({
         <p className="text-xs font-medium uppercase tracking-[0.12em] text-[#9a8f7a]">
           By category
         </p>
+
         {topCategories.length === 0 ? (
           <p className="text-sm text-[#9a8f7a]">No data yet.</p>
         ) : (
           topCategories.slice(0, 4).map((cat) => (
             <div key={cat.label}>
               <div className="mb-1.5 flex items-center justify-between">
-                <span className="text-sm text-[#3d3730]">{cat.label}</span>
+                <span className="text-sm text-[#3d3730]">
+                  {cat.label}
+                </span>
+                
                 <span className="text-sm font-medium text-[#1d211c]">
                   {FORMATTERS.currency.format(cat.value)}
                 </span>
               </div>
+              
               <div className="h-1 w-full overflow-hidden rounded-full bg-[#e4dece]">
                 <div
                   className={`h-full rounded-full transition-all ${
@@ -125,6 +135,7 @@ export function PortfolioOverviewCard({
         <span className="text-sm font-medium text-[#7a6332]">
           View {isAssets ? "all assets" : "all liabilities"}
         </span>
+
         <svg
           className="h-4 w-4 text-[#7a6332] transition-transform duration-200 group-hover:translate-x-0.5"
           fill="none"

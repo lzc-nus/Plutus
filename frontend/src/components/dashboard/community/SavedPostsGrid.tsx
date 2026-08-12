@@ -11,7 +11,7 @@ export function SavedPostsGrid() {
 
   useEffect(() => {
     getSavedPosts()
-      .then((res) => {
+      .then(res => {
         setPosts(res.data ?? []);
         setStatus("ready");
       })
@@ -19,21 +19,19 @@ export function SavedPostsGrid() {
   }, []);
 
   function handleUnsave(postId: string) {
-    // Optimistically remove from the saved list
-    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    setPosts(prev => prev.filter(post => post.id !== postId));
+
     unsavePost(postId).catch(() => {
-      // If it fails, refetch to restore correct state
-      getSavedPosts().then((res) => setPosts(res.data ?? []));
+      // If fails, refetch to restore correct state
+      getSavedPosts().then(res => setPosts(res.data ?? []));
     });
   }
-
-  // ── Loading ─────────────────────────────────────────────────────────────────
 
   if (status === "loading") {
     return (
       <div className="flex flex-col">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <SavedPostSkeleton key={i} />
+        {Array.from({ length: 3 }).map((_, index) => (
+          <SavedPostSkeleton key={index} />
         ))}
       </div>
     );
@@ -42,12 +40,18 @@ export function SavedPostsGrid() {
   if (status === "error") {
     return (
       <div className="flex flex-col items-center gap-3 py-16 text-center">
-        <p className="text-sm text-[#a99b82]">{"Saved posts couldn't be loaded."}</p>
+        <p className="text-sm text-[#a99b82]">
+          {"Saved posts couldn't be loaded."}
+        </p>
+        
         <button
           onClick={() => {
             setStatus("loading");
             getSavedPosts()
-              .then((res) => { setPosts(res.data ?? []); setStatus("ready"); })
+              .then(res => { 
+                setPosts(res.data ?? []); 
+                setStatus("ready"); 
+              })
               .catch(() => setStatus("error"));
           }}
           className="text-sm text-[#d8bd75] hover:underline"
@@ -61,7 +65,10 @@ export function SavedPostsGrid() {
   if (posts.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 py-20 text-center">
-        <p className="text-sm font-medium text-[#1c2018]">No saved posts yet.</p>
+        <p className="text-sm font-medium text-[#1c2018]">
+          No saved posts yet.
+        </p>
+        
         <p className="text-xs text-[#a99b82]">
           Tap the bookmark on any post to save it here.
         </p>
@@ -69,11 +76,9 @@ export function SavedPostsGrid() {
     );
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────────
-
   return (
     <div className="flex flex-col">
-      {posts.map((post) => (
+      {posts.map(post => (
         <SavedPostRow
           key={post.id}
           post={post}
@@ -83,8 +88,6 @@ export function SavedPostsGrid() {
     </div>
   );
 }
-
-// ── SavedPostRow ──────────────────────────────────────────────────────────────
 
 function SavedPostRow({
   post,
@@ -98,7 +101,8 @@ function SavedPostRow({
   return (
     <div className="group relative">
       <PostCard post={post} />
-      {/* Unsave button — appears on hover */}
+
+      {/* Unsave button (appears on hover) */}
       <div className="absolute right-4 top-4 opacity-0 transition-opacity group-hover:opacity-100">
         {confirming ? (
           <div className="flex items-center gap-1">
@@ -108,6 +112,7 @@ function SavedPostRow({
             >
               Keep
             </button>
+
             <button
               onClick={onUnsave}
               className="rounded-full px-2 py-1 text-xs text-rose-500 hover:bg-rose-50"
@@ -130,8 +135,6 @@ function SavedPostRow({
   );
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
-
 function SavedPostSkeleton() {
   return (
     <div className="animate-pulse border-b border-[#d7c6a3]/30 px-4 py-4">
@@ -139,6 +142,7 @@ function SavedPostSkeleton() {
         <div className="h-8 w-8 rounded-full bg-[#e8dfc8]" />
         <div className="h-3 w-28 rounded bg-[#e8dfc8]" />
       </div>
+
       <div className="space-y-2">
         <div className="h-3 w-full rounded bg-[#e8dfc8]" />
         <div className="h-3 w-4/5 rounded bg-[#e8dfc8]" />
@@ -147,11 +151,20 @@ function SavedPostSkeleton() {
   );
 }
 
-// ── Icon ──────────────────────────────────────────────────────────────────────
+// ICON 
 
 function UnsaveIcon() {
   return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg 
+      className="h-4 w-4" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="1.75" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      aria-hidden
+    >
       <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
       <line x1="9" y1="10" x2="15" y2="10" />
     </svg>
