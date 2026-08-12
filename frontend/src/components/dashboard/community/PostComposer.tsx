@@ -16,34 +16,49 @@ export function PostComposer({ onClose, onCreated }: PostComposerProps) {
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Close on Escape
+  // close the composer when Esc button is pressed.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+      }
     }
+
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // Restore focus on unmount
+  // restore focus
   useEffect(() => {
-    const prev = document.activeElement as HTMLElement | null;
-    return () => prev?.focus();
+    const previousElement = document.activeElement as HTMLElement | null;
+    
+    return () => previousElement?.focus();
   }, []);
 
   const textBlock = blocks.find((b) => b.type === "text");
   const textLength = textBlock?.type === "text" ? textBlock.value.length : 0;
-  const canSubmit = blocks.length > 0 && textLength <= 280 && status !== "submitting";
+  const canSubmit = 
+    blocks.length > 0 && 
+    textLength <= 280 && 
+    status !== "submitting";
 
   async function handleSubmit() {
-    if (!canSubmit) return;
+    if (!canSubmit) {
+      return;
+    }
+
     setStatus("submitting");
+    
     try {
-      const res = await createPost({ content_blocks: blocks });
-      if (res.data) {
-        onCreated(res.data);
+      const parsed = await createPost({ 
+        content_blocks: blocks 
+      });
+      
+      if (parsed.data) {
+        onCreated(parsed.data);
         onClose();
       }
+
       setStatus("idle");
     } catch {
       setStatus("error");
@@ -57,7 +72,11 @@ export function PostComposer({ onClose, onCreated }: PostComposerProps) {
       aria-modal
       aria-label="Create post"
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={event => { 
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
     >
       <div className="flex w-full max-w-lg flex-col rounded-t-2xl border border-[#d7c6a3]/40 bg-white sm:rounded-2xl">
 
@@ -98,6 +117,7 @@ export function PostComposer({ onClose, onCreated }: PostComposerProps) {
           >
             Cancel
           </button>
+
           <button
             onClick={handleSubmit}
             disabled={!canSubmit}
@@ -116,8 +136,7 @@ export function PostComposer({ onClose, onCreated }: PostComposerProps) {
   );
 }
 
-// ── Icon ──────────────────────────────────────────────────────────────────────
-
+// ICON
 function CloseIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>

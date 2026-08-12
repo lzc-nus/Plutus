@@ -24,10 +24,12 @@ export function ConfirmDeleteDialog({
 
     try {
       const deleted = await onConfirm();
+
       if (!deleted) {
         setError(`Could not delete this ${itemType}. Please try again.`);
         return;
       }
+
       onClose();
     } catch {
       setError(`Could not delete this ${itemType}. Please try again.`);
@@ -39,7 +41,7 @@ export function ConfirmDeleteDialog({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(29,33,28,0.5)] p-4"
-      onClick={(e) => e.target === e.currentTarget && !isDeleting && onClose()}
+      onClick={event => event.target === event.currentTarget && !isDeleting && onClose()}
     >
       <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-[#d9d0c1] bg-[#fbf7ef] shadow-[0_24px_80px_rgba(43,34,24,0.2)]">
         {/* Icon */}
@@ -63,12 +65,20 @@ export function ConfirmDeleteDialog({
 
         {/* Text */}
         <div className="px-6 py-4 text-center">
-          <h2 className="text-base font-bold text-[#1d211c]">Delete {itemType}?</h2>
+          <h2 className="text-base font-bold text-[#1d211c]">
+            Delete {itemType}?
+          </h2>
+
           <p className="mt-1.5 text-sm text-[#6f675b]">
             <span className="font-medium text-[#1d211c]">{itemName}</span> will be permanently
             removed from your portfolio. This cannot be undone.
           </p>
-          {error ? <p className="mt-3 text-sm text-[#993c1d]">{error}</p> : null}
+
+          {error 
+            ? <p className="mt-3 text-sm text-[#993c1d]">
+                {error}
+              </p> 
+            : null}
         </div>
 
         {/* Actions */}
@@ -80,6 +90,7 @@ export function ConfirmDeleteDialog({
           >
             Cancel
           </button>
+          
           <button
             onClick={handleConfirm}
             disabled={isDeleting}

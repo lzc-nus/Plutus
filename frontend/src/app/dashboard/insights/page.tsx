@@ -38,32 +38,34 @@ export default function InsightsPage() {
   const [question, setQuestion] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
   const insight = useLatestInsight()?.insight ?? null;
 
   async function handleGenerate() {
     setIsLoading(true);
     setErrorMessage("");
 
-    const result = await generateInsight({
-      time_horizon: timeHorizon,
-      focus,
-      question: question.trim() || null,
-    });
+    try {
+      const result = await generateInsight({
+        time_horizon: timeHorizon,
+        focus,
+        question: question.trim() || null,
+      });
 
-    if (result.error) {
-      setErrorMessage(result.error);
+      if (result.error) {
+        setErrorMessage(result.error);
+        return;
+      }
+
+      if (!result.data) {
+        setErrorMessage("Unable to generate insight right now.");
+        return;
+      }
+
+      saveLatestInsight(result.data);
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    if (!result.data) {
-      setErrorMessage("Unable to generate insight right now.");
-      setIsLoading(false);
-      return;
-    }
-
-    saveLatestInsight(result.data);
-    setIsLoading(false);
   }
 
   return (
@@ -90,6 +92,7 @@ export default function InsightsPage() {
             eyebrow="Risk report"
             title="Insight run"
           />
+
           <button
             className="inline-flex h-11 items-center justify-center rounded-md bg-[#1d211c] px-4 text-sm font-semibold text-[#fbf7ef] transition hover:bg-[#343b32] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isLoading}
@@ -105,6 +108,7 @@ export default function InsightsPage() {
             <legend className="text-sm font-semibold text-[#353026]">
               Horizon
             </legend>
+
             <div className="mt-3 grid grid-cols-2 gap-2">
               {horizonOptions.map((option) => (
                 <button
@@ -127,6 +131,7 @@ export default function InsightsPage() {
             <legend className="text-sm font-semibold text-[#353026]">
               Focus
             </legend>
+
             <div className="mt-3 grid grid-cols-2 gap-2">
               {focusOptions.map((option) => (
                 <button
@@ -145,8 +150,12 @@ export default function InsightsPage() {
             </div>
           </fieldset>
 
-          <label className="block text-sm font-semibold text-[#353026]" htmlFor="insight-question">
+          <label 
+            className="block text-sm font-semibold text-[#353026]" 
+            htmlFor="insight-question"
+          >
             Question
+
             <textarea
               className="mt-3 min-h-32 w-full resize-none rounded-md border border-[#d0c5b3] bg-[#fffaf2] p-4 text-base font-normal text-[#1d211c] outline-[#8f6f2d]"
               id="insight-question"
@@ -161,8 +170,12 @@ export default function InsightsPage() {
 
       {errorMessage ? (
         <section className="rounded-lg border border-[#d5a58b] bg-[#f2e0d8] p-6 text-[#8f3f32]">
-          <p className="text-sm font-semibold uppercase">Insight unavailable</p>
+          <p className="text-sm font-semibold uppercase">
+            Insight unavailable
+          </p>
+
           <p className="mt-2 text-sm leading-6">{errorMessage}</p>
+
           {errorMessage.includes("OPENAI_API_KEY") ? (
             <p className="mt-3 text-sm leading-6">
               Add OPENAI_API_KEY to backend/.env, keep OPENAI_MODEL configured,
@@ -183,6 +196,7 @@ function EmptyInsightState() {
       <h2 className="font-display text-4xl font-semibold text-[#1d211c]">
         No risk report generated yet
       </h2>
+
       <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[#696154]">
         Run the insight generator to save a risk score for the overview page.
       </p>
@@ -196,6 +210,8 @@ function InsightReport({ insight }: { insight: InsightResponse }) {
     timeStyle: "short",
   }).format(new Date(insight.generated_at));
 
+  const timeHorizon = insight.time_horizon.replace("_", " ");
+
   return (
     <section className="grid gap-5">
       <article className="rounded-lg bg-[#1d211c] p-6 text-[#fbf7ef] shadow-[0_24px_90px_rgba(43,34,24,0.12)] sm:p-8">
@@ -204,21 +220,29 @@ function InsightReport({ insight }: { insight: InsightResponse }) {
             <p className="text-sm font-semibold uppercase text-[#c3a35d]">
               Generated risk report
             </p>
+
             <h2 className="font-display mt-3 text-5xl font-semibold">
               {insight.label}
             </h2>
+
             <p className="mt-4 max-w-3xl text-base leading-7 text-[#d9d0c1]">
               {insight.executive_summary}
             </p>
           </div>
+
           <div className="rounded-lg border border-white/10 bg-white/5 p-5 text-center">
             <p className="text-sm font-semibold uppercase text-[#c3a35d]">
               Risk score
             </p>
-            <p className="mt-3 text-6xl font-semibold">{insight.score}</p>
+
+            <p className="mt-3 text-6xl font-semibold">
+              {insight.score}
+            </p>
+
             <p className="mt-2 text-sm text-[#d9d0c1]">out of 100</p>
           </div>
         </div>
+
         <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold uppercase text-[#d9d0c1]">
           <span className="rounded-md border border-white/10 px-2 py-1">
             {generatedAt}
@@ -227,7 +251,7 @@ function InsightReport({ insight }: { insight: InsightResponse }) {
             {insight.model}
           </span>
           <span className="rounded-md border border-white/10 px-2 py-1">
-            {insight.time_horizon.replace("_", " ")}
+            {timeHorizon}
           </span>
           <span className="rounded-md border border-white/10 px-2 py-1">
             {insight.focus}
@@ -245,18 +269,24 @@ function InsightReport({ insight }: { insight: InsightResponse }) {
               <h3 className="font-display text-3xl font-semibold text-[#1d211c]">
                 {section.title}
               </h3>
+
               <span
                 className={`rounded-md border px-2 py-1 text-xs font-semibold uppercase ${severityStyles[section.severity]}`}
               >
                 {section.severity}
               </span>
             </div>
+
             <p className="mt-4 text-sm leading-6 text-[#575044]">
               {section.summary}
             </p>
+
             <ul className="mt-5 grid gap-2 text-sm text-[#696154]">
               {section.signals.map((signal) => (
-                <li className="rounded-md bg-[#f4efe6] px-3 py-2" key={signal}>
+                <li 
+                  className="rounded-md bg-[#f4efe6] px-3 py-2" 
+                  key={signal}
+                >
                   {signal}
                 </li>
               ))}
@@ -267,7 +297,13 @@ function InsightReport({ insight }: { insight: InsightResponse }) {
 
       <section className="grid gap-5 lg:grid-cols-3">
         <InsightList title="Action Items" items={insight.action_items} />
-        <InsightList title="Risk Flags" items={insight.risk_flags} empty="No material flags returned." />
+
+        <InsightList 
+          title="Risk Flags" 
+          items={insight.risk_flags} 
+          empty="No material flags returned." 
+        />
+
         <InsightList title="Assumptions" items={insight.assumptions} />
       </section>
 
@@ -292,6 +328,7 @@ function InsightList({
       <h3 className="font-display text-3xl font-semibold text-[#1d211c]">
         {title}
       </h3>
+      
       {items.length > 0 ? (
         <ul className="mt-5 grid gap-3 text-sm leading-6 text-[#575044]">
           {items.map((item) => (

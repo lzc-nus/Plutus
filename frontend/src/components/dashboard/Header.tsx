@@ -84,7 +84,9 @@ const routeMeta: Array<{ path: string; meta: HeaderMeta }> = [
 
 function getHeaderMeta(pathname: string) {
   return (
-    routeMeta.find((route) => pathname === route.path || pathname.startsWith(`${route.path}/`))?.meta ??
+    routeMeta.find(
+      route => pathname === route.path || pathname.startsWith(`${route.path}/`)
+    )?.meta ??
     routeMeta[routeMeta.length - 1].meta
   );
 }
@@ -108,7 +110,9 @@ function getInitials(name: string) {
     return parts[0].slice(0, 2).toUpperCase();
   }
 
-  return parts.map((part) => part[0]?.toUpperCase()).join("");
+  return parts
+    .map(part => part[0]?.toUpperCase())
+    .join("");
 }
 
 function HeaderIcon({ name }: { name: "logout" }) {
@@ -151,6 +155,7 @@ export default function Header({ currentUser }: HeaderProps) {
 
   async function handleLogout() {
     await logoutAccount();
+    
     window.dispatchEvent(new Event("plutus-auth-refresh"));
     router.replace("/login");
   }
@@ -160,9 +165,15 @@ export default function Header({ currentUser }: HeaderProps) {
       <div className="flex min-h-24 flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between lg:px-8">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.22em] text-[#7a6332]">
-            <span>Private dashboard</span>
+            <span>
+              Private dashboard
+            </span>
+            
             <span className="h-1 w-1 rounded-full bg-[#b99a52]" />
-            <span>{dateLabel}</span>
+            
+            <span>
+              {dateLabel}
+            </span>
           </div>
 
           <h1 className="mt-2 truncate text-2xl font-bold text-[#1d211c] sm:text-3xl">
@@ -179,8 +190,12 @@ export default function Header({ currentUser }: HeaderProps) {
             <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#d8bd75]/22 text-xs font-black text-[#5f4a1b]">
               {getInitials(displayName)}
             </span>
+            
             <span className="hidden min-w-0 sm:grid">
-              <span className="max-w-36 truncate text-sm font-bold text-[#1d211c]">{displayName}</span>
+              <span className="max-w-36 truncate text-sm font-bold text-[#1d211c]">
+                {displayName}
+              </span>
+              
               <span className="max-w-36 truncate text-[0.72rem] font-medium text-[#7c7468]">
                 {currentUser.email}
               </span>
@@ -195,7 +210,10 @@ export default function Header({ currentUser }: HeaderProps) {
             className="inline-flex h-10 items-center justify-center gap-2 rounded-md px-3 text-sm font-bold text-[#5a241d] transition hover:bg-[#f3e3dc]"
           >
             <HeaderIcon name="logout" />
-            <span className="hidden sm:inline">Logout</span>
+            
+            <span className="hidden sm:inline">
+              Logout
+            </span>
           </button>
         </div>
       </div>

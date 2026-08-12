@@ -36,12 +36,11 @@ import type {
 } from "@/lib/api/generated";
 import { configureApiClient } from "./configureClient";
 
-// ── Feed ──────────────────────────────────────────────────────────────────────
+// FEED
 
 /**
- * Fetches posts from followed users, newest-first.
- * Falls back to global feed if the current user follows nobody.
- * Pass `before` (ISO datetime string) to paginate to the next page.
+ * Fetch posts from followed users, newest-first.
+ * Fall back to global feed if the current user follows nobody.
  */
 export async function getFeed(limit?: number, before?: string | null) {
   configureApiClient();
@@ -52,7 +51,6 @@ export async function getFeed(limit?: number, before?: string | null) {
 
 /**
  * Fetches all posts regardless of follows, newest-first.
- * Pass `before` (ISO datetime string) to paginate to the next page.
  */
 export async function getGlobalFeed(limit?: number, before?: string | null) {
   configureApiClient();
@@ -70,17 +68,17 @@ export async function getUserPosts(userId: string, limit?: number, before?: stri
 }
 
 /**
- * Returns the total number of posts by a user.
+ * Return the total number of posts posted by a user.
  */
 export async function getUserPostsCount(userId: string) {
   configureApiClient();
   return communityUserPostsCount({ path: { user_id: userId } });
 }
 
-// ── Posts ─────────────────────────────────────────────────────────────────────
+// POST
 
 /**
- * Fetches a single post by ID.
+ * Fetch a single post by ID.
  */
 export async function getPost(postId: string) {
   configureApiClient();
@@ -90,7 +88,7 @@ export async function getPost(postId: string) {
 }
 
 /**
- * Creates a new post with the given content blocks.
+ * Create a new post with the given content blocks.
  */
 export async function createPost(payload: PostCreate) {
   configureApiClient();
@@ -98,7 +96,7 @@ export async function createPost(payload: PostCreate) {
 }
 
 /**
- * Edits the content blocks of an existing post owned by the current user.
+ * Edit the content blocks of an existing post owned by the current user.
  */
 export async function updatePost(postId: string, payload: PostUpdate) {
   configureApiClient();
@@ -108,9 +106,6 @@ export async function updatePost(postId: string, payload: PostUpdate) {
   });
 }
 
-/**
- * Deletes a post owned by the current user.
- */
 export async function deletePost(postId: string) {
   configureApiClient();
   return communityPostsDelete({
@@ -118,10 +113,10 @@ export async function deletePost(postId: string) {
   });
 }
 
-// ── Post reactions ────────────────────────────────────────────────────────────
+// POST REACTIONS
 
 /**
- * Likes a post. Returns the updated post with the new like_count.
+ * Return the updated post with the new like count.
  */
 export async function likePost(postId: string) {
   configureApiClient();
@@ -131,7 +126,7 @@ export async function likePost(postId: string) {
 }
 
 /**
- * Removes the current user's like from a post.
+ * Remove the current user's like from a post.
  */
 export async function unlikePost(postId: string) {
   configureApiClient();
@@ -141,7 +136,7 @@ export async function unlikePost(postId: string) {
 }
 
 /**
- * Saves a post to the current user's saved list. Returns the updated post.
+ * Save a post to the current user's saved list.
  */
 export async function savePost(postId: string) {
   configureApiClient();
@@ -151,7 +146,7 @@ export async function savePost(postId: string) {
 }
 
 /**
- * Removes a post from the current user's saved list.
+ * Remove a post from the current user's saved list.
  */
 export async function unsavePost(postId: string) {
   configureApiClient();
@@ -161,7 +156,7 @@ export async function unsavePost(postId: string) {
 }
 
 /**
- * Returns all posts saved by the current user, newest save first.
+ * Return all posts saved by the current user, newest save first.
  */
 export async function getSavedPosts() {
   configureApiClient();
@@ -169,7 +164,7 @@ export async function getSavedPosts() {
 }
 
 /**
- * Records a share event for a post and returns the generated share URL.
+ * Record a share event for a post and return the generated URL.
  */
 export async function sharePost(postId: string) {
   configureApiClient();
@@ -178,10 +173,9 @@ export async function sharePost(postId: string) {
   });
 }
 
-// ── Reposts ───────────────────────────────────────────────────────────────────
+// REPOST
 
 /**
- * Reposts an existing post.
  * Simple repost: pass an empty content_blocks array.
  * Quote repost: populate content_blocks with added commentary.
  */
@@ -193,9 +187,6 @@ export async function repostPost(postId: string, payload: RepostCreate) {
   });
 }
 
-/**
- * Deletes a repost owned by the current user.
- */
 export async function deleteRepost(repostId: string) {
   configureApiClient();
   return communityRepostsDelete({
@@ -203,10 +194,10 @@ export async function deleteRepost(repostId: string) {
   });
 }
 
-// ── Comments ──────────────────────────────────────────────────────────────────
+// COMMENT
 
 /**
- * Fetches all comments on a post, ordered oldest-first.
+ * Fetch all comments on a post, oldest first.
  */
 export async function listComments(postId: string) {
   configureApiClient();
@@ -215,9 +206,6 @@ export async function listComments(postId: string) {
   });
 }
 
-/**
- * Creates a comment on a post.
- */
 export async function createComment(postId: string, payload: CommentCreate) {
   configureApiClient();
   return communityCommentsCreate({
@@ -227,7 +215,7 @@ export async function createComment(postId: string, payload: CommentCreate) {
 }
 
 /**
- * Edits a comment owned by the current user.
+ * Edit a comment owned by the current user.
  */
 export async function updateComment(
   postId: string,
@@ -241,9 +229,6 @@ export async function updateComment(
   });
 }
 
-/**
- * Deletes a comment owned by the current user.
- */
 export async function deleteComment(postId: string, commentId: string) {
   configureApiClient();
   return communityCommentsDelete({
@@ -251,10 +236,10 @@ export async function deleteComment(postId: string, commentId: string) {
   });
 }
 
-// ── Comment reactions ─────────────────────────────────────────────────────────
+// COMMENT REACTION
 
 /**
- * Likes a comment. Returns the updated comment with the new like_count.
+ * Return the updated comment with the new like_count.
  */
 export async function likeComment(postId: string, commentId: string) {
   configureApiClient();
@@ -264,7 +249,7 @@ export async function likeComment(postId: string, commentId: string) {
 }
 
 /**
- * Removes the current user's like from a comment.
+ * Remove the current user's like from a comment.
  */
 export async function unlikeComment(postId: string, commentId: string) {
   configureApiClient();
@@ -274,7 +259,7 @@ export async function unlikeComment(postId: string, commentId: string) {
 }
 
 /**
- * Records a share event for a comment and returns the generated share URL.
+ * Record a share event for a comment and return the generated URL.
  */
 export async function shareComment(postId: string, commentId: string) {
   configureApiClient();
@@ -283,11 +268,8 @@ export async function shareComment(postId: string, commentId: string) {
   });
 }
 
-// ── Follows ───────────────────────────────────────────────────────────────────
+// FOLLOW
 
-/**
- * Follows a user.
- */
 export async function followUser(userId: string) {
   configureApiClient();
   return communityFollow({
@@ -295,9 +277,6 @@ export async function followUser(userId: string) {
   });
 }
 
-/**
- * Unfollows a user.
- */
 export async function unfollowUser(userId: string) {
   configureApiClient();
   return communityUnfollow({
@@ -306,7 +285,7 @@ export async function unfollowUser(userId: string) {
 }
 
 /**
- * Returns all users that userId is following.
+ * Return all users that userId is following.
  */
 export async function getFollowing(userId: string) {
   configureApiClient();
@@ -316,7 +295,7 @@ export async function getFollowing(userId: string) {
 }
 
 /**
- * Returns all users following userId.
+ * Return all users following userId.
  */
 export async function getFollowers(userId: string) {
   configureApiClient();

@@ -8,7 +8,11 @@ import {
   TransactionList,
   TransactionRangeToggle,
 } from "@/components/WealthComponents";
-import { listTransactions, type TransactionRange } from "@/lib/api/transactions";
+import { 
+  deleteTransaction,
+  listTransactions, 
+  type TransactionRange, 
+} from "@/lib/api/transactions";
 import type { TransactionRead } from "@/lib/api/generated";
 import type { Transaction } from "@/data/wealthData";
 import { formatCurrency, formatCurrencyWithCents } from "@/lib/format";
@@ -21,13 +25,12 @@ import {
 } from "@/components/dashboard/transactions/TransactionSearchFilterBar";
 import { filterTransactions } from "@/lib/filterTransactions";
 import { ConfirmDeleteDialog } from "@/components/dashboard/portfolio/ConfirmDeleteDialog";
-import { deleteTransaction } from "@/lib/api/transactions";
 
 function toNumber(value: number | string) {
   return typeof value === "number" ? value : Number(value);
 }
 
-function formatTransactionDate(value: string) {
+function formatDate(value: string) {
   return new Intl.DateTimeFormat("en", {
     month: "short",
     day: "2-digit",
@@ -35,10 +38,10 @@ function formatTransactionDate(value: string) {
   }).format(new Date(value));
 }
 
-function toLedgerTransaction(transaction: TransactionRead, range: TransactionRange): Transaction {
+function toTransaction(transaction: TransactionRead, range: TransactionRange): Transaction {
   return {
     id: transaction.id,
-    date: formatTransactionDate(transaction.occurred_at),
+    date: formatDate(transaction.occurred_at),
     description: transaction.description,
     category: transaction.category,
     account: transaction.account,
@@ -51,23 +54,17 @@ function toLedgerTransaction(transaction: TransactionRead, range: TransactionRan
 export default function TransactionsPage() {
   const [range, setRange] = useState<TransactionRange>("ALL");
   const [transactions, setTransactions] = useState<TransactionRead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [filters, setFilters] = useState<TransactionFilterState>(DEFAULT_TRANSACTION_FILTERS);
+  const [deleteTarget, setDeleteTarget] = useState<TransactionRead | null>(null);
 
   const { openEditModal } = useTransactionModalStore();
-
-  function handleRowClick(id: string) {
-    const original = transactions.find((transaction) => transaction.id === id);
-    if (original) {
-      openEditModal(original);
-    }
-  }
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
 
   const ignoreRef = useRef(false);
 
   const loadTransactions = useCallback(async () => {
-    setIsLoading(true);
+    setLoading(true);
     setErrorMessage("");
 
     const { data, error, response } = await listTransactions(range);
@@ -77,12 +74,12 @@ export default function TransactionsPage() {
     if (error || !response?.ok) {
       setTransactions([]);
       setErrorMessage("Unable to load transactions. Please try again.");
-      setIsLoading(false);
+      setLoading(false);
       return;
     }
 
     setTransactions(data ?? []);
-    setIsLoading(false);
+    setLoading(false);
   }, [range]);
 
   useEffect(() => {
@@ -93,61 +90,82 @@ export default function TransactionsPage() {
     };
   }, [loadTransactions]);
 
-  const [filters, setFilters] = useState<TransactionFilterState>(DEFAULT_TRANSACTION_FILTERS);
-
-  const ledgerTransactions = useMemo(
-    () => transactions.map((transaction) => toLedgerTransaction(transaction, range)),
-    [range, transactions],
-  );
-  const availableCategories = useMemo(
-    () => Array.from(new Set(ledgerTransactions.map((t) => t.category))),
-    [ledgerTransactions],
-  );
-  const availableAccounts = useMemo(
-    () => Array.from(new Set(ledgerTransactions.map((t) => t.account))),
-    [ledgerTransactions],
-  );
-  const availableImpacts = useMemo(
-    () => Array.from(new Set(ledgerTransactions.map((t) => t.impact))),
-    [ledgerTransactions],
+  const ledger = useMemo(
+    () => transactions.map(transaction => toTransaction(transaction, range)),
+    [transactions, range],
   );
 
-  const [deleteTarget, setDeleteTarget] = useState<TransactionRead | null>(null);
-
-  function handleEditClick(id: string) {
-    const original = transactions.find((transaction) => transaction.id === id);
-    if (original) openEditModal(original);
-  }
-
-  function handleDeleteClick(id: string) {
-    const original = transactions.find((transaction) => transaction.id === id);
-    if (original) setDeleteTarget(original);
-  }
-
-  async function handleConfirmDelete(): Promise<boolean> {
-    if (!deleteTarget) return false;
-    const { error } = await deleteTransaction(deleteTarget.id);
-    if (error) return false;
-    await loadTransactions();
-    return true;
-  }
-
-  const filteredTransactions = useMemo(
-    () => filterTransactions(ledgerTransactions, filters),
-    [ledgerTransactions, filters],
+  const categories = useMemo(
+    () => Array.from(new Set(ledger.map(transaction => transaction.category))),
+    [ledger],
   );
-  const inflow = filteredTransactions
-    .filter((transaction) => transaction.amount > 0)
-    .reduce((total, transaction) => total + transaction.amount, 0);
-  const outflow = Math.abs(
-    filteredTransactions
-      .filter((transaction) => transaction.amount < 0)
-      .reduce((total, transaction) => total + transaction.amount, 0),
+
+  const accounts = useMemo(
+    () => Array.from(new Set(ledger.map(transaction => transaction.account))),
+    [ledger],
   );
-  const netMovement = filteredTransactions.reduce(
+
+  const impacts = useMemo(
+    () => Array.from(new Set(ledger.map(transaction => transaction.impact))),
+    [ledger],
+  );
+
+  const filtered = useMemo(
+    () => filterTransactions(ledger, filters),
+    [ledger, filters],
+  );
+
+  const inflow = filtered
+    .filter(transaction => transaction.amount > 0)
+    .reduce(
+      (total, transaction) => total + transaction.amount, 
+      0
+    );
+  
+  const outflow = filtered
+    .filter(transaction => transaction.amount < 0)
+    .reduce(
+      (total, transaction) => total + Math.abs(transaction.amount), 
+      0
+    );
+
+  const netMovement = filtered.reduce(
     (total, transaction) => total + transaction.amount,
     0,
   );
+
+  function editTransaction(id: string) {
+    const transaction = transactions.find(transaction => transaction.id === id);
+
+    if (transaction) {
+      openEditModal(transaction);
+    }
+  }
+
+  function deleteTransactionRequest(id: string) {
+    const transaction = transactions.find((transaction) => transaction.id === id);
+
+    if (transaction) {
+      setDeleteTarget(transaction);
+    }
+  }
+
+  async function confirmDelete(): Promise<boolean> {
+    if (!deleteTarget) {
+      return false;
+    }
+
+    const result = await deleteTransaction(deleteTarget.id);
+
+    if (result.error) {
+      return false;
+    }
+
+    setDeleteTarget(null);
+    await loadTransactions();
+
+    return true;
+  }
 
   return (
     <div className="grid gap-6">
@@ -172,11 +190,13 @@ export default function TransactionsPage() {
           sublabel="Net change in the selected range"
           value={formatCurrencyWithCents(netMovement)}
         />
+
         <MetricCard
           label="Inflow"
           sublabel="Positive records in view"
           value={formatCurrency(inflow)}
         />
+
         <MetricCard
           label="Outflow"
           sublabel="Negative records in view"
@@ -191,47 +211,54 @@ export default function TransactionsPage() {
             eyebrow="Transaction record"
             title="Movements and risk tags"
           />
-          <TransactionRangeToggle onChange={setRange} value={range} />
+
+          <TransactionRangeToggle 
+            onChange={setRange} 
+            value={range} 
+          />
         </div>
+
         <TransactionSearchFilterBar
-          availableAccounts={availableAccounts}
-          availableCategories={availableCategories}
-          availableImpacts={availableImpacts}
+          availableAccounts={accounts}
+          availableCategories={categories}
+          availableImpacts={impacts}
           filters={filters}
           onChange={setFilters}
         />
 
-        {isLoading ? (
+        {loading ? (
           <div className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-8 text-sm font-semibold text-[#696154]">
             Loading transactions...
           </div>
         ) : null}
 
-        {!isLoading && errorMessage ? (
+        {!loading && errorMessage ? (
           <div className="rounded-lg border border-[#d5a58b] bg-[#f2e0d8] p-6 text-sm font-semibold text-[#8f3f32]">
             {errorMessage}
           </div>
         ) : null}
 
-        {!isLoading && !errorMessage && filteredTransactions.length > 0 ? (
+        {!loading && !errorMessage && filtered.length > 0 ? (
           <TransactionList
-            onDeleteClick={handleDeleteClick}
-            onEditClick={handleEditClick}
-            onRowClick={handleRowClick}
-            transactions={filteredTransactions}
+            onDeleteClick={deleteTransactionRequest}
+            onEditClick={editTransaction}
+            onRowClick={editTransaction}
+            transactions={filtered}
           />
         ) : null}
 
-        {!isLoading && !errorMessage && filteredTransactions.length === 0 ? (
+        {!loading && !errorMessage && filtered.length === 0 ? (
           <div className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-8 text-center">
             <h3 className="font-display text-3xl font-semibold text-[#1d211c]">
               No transactions in this view
             </h3>
+
             <p className="mt-2 text-sm text-[#696154]">
               {filters.search || filters.categories.length > 0
                 ? "No matches for your search. Try a different term or clear the search."
                 : "Add your first transaction or choose All to inspect the full ledger."}
             </p>
+
             <Link
               className="mt-5 inline-flex h-11 items-center justify-center rounded-md bg-[#1d211c] px-4 text-sm font-semibold text-[#fbf7ef] transition hover:bg-[#343b32]"
               href="/dashboard/transactions/new"
@@ -241,13 +268,15 @@ export default function TransactionsPage() {
           </div>
         ) : null}
       </section>
+
       <EditTransactionModal onSuccess={loadTransactions} />
+
       {deleteTarget ? (
         <ConfirmDeleteDialog
           itemName={deleteTarget.description}
           itemType="transaction"
           onClose={() => setDeleteTarget(null)}
-          onConfirm={handleConfirmDelete}
+          onConfirm={confirmDelete}
         />
       ) : null}
     </div>

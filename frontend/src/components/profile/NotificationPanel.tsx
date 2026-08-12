@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getNotifications, markAllRead, markOneRead } from "@/lib/api/notifications";
+import { 
+  getNotifications, 
+  markAllRead, 
+  markOneRead 
+} from "@/lib/api/notifications";
 import { NotificationRead } from "@/lib/api/generated";
 import { getUserById } from "@/lib/api/users";
 
@@ -11,7 +15,7 @@ interface NotificationPanelProps {
   onAllRead: () => void;
 }
 
-const TYPE_LABEL: Record<string, string> = {
+const NOTIFICATION_LABEL: Record<string, string> = {
   like_post: "liked your post",
   like_comment: "liked your comment",
   comment: "commented on your post",
@@ -19,35 +23,59 @@ const TYPE_LABEL: Record<string, string> = {
   repost: "reposted your post",
 };
 
+type Notification = Omit<NotificationRead, "actor_id"> & { 
+  actor_id: string | null;
+}
+
 export function NotificationPanel({ onClose, onAllRead }: NotificationPanelProps) {
-  const [notifications, setNotifications] = useState<
-    (Omit<NotificationRead, "actor_id"> & { actor_id: string | null })[]
-  >([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
   useEffect(() => {
     getNotifications(30)
-      .then((res) => {
-        setNotifications((res.data ?? []) as (Omit<NotificationRead, "actor_id"> & { actor_id: string | null })[]);
+      .then(response => {
+        setNotifications((response.data ?? []) as Notification[]);
         setStatus("ready");
       })
       .catch(() => setStatus("error"));
   }, []);
 
   async function handleMarkAllRead() {
-    await markAllRead();
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    onAllRead();
+    try { 
+      await markAllRead(); 
+      
+      setNotifications(current => 
+        current.map(notification => ({ 
+          ...notification, 
+          read: true, 
+        })), 
+      ); 
+      
+      onAllRead(); 
+    } catch { 
+      // leave the notifications unchanged if request fail 
+    }
   }
 
   async function handleMarkOneRead(id: string) {
-    await markOneRead(id);
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
-    );
+    try { 
+      await markOneRead(id); 
+      
+      setNotifications(current => 
+        current.map(notification => 
+          notification.id === id 
+            ? { ...notification, read: true } 
+            : notification, 
+        ), 
+      ); 
+    } catch { 
+      // notification can still open if marking it read fails 
+    }
   }
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter(
+    notification => !notification.read
+  ).length;
 
   return (
     <div className="flex flex-col overflow-hidden rounded-xl border border-[#d7c6a3]/40 bg-[#fbf7ef] shadow-[0_24px_64px_rgba(28,32,24,0.14)]">
@@ -56,12 +84,14 @@ export function NotificationPanel({ onClose, onAllRead }: NotificationPanelProps
       <div className="flex items-center justify-between border-b border-[#d7c6a3]/30 px-4 py-3">
         <span className="text-sm font-bold text-[#1c2018]">
           Notifications
+
           {unreadCount > 0 && (
             <span className="ml-2 rounded-full bg-[#d8bd75] px-1.5 py-0.5 text-[10px] font-bold text-[#1c2018]">
               {unreadCount}
             </span>
           )}
         </span>
+
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
             <button
@@ -71,6 +101,7 @@ export function NotificationPanel({ onClose, onAllRead }: NotificationPanelProps
               Mark all read
             </button>
           )}
+
           <button
             onClick={onClose}
             aria-label="Close"
@@ -85,8 +116,8 @@ export function NotificationPanel({ onClose, onAllRead }: NotificationPanelProps
       <div className="max-h-[420px] overflow-y-auto">
         {status === "loading" && (
           <div className="flex flex-col divide-y divide-[#d7c6a3]/20">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <NotificationSkeleton key={i} />
+            {Array.from({ length: 4 }).map((_, index) => (
+              <NotificationSkeleton key={index} />
             ))}
           </div>
         )}
@@ -105,11 +136,11 @@ export function NotificationPanel({ onClose, onAllRead }: NotificationPanelProps
 
         {status === "ready" && notifications.length > 0 && (
           <div className="flex flex-col divide-y divide-[#d7c6a3]/20">
-            {notifications.map((n) => (
+            {notifications.map(notification => (
               <NotificationRow
-                key={n.id}
-                notification={n}
-                onRead={() => handleMarkOneRead(n.id)}
+                key={notification.id}
+                notification={notification}
+                onRead={() => handleMarkOneRead(notification.id)}
                 onClose={onClose}
               />
             ))}
@@ -120,8 +151,6 @@ export function NotificationPanel({ onClose, onAllRead }: NotificationPanelProps
   );
 }
 
-// ── NotificationRow ───────────────────────────────────────────────────────────
-
 function NotificationRow({
   notification,
   onRead,
@@ -131,13 +160,16 @@ function NotificationRow({
   onRead: () => void;
   onClose: () => void;
 }) {
-  const label = TYPE_LABEL[notification.type] ?? notification.type;
+  const label = NOTIFICATION_LABEL[notification.type] ?? notification.type;
   const href = notification.post_id
     ? `/community/posts/${notification.post_id}`
     : `/profile/${notification.actor_id}`;
 
   function handleClick() {
-    if (!notification.read) onRead();
+    if (!notification.read) {
+      onRead();
+    }
+
     onClose();
   }
 
@@ -150,6 +182,7 @@ function NotificationRow({
         notification.read ? "opacity-60" : "",
       ].join(" ")}
     >
+
       {/* Unread dot */}
       <span className="mt-1.5 flex h-2 w-2 shrink-0 items-center justify-center">
         {!notification.read && (
@@ -161,10 +194,16 @@ function NotificationRow({
       <div className="min-w-0 flex-1">
         <p className="text-sm text-[#1c2018]">
           <span className="font-semibold">
-            {notification.actor_id ? <ActorName actorId={notification.actor_id} /> : "Deleted Account"}
+            {notification.actor_id 
+              ? <ActorName actorId={notification.actor_id} /> 
+              : "Deleted Account"}
           </span>{" "}
-          <span className="text-[#6b6252]">{label}</span>
+
+          <span className="text-[#6b6252]">
+            {label}
+          </span>
         </p>
+
         <p className="mt-0.5 text-xs text-[#a99b82]">
           {formatRelativeTime(notification.created_at)}
         </p>
@@ -172,8 +211,6 @@ function NotificationRow({
     </Link>
   );
 }
-
-// ── Skeleton ──────────────────────────────────────────────────────────────────
 
 function NotificationSkeleton() {
   return (
@@ -187,7 +224,7 @@ function NotificationSkeleton() {
   );
 }
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
+// ICON
 
 function CloseIcon() {
   return (
@@ -198,19 +235,36 @@ function CloseIcon() {
   );
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// HELPERS
 
 function formatRelativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
+
   const seconds = Math.floor(diff / 1000);
-  if (seconds < 60) return `${seconds}s ago`;
+
+  if (seconds < 60) {
+    return `${seconds}s`;
+  }
+
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) {
+    return `${minutes}m`;
+  }
+
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) {
+    return `${hours}h`;
+  }
+
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  if (days < 7) {
+    return `${days}d`;
+  }
+  
+  return new Date(iso).toLocaleDateString(undefined, { 
+    month: "short", 
+    day: "numeric" 
+  });
 }
 
 function ActorName({ actorId }: { actorId: string }) {
@@ -218,14 +272,21 @@ function ActorName({ actorId }: { actorId: string }) {
 
   useEffect(() => {
     getUserById(actorId)
-      .then((res) => {
-        const user = res.data;
-        if (!user) return;
+      .then(response => {
+        const user = response.data;
+        
+        if (!user) {
+          return;
+        }
+        
         setName(user.display_name ?? user.username);
       })
       .catch(() => {});
   }, [actorId]);
 
-  if (!name) return <span className="inline-block h-3 w-20 animate-pulse rounded bg-[#e8dfc8]" />;
+  if (!name) {
+    return <span className="inline-block h-3 w-20 animate-pulse rounded bg-[#e8dfc8]" />;
+  }
+
   return <>{name}</>;
 }

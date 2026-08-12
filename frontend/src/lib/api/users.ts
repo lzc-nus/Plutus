@@ -14,8 +14,7 @@ import type {
 import { configureApiClient } from "./configureClient";
 
 /**
- * Fetches the authenticated user's full profile.
- * Used on app load to hydrate the current user's identity.
+ * Fetch the authenticated user's full profile.
  */
 export async function getMe() {
   configureApiClient();
@@ -23,7 +22,7 @@ export async function getMe() {
 }
 
 /**
- * Updates the authenticated user's profile fields (display name, bio, avatar).
+ * Update user's profile fields (display name, bio, avatar).
  */
 export async function updateMe(payload: UserProfileUpdate) {
   configureApiClient();
@@ -31,7 +30,7 @@ export async function updateMe(payload: UserProfileUpdate) {
 }
 
 /**
- * Updates editable account settings and profile fields.
+ * Update account settings and profile fields.
  */
 export async function updateSettings(payload: UserSettingsUpdate) {
   configureApiClient();
@@ -39,7 +38,7 @@ export async function updateSettings(payload: UserSettingsUpdate) {
 }
 
 /**
- * Changes the authenticated user's password after current-password validation.
+ * Change the password after current-password validation.
  */
 export async function changePassword(payload: UserPasswordUpdate) {
   configureApiClient();
@@ -56,8 +55,8 @@ export async function getUserById(userId: string) {
 }
 
 /**
- * Permanently deletes the authenticated user's account after password confirmation.
- * Posts and comments are reassigned to the system placeholder user.
+ * Permanently delete the user's account after password confirmation.
+ * Posts and comments are assigned to the system placeholder user.
  */
 export async function deleteAccount(password: string) {
   configureApiClient();

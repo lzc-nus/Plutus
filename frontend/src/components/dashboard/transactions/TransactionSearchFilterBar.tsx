@@ -37,11 +37,27 @@ const INPUT_CLS =
 
 function countActiveFilters(filters: TransactionFilterState): number {
   let count = 0;
-  if (filters.categories.length > 0) count += 1;
-  if (filters.accounts.length > 0) count += 1;
-  if (filters.impacts.length > 0) count += 1;
-  if (filters.dateFrom || filters.dateTo) count += 1;
-  if (filters.amountMin || filters.amountMax) count += 1;
+
+  if (filters.categories.length > 0) {
+    count++;
+  }
+
+  if (filters.accounts.length > 0) {
+    count++;
+  }
+
+  if (filters.impacts.length > 0) {
+    count++;
+  }
+
+  if (filters.dateFrom || filters.dateTo) {
+    count++;
+  }
+
+  if (filters.amountMin || filters.amountMax) {
+    count++;
+  }
+
   return count;
 }
 
@@ -60,7 +76,7 @@ function ChipGroup({
     <div>
       <p className="mb-2 text-xs font-medium uppercase tracking-[0.1em] text-[#9a8f7a]">{label}</p>
       <div className="flex flex-wrap gap-1.5">
-        {options.map((value) => (
+        {options.map(value => (
           <button
             key={value}
             className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
@@ -73,17 +89,17 @@ function ChipGroup({
             {value}
           </button>
         ))}
-        {options.length === 0 && <p className="text-xs text-[#9a8f7a]">None in this view.</p>}
+
+        {options.length === 0 && (
+          <p className="text-xs text-[#9a8f7a]">
+            None in this view.
+          </p>
+        )}
       </div>
     </div>
   );
 }
 
-/**
- * Search/filter bar for /dashboard/transactions. Filters the already-fetched
- * ledger for the selected range — client-side only, same pattern as
- * PortfolioSearchFilterBar.
- */
 export function TransactionSearchFilterBar({
   filters,
   onChange,
@@ -94,15 +110,28 @@ export function TransactionSearchFilterBar({
   const [panelOpen, setPanelOpen] = useState(false);
   const activeCount = countActiveFilters(filters);
 
-  const sortedCategories = useMemo(() => [...availableCategories].sort(), [availableCategories]);
-  const sortedAccounts = useMemo(() => [...availableAccounts].sort(), [availableAccounts]);
-  const sortedImpacts = useMemo(() => [...availableImpacts].sort(), [availableImpacts]);
+  const sortedCategories = useMemo(
+    () => [...availableCategories].sort(), 
+    [availableCategories]
+  );
+
+  const sortedAccounts = useMemo(
+    () => [...availableAccounts].sort(), 
+    [availableAccounts]
+  );
+
+  const sortedImpacts = useMemo(
+    () => [...availableImpacts].sort(), 
+    [availableImpacts]
+  );
 
   function toggle(key: "categories" | "accounts" | "impacts", value: string) {
     const current = filters[key];
+
     const next = current.includes(value)
-      ? current.filter((v) => v !== value)
+      ? current.filter(item => item !== value)
       : [...current, value];
+
     onChange({ ...filters, [key]: next });
   }
 
@@ -124,9 +153,10 @@ export function TransactionSearchFilterBar({
             <circle cx="11" cy="11" r="7" />
             <path d="m21 21-4.35-4.35" strokeLinecap="round" />
           </svg>
+
           <input
             className={`${INPUT_CLS} pl-9`}
-            onChange={(e) => onChange({ ...filters, search: e.target.value })}
+            onChange={event => onChange({ ...filters, search: event.target.value })}
             placeholder="Search description, category, account…"
             type="text"
             value={filters.search}
@@ -139,12 +169,20 @@ export function TransactionSearchFilterBar({
               ? "border-[#7a6332] bg-[#f4ede0] text-[#5a4520]"
               : "border-[#d9d0c1] bg-white text-[#6f675b] hover:border-[#b8a87a]"
           }`}
-          onClick={() => setPanelOpen((o) => !o)}
+          onClick={() => setPanelOpen(open => !open)}
         >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <svg 
+            className="h-4 w-4" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth={2} 
+            viewBox="0 0 24 24"
+          >
             <path d="M3 5h18M6 12h12M10 19h4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
+
           Filters
+
           {activeCount > 0 && (
             <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#7a6332] text-[10px] font-bold text-white">
               {activeCount}
@@ -166,21 +204,21 @@ export function TransactionSearchFilterBar({
         <div className="space-y-4 border-t border-[#e4dece] p-4">
           <ChipGroup
             label="Categories"
-            onToggle={(v) => toggle("categories", v)}
+            onToggle={value => toggle("categories", value)}
             options={sortedCategories}
             selected={filters.categories}
           />
 
           <ChipGroup
             label="Accounts"
-            onToggle={(v) => toggle("accounts", v)}
+            onToggle={value => toggle("accounts", value)}
             options={sortedAccounts}
             selected={filters.accounts}
           />
 
           <ChipGroup
             label="Impact"
-            onToggle={(v) => toggle("impacts", v)}
+            onToggle={value => toggle("impacts", value)}
             options={sortedImpacts}
             selected={filters.impacts}
           />
@@ -192,14 +230,18 @@ export function TransactionSearchFilterBar({
             <div className="flex items-center gap-2 sm:w-1/2">
               <input
                 className={INPUT_CLS}
-                onChange={(e) => onChange({ ...filters, dateFrom: e.target.value })}
+                onChange={event => onChange({ ...filters, dateFrom: event.target.value })}
                 type="date"
                 value={filters.dateFrom}
               />
-              <span className="text-[#9a8f7a]">–</span>
+
+              <span className="text-[#9a8f7a]">
+                –
+              </span>
+              
               <input
                 className={INPUT_CLS}
-                onChange={(e) => onChange({ ...filters, dateTo: e.target.value })}
+                onChange={event => onChange({ ...filters, dateTo: event.target.value })}
                 type="date"
                 value={filters.dateTo}
               />
@@ -210,18 +252,23 @@ export function TransactionSearchFilterBar({
             <p className="mb-2 text-xs font-medium uppercase tracking-[0.1em] text-[#9a8f7a]">
               Amount range
             </p>
+
             <div className="flex items-center gap-2 sm:w-1/2">
               <input
                 className={INPUT_CLS}
-                onChange={(e) => onChange({ ...filters, amountMin: e.target.value })}
+                onChange={event => onChange({ ...filters, amountMin: event.target.value })}
                 placeholder="Min"
                 type="number"
                 value={filters.amountMin}
               />
-              <span className="text-[#9a8f7a]">–</span>
+
+              <span className="text-[#9a8f7a]">
+                –
+              </span>
+
               <input
                 className={INPUT_CLS}
-                onChange={(e) => onChange({ ...filters, amountMax: e.target.value })}
+                onChange={event => onChange({ ...filters, amountMax: event.target.value })}
                 placeholder="Max"
                 type="number"
                 value={filters.amountMax}

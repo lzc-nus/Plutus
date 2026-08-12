@@ -22,7 +22,7 @@ import { formatCurrency } from "@/lib/format";
 
 type GoalStatus = NonNullable<StrategyGoalCreate["status"]>;
 
-type GoalFormState = {
+type GoalForm = {
   title: string;
   targetAmount: string;
   currentAmount: string;
@@ -34,7 +34,7 @@ type GoalFormState = {
 const DEFAULT_SCENARIO =
   "Assess the current goals, liquidity buffer, debt priorities, and trade-offs before adding a new car purchase or illiquid commitment.";
 
-const INITIAL_GOAL_FORM: GoalFormState = {
+const INITIAL_GOAL_FORM: GoalForm = {
   title: "",
   targetAmount: "",
   currentAmount: "0",
@@ -67,82 +67,89 @@ const planningRules = [
 
 export default function StrategyPage() {
   const [goals, setGoals] = useState<StrategyGoalRead[]>([]);
-  const [goalForm, setGoalForm] = useState<GoalFormState>(INITIAL_GOAL_FORM);
+  const [goalForm, setGoalForm] = useState<GoalForm>(INITIAL_GOAL_FORM);
   const [scenario, setScenario] = useState(DEFAULT_SCENARIO);
+
   const [generatedMemo, setGeneratedMemo] =
     useState<StrategyMemoResponse | null>(null);
   const [loadError, setLoadError] = useState("");
   const [formError, setFormError] = useState("");
   const [memoError, setMemoError] = useState("");
-  const [isLoadingGoals, setIsLoadingGoals] = useState(true);
-  const [isCreatingGoal, setIsCreatingGoal] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [mutatingGoalId, setMutatingGoalId] = useState<string | null>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [savingGoal, setSavingGoal] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [mutatingGoal, setMutatingGoal] = useState<string | null>(null);
+
   const metrics = useMemo(() => getGoalMetrics(goals), [goals]);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function loadGoals() {
-      setIsLoadingGoals(true);
+    async function load() {
+      setLoading(true);
       setLoadError("");
 
       const result = await listStrategyGoals();
+
       if (cancelled) {
         return;
       }
 
-      if (result.error) {
-        setLoadError(result.error);
-        setIsLoadingGoals(false);
-        return;
-      }
-
-      setGoals(result.data ?? []);
-      setIsLoadingGoals(false);
+      if (result.error) { 
+        setLoadError(result.error); 
+      } else { 
+        setGoals(result.data ?? []); 
+      } 
+      
+      setLoading(false);
     }
 
-    loadGoals();
+    load();
 
     return () => {
       cancelled = true;
     };
   }, []);
 
-  async function handleCreateGoal(event: FormEvent<HTMLFormElement>) {
+  async function createGoal(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError("");
 
-    const payload = buildGoalCreatePayload(goalForm);
+    const payload = makeGoalPayload(goalForm);
+
     if ("error" in payload) {
       setFormError(payload.error);
       return;
     }
 
-    setIsCreatingGoal(true);
-    const result = await createStrategyGoal(payload.data);
-    setIsCreatingGoal(false);
+    setSavingGoal(true);
 
-    if (result.error) {
-      setFormError(result.error);
+    const response = await createStrategyGoal(payload.data);
+
+    setSavingGoal(false);
+
+    if (response.error) {
+      setFormError(response.error);
       return;
     }
 
-    if (result.data) {
-      setGoals((current) => [...current, result.data]);
+    if (response.data) {
+      setGoals(current => [...current, response.data]);
       setGoalForm(INITIAL_GOAL_FORM);
     }
   }
 
-  async function handleUpdateGoal(
+  async function updateGoal(
     goalId: string,
     payload: { current_amount: string; status: GoalStatus },
   ) {
     setLoadError("");
-    setMutatingGoalId(goalId);
+    setMutatingGoal(goalId);
 
     const result = await updateStrategyGoal(goalId, payload);
-    setMutatingGoalId(null);
+
+    setMutatingGoal(null);
 
     if (result.error) {
       setLoadError(result.error);
@@ -150,29 +157,30 @@ export default function StrategyPage() {
     }
 
     if (result.data) {
-      setGoals((current) =>
-        current.map((goal) => (goal.id === goalId ? result.data : goal)),
+      setGoals(current =>
+        current.map(goal => (goal.id === goalId ? result.data : goal)),
       );
     }
   }
 
-  async function handleDeleteGoal(goalId: string) {
+  async function deleteGoal(goalId: string) {
     setLoadError("");
-    setMutatingGoalId(goalId);
+    setMutatingGoal(goalId);
 
     const result = await deleteStrategyGoal(goalId);
-    setMutatingGoalId(null);
+
+    setMutatingGoal(null);
 
     if (result.error) {
       setLoadError(result.error);
       return;
     }
 
-    setGoals((current) => current.filter((goal) => goal.id !== goalId));
+    setGoals(current => current.filter(goal => goal.id !== goalId));
   }
 
-  async function handleGenerateStrategy() {
-    setIsGenerating(true);
+  async function generateStrategy() {
+    setGenerating(true);
     setMemoError("");
 
     const result = await generateStrategyMemo({
@@ -180,7 +188,7 @@ export default function StrategyPage() {
       time_horizon: "annual",
     });
 
-    setIsGenerating(false);
+    setGenerating(false);
 
     if (result.error) {
       setMemoError(result.error);
@@ -217,7 +225,9 @@ export default function StrategyPage() {
             <p className="text-xs font-semibold uppercase text-[#c3a35d]">
               Capital readiness
             </p>
-            <p className="mt-3 text-5xl font-semibold">{metrics.progress}%</p>
+            <p className="mt-3 text-5xl font-semibold">
+              {metrics.progress}%
+            </p>
             <p className="mt-2 text-sm leading-6 text-[#d9d0c1]">
               {formatCurrency(metrics.current)} funded across {goals.length}{" "}
               goals.
@@ -243,16 +253,16 @@ export default function StrategyPage() {
           />
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
-            {isLoadingGoals ? (
+            {loading ? (
               <GoalSkeleton />
             ) : goals.length > 0 ? (
-              goals.map((goal) => (
+              goals.map(goal => (
                 <GoalStructureCard
                   goal={goal}
-                  isBusy={mutatingGoalId === goal.id}
+                  isBusy={mutatingGoal === goal.id}
                   key={`${goal.id}-${goal.updated_at}`}
-                  onDelete={handleDeleteGoal}
-                  onUpdate={handleUpdateGoal}
+                  onDelete={deleteGoal}
+                  onUpdate={updateGoal}
                 />
               ))
             ) : (
@@ -278,7 +288,7 @@ export default function StrategyPage() {
       <section className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         <form
           className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 sm:p-7"
-          onSubmit={handleCreateGoal}
+          onSubmit={createGoal}
         >
           <SectionHeader
             description="Add goals here before running scenarios so the AI memo can reason from the same records."
@@ -289,34 +299,37 @@ export default function StrategyPage() {
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <TextInput
               label="Title"
-              onChange={(value) =>
-                setGoalForm((current) => ({ ...current, title: value }))
+              onChange={value =>
+                setGoalForm(form => ({ ...form, title: value }))
               }
               placeholder="Build emergency fund"
               value={goalForm.title}
             />
+
             <TextInput
               inputMode="decimal"
               label="Target"
-              onChange={(value) =>
-                setGoalForm((current) => ({ ...current, targetAmount: value }))
+              onChange={value =>
+                setGoalForm(form => ({ ...form, targetAmount: value }))
               }
               placeholder="60000"
               value={goalForm.targetAmount}
             />
+
             <TextInput
               inputMode="decimal"
               label="Current"
-              onChange={(value) =>
-                setGoalForm((current) => ({ ...current, currentAmount: value }))
+              onChange={value =>
+                setGoalForm(form => ({ ...form, currentAmount: value }))
               }
               placeholder="42600"
               value={goalForm.currentAmount}
             />
+
             <TextInput
               label="Horizon"
-              onChange={(value) =>
-                setGoalForm((current) => ({ ...current, horizon: value }))
+              onChange={value =>
+                setGoalForm(form => ({ ...form, horizon: value }))
               }
               placeholder="14 months"
               value={goalForm.horizon}
@@ -325,25 +338,26 @@ export default function StrategyPage() {
               Status
               <select
                 className="mt-2 h-11 w-full rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-[#8f6f2d]"
-                onChange={(event) =>
-                  setGoalForm((current) => ({
-                    ...current,
+                onChange={event =>
+                  setGoalForm(form => ({
+                    ...form,
                     status: event.target.value as GoalStatus,
                   }))
                 }
                 value={goalForm.status}
               >
-                {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                {statusOptions.map(status => (
+                  <option key={status.value} value={status.value}>
+                    {status.label}
                   </option>
                 ))}
               </select>
             </label>
+
             <TextInput
               label="Note"
-              onChange={(value) =>
-                setGoalForm((current) => ({ ...current, note: value }))
+              onChange={value =>
+                setGoalForm(form => ({ ...form, note: value }))
               }
               placeholder="Reserve covers most essential obligations"
               value={goalForm.note}
@@ -358,10 +372,10 @@ export default function StrategyPage() {
 
           <button
             className="mt-5 inline-flex h-11 items-center justify-center rounded-md bg-[#1d211c] px-4 text-sm font-semibold text-[#fbf7ef] transition hover:bg-[#343b32] disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={isCreatingGoal}
+            disabled={savingGoal}
             type="submit"
           >
-            {isCreatingGoal ? "Saving..." : "Save goal"}
+            {savingGoal ? "Saving..." : "Save goal"}
           </button>
         </form>
 
@@ -373,7 +387,7 @@ export default function StrategyPage() {
           />
 
           <div className="mt-5 flex flex-wrap gap-2">
-            {scenarioOptions.map((option) => (
+            {scenarioOptions.map(option => (
               <button
                 className="rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 py-2 text-sm font-semibold text-[#575044] transition hover:border-[#8f6f2d] hover:text-[#1d211c]"
                 key={option}
@@ -394,18 +408,18 @@ export default function StrategyPage() {
               className="mt-3 min-h-36 w-full resize-none rounded-md border border-[#d0c5b3] bg-[#fffaf2] p-4 text-base font-normal leading-7 text-[#1d211c] outline-[#8f6f2d]"
               id="strategy-scenario"
               maxLength={500}
-              onChange={(event) => setScenario(event.target.value)}
+              onChange={event => setScenario(event.target.value)}
               value={scenario}
             />
           </label>
 
           <button
             className="mt-4 inline-flex h-11 items-center justify-center rounded-md bg-[#1d211c] px-4 text-sm font-semibold text-[#fbf7ef] transition hover:bg-[#343b32] disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={isGenerating}
-            onClick={handleGenerateStrategy}
+            disabled={generating}
+            onClick={generateStrategy}
             type="button"
           >
-            {isGenerating ? "Generating..." : "Generate strategy memo"}
+            {generating ? "Generating..." : "Generate strategy memo"}
           </button>
 
           {memoError ? (
@@ -422,6 +436,7 @@ export default function StrategyPage() {
           eyebrow="Planning rules"
           title="Priority order"
         />
+
         <div className="mt-6 grid gap-3 md:grid-cols-2">
           {planningRules.map((recommendation, index) => (
             <article
@@ -431,6 +446,7 @@ export default function StrategyPage() {
               <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#1d211c] text-sm font-semibold text-[#fbf7ef]">
                 {index + 1}
               </span>
+
               <p className="self-center text-sm leading-6 text-[#575044]">
                 {recommendation}
               </p>
@@ -439,11 +455,7 @@ export default function StrategyPage() {
         </div>
       </section>
 
-      {generatedMemo ? (
-        <StrategyMemo memo={generatedMemo} />
-      ) : (
-        <EmptyMemoState />
-      )}
+      {generatedMemo ? <StrategyMemo memo={generatedMemo} /> : <EmptyMemoState />}
     </div>
   );
 }
@@ -462,25 +474,32 @@ function GoalStructureCard({
     payload: { current_amount: string; status: GoalStatus },
   ) => void;
 }) {
-  const [draftCurrent, setDraftCurrent] = useState(goal.current_amount);
-  const [draftStatus, setDraftStatus] = useState<GoalStatus>(
+  const [currentAmount, setCurrentAmount] = useState(goal.current_amount);
+  const [status, setStatus] = useState<GoalStatus>(
     normalizeGoalStatus(goal.status),
   );
-  const targetAmount = moneyToNumber(goal.target_amount);
-  const currentAmount = moneyToNumber(goal.current_amount);
+
+  const target = moneyToNumber(goal.target_amount);
+  const current = moneyToNumber(currentAmount);
   const progress =
-    targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 100)) : 0;
-  const remaining = Math.max(targetAmount - currentAmount, 0);
+    target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+  const remaining = Math.max(target - current, 0);
 
   return (
     <article className="rounded-lg border border-[#d9d0c1] bg-[#fffaf2] p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="font-semibold text-[#1d211c]">{goal.title}</h3>
+          <h3 className="font-semibold text-[#1d211c]">
+            {goal.title}
+          </h3>
+
           {goal.note ? (
-            <p className="mt-2 text-sm leading-6 text-[#696154]">{goal.note}</p>
+            <p className="mt-2 text-sm leading-6 text-[#696154]">
+              {goal.note}
+            </p>
           ) : null}
         </div>
+
         <span className="rounded-md border border-[#d0c5b3] px-2 py-1 text-xs font-semibold uppercase text-[#6f5a24]">
           {formatStatus(goal.status)}
         </span>
@@ -493,11 +512,12 @@ function GoalStructureCard({
             style={{ width: `${progress}%` }}
           />
         </div>
+
         <p className="text-sm font-semibold text-[#1d211c]">{progress}%</p>
       </div>
 
       <dl className="mt-5 grid grid-cols-3 gap-3 text-sm">
-        <GoalStat label="Target" value={formatCurrency(targetAmount)} />
+        <GoalStat label="Target" value={formatCurrency(target)} />
         <GoalStat label="Left" value={formatCurrency(remaining)} />
         <GoalStat label="Horizon" value={goal.horizon} />
       </dl>
@@ -508,18 +528,19 @@ function GoalStructureCard({
           <input
             className="mt-2 h-10 w-full rounded-md border border-[#d0c5b3] bg-[#fbf7ef] px-3 text-sm font-normal text-[#1d211c] outline-[#8f6f2d]"
             inputMode="decimal"
-            onChange={(event) => setDraftCurrent(event.target.value)}
-            value={draftCurrent}
+            onChange={(event) => setCurrentAmount(event.target.value)}
+            value={currentAmount}
           />
         </label>
+
         <label className="block text-xs font-semibold uppercase text-[#8a8173]">
           Status
           <select
             className="mt-2 h-10 w-full rounded-md border border-[#d0c5b3] bg-[#fbf7ef] px-2 text-sm font-normal text-[#1d211c] outline-[#8f6f2d]"
-            onChange={(event) => setDraftStatus(event.target.value as GoalStatus)}
-            value={draftStatus}
+            onChange={event => setStatus(event.target.value as GoalStatus)}
+            value={status}
           >
-            {statusOptions.map((option) => (
+            {statusOptions.map(option => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -534,14 +555,15 @@ function GoalStructureCard({
           disabled={isBusy}
           onClick={() =>
             onUpdate(goal.id, {
-              current_amount: draftCurrent,
-              status: draftStatus,
+              current_amount: currentAmount,
+              status: status,
             })
           }
           type="button"
         >
           {isBusy ? "Saving..." : "Update"}
         </button>
+
         <button
           className="h-10 rounded-md border border-[#d5a58b] px-3 text-sm font-semibold text-[#8f3f32] transition hover:bg-[#f2e0d8] disabled:cursor-not-allowed disabled:opacity-60"
           disabled={isBusy}
@@ -592,7 +614,10 @@ function MetricTile({
       >
         {label}
       </p>
-      <p className="mt-3 text-3xl font-semibold">{value}</p>
+
+      <p className="mt-3 text-3xl font-semibold">
+        {value}
+      </p>
     </article>
   );
 }
@@ -609,9 +634,11 @@ function StrategyMemo({ memo }: { memo: StrategyMemoResponse }) {
         <p className="text-sm font-semibold uppercase text-[#c3a35d]">
           What-if answer
         </p>
+        
         <h2 className="font-display mt-3 text-5xl font-semibold">
           Scenario response
         </h2>
+
         <p className="mt-4 max-w-4xl text-base leading-7 text-[#d9d0c1]">
           {memo.answer}
         </p>
@@ -620,9 +647,11 @@ function StrategyMemo({ memo }: { memo: StrategyMemoResponse }) {
           <span className="rounded-md border border-white/10 px-2 py-1">
             {generatedAt}
           </span>
+
           <span className="rounded-md border border-white/10 px-2 py-1">
             {memo.model}
           </span>
+
           <span className="rounded-md border border-white/10 px-2 py-1">
             {memo.time_horizon.replace("_", " ")}
           </span>
@@ -633,7 +662,10 @@ function StrategyMemo({ memo }: { memo: StrategyMemoResponse }) {
         <h3 className="font-display text-3xl font-semibold text-[#1d211c]">
           Scenario
         </h3>
-        <p className="mt-4 text-sm leading-6 text-[#575044]">{memo.scenario}</p>
+
+        <p className="mt-4 text-sm leading-6 text-[#575044]">
+          {memo.scenario}
+        </p>
       </article>
 
       <section className="grid gap-5 lg:grid-cols-3">
@@ -644,6 +676,7 @@ function StrategyMemo({ memo }: { memo: StrategyMemoResponse }) {
 
       <section className="grid gap-5 lg:grid-cols-2">
         <MemoList title="Assumptions" items={memo.assumptions} />
+
         <p className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 text-sm leading-6 text-[#696154]">
           {memo.disclaimer}
         </p>
@@ -655,27 +688,28 @@ function StrategyMemo({ memo }: { memo: StrategyMemoResponse }) {
 function MemoList({
   title,
   items,
-  empty = "Nothing returned.",
 }: {
   title: string;
   items: string[];
-  empty?: string;
 }) {
   return (
     <article className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6">
       <h3 className="font-display text-3xl font-semibold text-[#1d211c]">
         {title}
       </h3>
+
       {items.length > 0 ? (
         <ul className="mt-5 grid gap-3 text-sm leading-6 text-[#575044]">
-          {items.map((item) => (
+          {items.map(item => (
             <li className="border-l border-[#c3a35d] pl-3" key={item}>
               {item}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-5 text-sm text-[#696154]">{empty}</p>
+        <p className="mt-5 text-sm text-[#696154]">
+          Nothing returned.
+        </p>
       )}
     </article>
   );
@@ -697,6 +731,7 @@ function TextInput({
   return (
     <label className="block text-sm font-semibold text-[#353026]">
       {label}
+
       <input
         className="mt-2 h-11 w-full rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm font-normal text-[#1d211c] outline-[#8f6f2d]"
         inputMode={inputMode}
@@ -732,7 +767,7 @@ function EmptyGoalsState() {
       <SectionHeader
         description="Add at least one goal so the strategy memo can reason about funding gaps and trade-offs."
         eyebrow="No goals"
-        title="Strategy record is empty"
+        title="No goals yet"
       />
     </section>
   );
@@ -744,6 +779,7 @@ function EmptyMemoState() {
       <h2 className="font-display text-4xl font-semibold text-[#1d211c]">
         No planning memo generated yet
       </h2>
+
       <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[#696154]">
         Generate a strategy memo to test the scenario against the current goals,
         portfolio, liability, and transaction records.
@@ -760,49 +796,63 @@ function ErrorBanner({ message }: { message: string }) {
   );
 }
 
-function getGoalMetrics(goalList: StrategyGoalRead[]) {
-  const target = goalList.reduce(
-    (sum, goal) => sum + moneyToNumber(goal.target_amount),
-    0,
-  );
-  const current = goalList.reduce(
-    (sum, goal) => sum + moneyToNumber(goal.current_amount),
-    0,
-  );
-  const remaining = Math.max(target - current, 0);
-  const progress = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
-  const watchCount = goalList.filter((goal) =>
-    ["on_watch", "behind"].includes(goal.status),
-  ).length;
-
-  return { target, current, remaining, progress, watchCount };
+function getGoalMetrics(goals: StrategyGoalRead[]) {
+  let target = 0; 
+  let current = 0; 
+  let watchCount = 0; 
+  
+  for (const goal of goals) { 
+    target += moneyToNumber(goal.target_amount); 
+    current += moneyToNumber(goal.current_amount); 
+    
+    if (goal.status === "on_watch" || goal.status === "behind") { 
+      watchCount++; 
+    } 
+  } 
+  
+  const remaining = Math.max(target - current, 0); 
+  const progress = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0; 
+  
+  return { 
+    target, 
+    current, 
+    remaining, 
+    progress, 
+    watchCount, 
+  };
 }
 
-function buildGoalCreatePayload(
-  form: GoalFormState,
-):
-  | { data: StrategyGoalCreate }
-  | { error: string } {
+function makeGoalPayload(
+  form: GoalForm,
+): { data: StrategyGoalCreate } | { error: string } {
   const title = form.title.trim();
   const horizon = form.horizon.trim();
   const target = moneyToNumber(form.targetAmount);
   const current = moneyToNumber(form.currentAmount);
 
   if (!title || !horizon) {
-    return { error: "Add a title and horizon before saving the goal." };
+    return { 
+      error: "Add a title and horizon before saving the goal." 
+    };
   }
+
   if (target <= 0) {
-    return { error: "Target amount must be greater than zero." };
+    return { 
+      error: "Target amount must be greater than zero." 
+    };
   }
+
   if (current < 0 || current > target) {
-    return { error: "Current amount must be between zero and the target." };
+    return { 
+      error: "Current amount must be between zero and the target." 
+    };
   }
 
   return {
     data: {
       title,
-      target_amount: toMoneyInput(target),
-      current_amount: toMoneyInput(current),
+      target_amount: toMoney(target),
+      current_amount: toMoney(current),
       horizon,
       status: form.status,
       note: form.note.trim() || null,
@@ -811,9 +861,11 @@ function buildGoalCreatePayload(
 }
 
 function normalizeGoalStatus(status: string): GoalStatus {
-  return statusOptions.some((option) => option.value === status)
-    ? (status as GoalStatus)
-    : "on_track";
+  if (statusOptions.some(item => item.value === status)) { 
+    return status as GoalStatus; 
+  } 
+  
+  return "on_track";
 }
 
 function formatStatus(status: string) {
@@ -821,10 +873,10 @@ function formatStatus(status: string) {
 }
 
 function moneyToNumber(value: string | number | null | undefined) {
-  const numeric = Number(value ?? 0);
-  return Number.isFinite(numeric) ? numeric : 0;
+  const number = Number(value ?? 0);
+  return Number.isFinite(number) ? number : 0;
 }
 
-function toMoneyInput(value: number) {
+function toMoney(value: number) {
   return value.toFixed(2);
 }

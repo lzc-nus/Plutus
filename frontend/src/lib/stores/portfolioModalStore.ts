@@ -32,15 +32,27 @@ export const usePortfolioModalStore = create<PortfolioModalState>((set) => ({
   assetModalOpen: false,
   assetModalParams: {},
   openAssetModal: (params = {}) =>
-    set({ assetModalOpen: true, assetModalParams: params }),
+    set({ 
+      assetModalOpen: true, 
+      assetModalParams: params 
+    }),
   closeAssetModal: () =>
-    set({ assetModalOpen: false, assetModalParams: {} }),
+    set({ 
+      assetModalOpen: false, 
+      assetModalParams: {} 
+    }),
 
   // Liability modal
   liabilityModalOpen: false,
   liabilityModalParams: {},
   openLiabilityModal: (params = {}) =>
-    set({ liabilityModalOpen: true, liabilityModalParams: params }),
+    set({ 
+      liabilityModalOpen: true, 
+      liabilityModalParams: params 
+    }),
   closeLiabilityModal: () =>
-    set({ liabilityModalOpen: false, liabilityModalParams: {} }),
+    set({ 
+      liabilityModalOpen: false, 
+      liabilityModalParams: {} 
+    }),
 }));

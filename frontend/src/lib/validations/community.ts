@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// ── Content blocks ────────────────────────────────────────────────────────────
+// CONTENT BLOCKS
 
 const httpUrlSchema = z
   .string()
@@ -49,7 +49,7 @@ export const contentBlockSchema = z.discriminatedUnion("type", [
 
 export type ContentBlock = z.infer<typeof contentBlockSchema>;
 
-// ── Post ──────────────────────────────────────────────────────────────────────
+// POST
 
 export const postFormSchema = z.object({
   content_blocks: z
@@ -60,7 +60,7 @@ export const postFormSchema = z.object({
 
 export type PostFormInput = z.infer<typeof postFormSchema>;
 
-// ── Comment ───────────────────────────────────────────────────────────────────
+// COMMENT
 
 export const commentFormSchema = z.object({
   content_blocks: z
@@ -71,7 +71,7 @@ export const commentFormSchema = z.object({
 
 export type CommentFormInput = z.infer<typeof commentFormSchema>;
 
-// ── Repost ────────────────────────────────────────────────────────────────────
+// REPOST
 // Simple repost: content_blocks is empty.
 // Quote repost: content_blocks carries the added commentary.
 

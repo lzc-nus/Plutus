@@ -14,8 +14,9 @@ export function FeedTabs({ active, onChange }: FeedTabsProps) {
       aria-label="Community feed"
       className="grid grid-cols-2 gap-1 rounded-md border border-[#d7c6a3]/45 bg-[#f4efe6] p-1"
     >
-      {(["following", "global"] as FeedTab[]).map((tab) => {
+      {(["following", "global"] as FeedTab[]).map(tab => {
         const isActive = active === tab;
+        
         return (
           <button
             type="button"

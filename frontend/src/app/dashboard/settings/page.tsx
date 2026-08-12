@@ -3,8 +3,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+
 import { getApiErrorMessage } from "@/lib/api/auth";
-import { changePassword, updateSettings, deleteAccount } from "@/lib/api/users";
+import { 
+  changePassword, 
+  updateSettings, 
+  deleteAccount 
+} from "@/lib/api/users";
 import type { UserRead, UserSettingsUpdate } from "@/lib/api/generated";
 import { useAuth } from "@/lib/hooks/useAuth";
 import {
@@ -15,7 +21,6 @@ import {
   type PasswordChangeInput,
   type SettingsFormInput,
 } from "@/lib/validations/settings";
-import { useRouter } from "next/navigation";
 
 const currencyOptions = [
   { code: "SGD", label: "Singapore dollar" },
@@ -32,12 +37,12 @@ const currencyOptions = [
 
 type SubmitState = "idle" | "saving" | "success" | "error";
 
-function toNullableString(value: string) {
+function emptyToNull(value: string) {
   const trimmed = value.trim();
-  return trimmed ? trimmed : null;
+  return trimmed || null;
 }
 
-function settingsDefaults(user: UserRead | null): SettingsFormInput {
+function getSettingsDefaults(user: UserRead | null): SettingsFormInput {
   return {
     username: user?.username ?? "",
     email: user?.email ?? "",
@@ -64,9 +69,9 @@ function buildSettingsPayload(values: SettingsFormInput): UserSettingsUpdate {
     username: values.username.trim(),
     email: values.email.trim().toLowerCase(),
     base_currency: values.base_currency.trim().toUpperCase(),
-    display_name: toNullableString(values.display_name),
-    bio: toNullableString(values.bio),
-    avatar_url: toNullableString(values.avatar_url),
+    display_name: emptyToNull(values.display_name),
+    bio: emptyToNull(values.bio),
+    avatar_url: emptyToNull(values.avatar_url),
   };
 }
 
@@ -83,10 +88,14 @@ function Panel({
     <section className="rounded-md border border-[#d9d0c1] bg-[#fbf7ef]/88 shadow-[0_18px_45px_rgba(43,34,24,0.05)]">
       <div className="border-b border-[#e3d8c8] px-5 py-4">
         <h2 className="text-base font-bold text-[#1d211c]">{title}</h2>
+
         {description ? (
-          <p className="mt-1 text-sm leading-6 text-[#756c61]">{description}</p>
+          <p className="mt-1 text-sm leading-6 text-[#756c61]">
+            {description}
+          </p>
         ) : null}
       </div>
+
       <div className="p-5">{children}</div>
     </section>
   );
@@ -97,22 +106,26 @@ function FieldError({ message }: { message?: string }) {
     return null;
   }
 
-  return <p className="text-xs font-semibold text-[#a83f33]">{message}</p>;
+  return (
+    <p className="text-xs font-semibold text-[#a83f33]">
+      {message}
+    </p>
+  );
 }
 
 function FormStatus({
   state,
-  success,
-  error,
+  successMessage,
+  errorMessage,
 }: {
   state: SubmitState;
-  success: string;
-  error: string;
+  successMessage: string;
+  errorMessage: string;
 }) {
   if (state === "success") {
     return (
       <p className="rounded-md border border-[#b8d9be] bg-[#eef8ef] px-3 py-2 text-sm font-semibold text-[#276237]">
-        {success}
+        {successMessage}
       </p>
     );
   }
@@ -120,7 +133,7 @@ function FormStatus({
   if (state === "error") {
     return (
       <p className="rounded-md border border-[#e2b8ae] bg-[#fff1ee] px-3 py-2 text-sm font-semibold text-[#8d3329]">
-        {error}
+        {errorMessage}
       </p>
     );
   }
@@ -128,23 +141,9 @@ function FormStatus({
   return null;
 }
 
-function ButtonIcon({ name }: { name: "save" | "key" }) {
+function ButtonIcon({ type }: { type: "save" | "key" }) {
   const paths = {
-    save: (
-      <>
-        <path d="M5 4h11l3 3v13H5z" />
-        <path d="M8 4v6h8" />
-        <path d="M8 20v-6h8v6" />
-      </>
-    ),
-    key: (
-      <>
-        <circle cx="8" cy="15" r="3" />
-        <path d="M10.5 12.5 19 4" />
-        <path d="m15 8 2 2" />
-        <path d="m13 10 2 2" />
-      </>
-    ),
+    
   };
 
   return (
@@ -158,7 +157,20 @@ function ButtonIcon({ name }: { name: "save" | "key" }) {
       strokeLinejoin="round"
       strokeWidth={1.9}
     >
-      {paths[name]}
+      {type === "save" ? (
+        <>
+          <path d="M5 4h11l3 3v13H5z" />
+          <path d="M8 4v6h8" />
+          <path d="M8 20v-6h8v6" />
+        </>
+      ) : (
+        <>
+          <circle cx="8" cy="15" r="3" />
+          <path d="M10.5 12.5 19 4" />
+          <path d="m15 8 2 2" />
+          <path d="m13 10 2 2" />
+        </>
+      )}
     </svg>
   );
 }
@@ -166,27 +178,36 @@ function ButtonIcon({ name }: { name: "save" | "key" }) {
 function DeleteAccountModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const { clearUser } = useAuth();
-  const [state, setState] = useState<SubmitState>("idle");
-  const [error, setError] = useState("Failed to delete account.");
+
+  const [submitState, setSubmitState] = useState<SubmitState>("idle");
+  const [errorMessage, setErrorMessage] = useState("Failed to delete account.");
 
   const form = useForm<DeleteAccountInput>({
     resolver: zodResolver(deleteAccountSchema),
     defaultValues: { password: "" },
   });
 
-  async function handleSubmit(values: DeleteAccountInput) {
-    setState("saving");
+  async function handleDelete(values: DeleteAccountInput) {
+    setSubmitState("saving");
+
     try {
       const result = await deleteAccount(values.password);
+
       if (result.error) {
-        setError(getApiErrorMessage(result.error, "Failed to delete account."));
-        setState("error");
+        setErrorMessage(
+          getApiErrorMessage(
+            result.error, 
+            "Failed to delete account."
+          )
+        );
+        setSubmitState("error");
         return;
       }
+
       clearUser();
       router.push("/login");
     } catch {
-      setState("error");
+      setSubmitState("error");
     }
   }
 
@@ -196,23 +217,31 @@ function DeleteAccountModal({ onClose }: { onClose: () => void }) {
       aria-modal="true"
       aria-label="Delete account"
       className="fixed inset-0 z-50 flex items-center justify-center bg-[#121417]/70 px-4 backdrop-blur-sm"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(event) => { 
+        if (event.target === event.currentTarget) {
+          onClose(); 
+        }
+      }}
     >
       <div className="w-full max-w-md rounded-lg border border-[#d7c6a3]/40 bg-[#fbf7ef] p-6 shadow-[0_24px_80px_rgba(28,32,24,0.24)]">
-        <h2 className="text-base font-bold text-[#1d211c]">Delete account</h2>
+        <h2 className="text-base font-bold text-[#1d211c]">
+          Delete account
+        </h2>
+
         <p className="mt-1 text-sm leading-6 text-[#756c61]">
           This is permanent. Your posts and comments will be attributed to a
           deleted account placeholder. All other activity will be removed.
         </p>
 
         <form
-          onSubmit={form.handleSubmit(handleSubmit)}
+          onSubmit={form.handleSubmit(handleDelete)}
           className="mt-5 grid gap-4"
         >
           <label className="grid gap-2">
             <span className="text-sm font-bold text-[#50483f]">
               Confirm your password
             </span>
+
             <input
               {...form.register("password")}
               type="password"
@@ -220,13 +249,16 @@ function DeleteAccountModal({ onClose }: { onClose: () => void }) {
               autoFocus
               className="h-11 rounded-md border border-[#d2c5b4] bg-white px-3 text-sm font-semibold text-[#1d211c] outline-none transition focus:border-[#8d7038] focus:ring-4 focus:ring-[#d8bd75]/24"
             />
-            <FieldError message={form.formState.errors.password?.message} />
+
+            <FieldError 
+              message={form.formState.errors.password?.message} 
+            />
           </label>
 
           <FormStatus
-            state={state}
-            success=""
-            error={error}
+            state={submitState}
+            successMessage=""
+            errorMessage={errorMessage}
           />
 
           <div className="flex justify-end gap-3">
@@ -237,12 +269,15 @@ function DeleteAccountModal({ onClose }: { onClose: () => void }) {
             >
               Cancel
             </button>
+
             <button
               type="submit"
-              disabled={state === "saving"}
+              disabled={submitState === "saving"}
               className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#6b3028] px-4 text-sm font-bold text-white transition hover:bg-[#7d3a30] disabled:cursor-not-allowed disabled:bg-[#b19b95]"
             >
-              {state === "saving" ? "Deleting…" : "Delete my account"}
+              {submitState === "saving" 
+                ? "Deleting…" 
+                : "Delete my account"}
             </button>
           </div>
         </form>
@@ -253,15 +288,18 @@ function DeleteAccountModal({ onClose }: { onClose: () => void }) {
 
 export default function SettingsPage() {
   const { user, loading, setUser } = useAuth();
+
   const [settingsState, setSettingsState] = useState<SubmitState>("idle");
   const [passwordState, setPasswordState] = useState<SubmitState>("idle");
+
   const [settingsError, setSettingsError] = useState("Unable to save settings.");
+
   const [passwordError, setPasswordError] = useState("Unable to change password.");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const settingsForm = useForm<SettingsFormInput>({
     resolver: zodResolver(settingsFormSchema),
-    defaultValues: settingsDefaults(user),
+    defaultValues: getSettingsDefaults(user),
   });
 
   const passwordForm = useForm<PasswordChangeInput>({
@@ -274,43 +312,69 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
-    settingsForm.reset(settingsDefaults(user));
-  }, [settingsForm, user]);
+    settingsForm.reset(getSettingsDefaults(user));
+  }, [user, settingsForm]);
 
   const accountRows = useMemo(
     () => [
-      { label: "User ID", value: user?.id ?? "Unavailable" },
-      { label: "Active", value: user?.is_active ? "Yes" : "No" },
-      { label: "Verified", value: user?.is_verified ? "Yes" : "No" },
-      { label: "Created", value: formatDateTime(user?.created_at) },
-      { label: "Updated", value: formatDateTime(user?.updated_at) },
+      { 
+        label: "User ID", 
+        value: user?.id ?? "Unavailable" 
+      },
+      { 
+        label: "Active", 
+        value: user?.is_active ? "Yes" : "No" 
+      },
+      { 
+        label: "Verified", 
+        value: user?.is_verified ? "Yes" : "No" 
+      },
+      { 
+        label: "Created", 
+        value: formatDateTime(user?.created_at) 
+      },
+      { 
+        label: "Updated", 
+        value: formatDateTime(user?.updated_at) 
+      },
     ],
     [user],
   );
 
-  async function handleSettingsSubmit(values: SettingsFormInput) {
+  async function saveSettings(values: SettingsFormInput) {
     setSettingsState("saving");
     setSettingsError("Unable to save settings.");
 
     try {
-      const result = await updateSettings(buildSettingsPayload(values));
+      const result = await updateSettings(
+        buildSettingsPayload(values)
+      );
 
       if (result.error || !result.data) {
-        setSettingsError(getApiErrorMessage(result.error, "Unable to save settings."));
+        setSettingsError(
+          getApiErrorMessage(
+            result.error, 
+            "Unable to save settings."
+          )
+        );
         setSettingsState("error");
         return;
       }
 
       setUser(result.data);
-      settingsForm.reset(settingsDefaults(result.data));
+      settingsForm.reset(
+        getSettingsDefaults(result.data)
+      );
+
       window.dispatchEvent(new Event("plutus-auth-refresh"));
+
       setSettingsState("success");
     } catch {
       setSettingsState("error");
     }
   }
 
-  async function handlePasswordSubmit(values: PasswordChangeInput) {
+  async function changeUserPassword(values: PasswordChangeInput) {
     setPasswordState("saving");
     setPasswordError("Unable to change password.");
 
@@ -321,7 +385,12 @@ export default function SettingsPage() {
       });
 
       if (result.error || !result.data) {
-        setPasswordError(getApiErrorMessage(result.error, "Unable to change password."));
+        setPasswordError(
+          getApiErrorMessage(
+            result.error, 
+            "Unable to change password."
+          )
+        );
         setPasswordState("error");
         return;
       }
@@ -331,6 +400,7 @@ export default function SettingsPage() {
         new_password: "",
         confirm_password: "",
       });
+
       setPasswordState("success");
     } catch {
       setPasswordState("error");
@@ -354,23 +424,32 @@ export default function SettingsPage() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <Panel title="Account Details">
           <form
-            onSubmit={settingsForm.handleSubmit(handleSettingsSubmit)}
+            onSubmit={settingsForm.handleSubmit(saveSettings)}
             className="grid gap-5"
           >
             <div className="grid gap-4 md:grid-cols-2">
               <label className="grid gap-2">
-                <span className="text-sm font-bold text-[#50483f]">Username</span>
+                <span className="text-sm font-bold text-[#50483f]">
+                  Username
+                </span>
+
                 <input
                   {...settingsForm.register("username")}
                   aria-invalid={Boolean(settingsErrors.username)}
                   autoComplete="username"
                   className="h-11 rounded-md border border-[#d2c5b4] bg-white px-3 text-sm font-semibold text-[#1d211c] outline-none transition focus:border-[#8d7038] focus:ring-4 focus:ring-[#d8bd75]/24"
                 />
-                <FieldError message={settingsErrors.username?.message} />
+
+                <FieldError 
+                  message={settingsErrors.username?.message} 
+                />
               </label>
 
               <label className="grid gap-2">
-                <span className="text-sm font-bold text-[#50483f]">Email</span>
+                <span className="text-sm font-bold text-[#50483f]">
+                  Email
+                </span>
+
                 <input
                   {...settingsForm.register("email")}
                   aria-invalid={Boolean(settingsErrors.email)}
@@ -378,29 +457,44 @@ export default function SettingsPage() {
                   type="email"
                   className="h-11 rounded-md border border-[#d2c5b4] bg-white px-3 text-sm font-semibold text-[#1d211c] outline-none transition focus:border-[#8d7038] focus:ring-4 focus:ring-[#d8bd75]/24"
                 />
-                <FieldError message={settingsErrors.email?.message} />
+
+                <FieldError 
+                  message={settingsErrors.email?.message} 
+                />
               </label>
             </div>
 
             <div className="grid gap-4 md:grid-cols-[minmax(0,16rem)_1fr]">
               <label className="grid gap-2">
-                <span className="text-sm font-bold text-[#50483f]">Base Currency</span>
+                <span className="text-sm font-bold text-[#50483f]">
+                  Base Currency
+                </span>
+
                 <select
                   {...settingsForm.register("base_currency")}
                   aria-invalid={Boolean(settingsErrors.base_currency)}
                   className="h-11 rounded-md border border-[#d2c5b4] bg-white px-3 text-sm font-semibold text-[#1d211c] outline-none transition focus:border-[#8d7038] focus:ring-4 focus:ring-[#d8bd75]/24"
                 >
                   {currencyOptions.map((currency) => (
-                    <option key={currency.code} value={currency.code}>
+                    <option 
+                      key={currency.code} 
+                      value={currency.code}
+                    >
                       {currency.code} - {currency.label}
                     </option>
                   ))}
                 </select>
-                <FieldError message={settingsErrors.base_currency?.message} />
+
+                <FieldError 
+                  message={settingsErrors.base_currency?.message} 
+                />
               </label>
 
               <label className="grid gap-2">
-                <span className="text-sm font-bold text-[#50483f]">Avatar URL</span>
+                <span className="text-sm font-bold text-[#50483f]">
+                  Avatar URL
+                </span>
+
                 <input
                   {...settingsForm.register("avatar_url")}
                   aria-invalid={Boolean(settingsErrors.avatar_url)}
@@ -408,36 +502,51 @@ export default function SettingsPage() {
                   placeholder="https://example.com/avatar.png"
                   className="h-11 rounded-md border border-[#d2c5b4] bg-white px-3 text-sm font-semibold text-[#1d211c] outline-none transition placeholder:text-[#aaa197] focus:border-[#8d7038] focus:ring-4 focus:ring-[#d8bd75]/24"
                 />
-                <FieldError message={settingsErrors.avatar_url?.message} />
+
+                <FieldError 
+                  message={settingsErrors.avatar_url?.message} 
+                />
               </label>
             </div>
 
             <label className="grid gap-2">
-              <span className="text-sm font-bold text-[#50483f]">Display Name</span>
+              <span className="text-sm font-bold text-[#50483f]">
+                Display Name
+              </span>
+
               <input
                 {...settingsForm.register("display_name")}
                 aria-invalid={Boolean(settingsErrors.display_name)}
                 autoComplete="name"
                 className="h-11 rounded-md border border-[#d2c5b4] bg-white px-3 text-sm font-semibold text-[#1d211c] outline-none transition focus:border-[#8d7038] focus:ring-4 focus:ring-[#d8bd75]/24"
               />
-              <FieldError message={settingsErrors.display_name?.message} />
+
+              <FieldError 
+                message={settingsErrors.display_name?.message} 
+              />
             </label>
 
             <label className="grid gap-2">
-              <span className="text-sm font-bold text-[#50483f]">Bio</span>
+              <span className="text-sm font-bold text-[#50483f]">
+                Bio
+              </span>
+
               <textarea
                 {...settingsForm.register("bio")}
                 aria-invalid={Boolean(settingsErrors.bio)}
                 rows={4}
                 className="min-h-28 resize-y rounded-md border border-[#d2c5b4] bg-white px-3 py-3 text-sm font-medium leading-6 text-[#1d211c] outline-none transition focus:border-[#8d7038] focus:ring-4 focus:ring-[#d8bd75]/24"
               />
-              <FieldError message={settingsErrors.bio?.message} />
+
+              <FieldError 
+                message={settingsErrors.bio?.message} 
+              />
             </label>
 
             <FormStatus
               state={settingsState}
-              success="Settings saved."
-              error={settingsError}
+              successMessage="Settings saved."
+              errorMessage={settingsError}
             />
 
             <div className="flex justify-end">
@@ -446,8 +555,10 @@ export default function SettingsPage() {
                 disabled={settingsState === "saving"}
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#1d211c] px-4 text-sm font-bold text-[#fbf7ef] transition hover:bg-[#2b332a] disabled:cursor-not-allowed disabled:bg-[#9b948b]"
               >
-                <ButtonIcon name="save" />
-                {settingsState === "saving" ? "Saving" : "Save Changes"}
+                <ButtonIcon type="save" />
+                {settingsState === "saving" 
+                  ? "Saving" 
+                  : "Save Changes"}
               </button>
             </div>
           </form>
@@ -455,16 +566,17 @@ export default function SettingsPage() {
 
         <Panel title="Account State">
           <div className="grid gap-3">
-            {accountRows.map((row) => (
+            {accountRows.map(item => (
               <div
-                key={row.label}
+                key={item.label}
                 className="grid gap-1 rounded-md border border-[#e3d8c8] bg-white/72 px-3 py-3"
               >
                 <span className="text-[0.68rem] font-black uppercase tracking-[0.18em] text-[#897a69]">
-                  {row.label}
+                  {item.label}
                 </span>
+
                 <span className="break-words text-sm font-bold text-[#1d211c]">
-                  {row.value}
+                  {item.value}
                 </span>
               </div>
             ))}
@@ -474,11 +586,14 @@ export default function SettingsPage() {
 
       <Panel title="Security">
         <form
-          onSubmit={passwordForm.handleSubmit(handlePasswordSubmit)}
+          onSubmit={passwordForm.handleSubmit(changeUserPassword)}
           className="grid gap-5 lg:grid-cols-3"
         >
           <label className="grid gap-2">
-            <span className="text-sm font-bold text-[#50483f]">Current Password</span>
+            <span className="text-sm font-bold text-[#50483f]">
+              Current Password
+            </span>
+
             <input
               {...passwordForm.register("current_password")}
               aria-invalid={Boolean(passwordErrors.current_password)}
@@ -486,11 +601,17 @@ export default function SettingsPage() {
               type="password"
               className="h-11 rounded-md border border-[#d2c5b4] bg-white px-3 text-sm font-semibold text-[#1d211c] outline-none transition focus:border-[#8d7038] focus:ring-4 focus:ring-[#d8bd75]/24"
             />
-            <FieldError message={passwordErrors.current_password?.message} />
+
+            <FieldError 
+              message={passwordErrors.current_password?.message} 
+            />
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-bold text-[#50483f]">New Password</span>
+            <span className="text-sm font-bold text-[#50483f]">
+              New Password
+            </span>
+
             <input
               {...passwordForm.register("new_password")}
               aria-invalid={Boolean(passwordErrors.new_password)}
@@ -498,11 +619,17 @@ export default function SettingsPage() {
               type="password"
               className="h-11 rounded-md border border-[#d2c5b4] bg-white px-3 text-sm font-semibold text-[#1d211c] outline-none transition focus:border-[#8d7038] focus:ring-4 focus:ring-[#d8bd75]/24"
             />
-            <FieldError message={passwordErrors.new_password?.message} />
+
+            <FieldError 
+              message={passwordErrors.new_password?.message} 
+            />
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-bold text-[#50483f]">Confirm Password</span>
+            <span className="text-sm font-bold text-[#50483f]">
+              Confirm Password
+            </span>
+
             <input
               {...passwordForm.register("confirm_password")}
               aria-invalid={Boolean(passwordErrors.confirm_password)}
@@ -510,14 +637,17 @@ export default function SettingsPage() {
               type="password"
               className="h-11 rounded-md border border-[#d2c5b4] bg-white px-3 text-sm font-semibold text-[#1d211c] outline-none transition focus:border-[#8d7038] focus:ring-4 focus:ring-[#d8bd75]/24"
             />
-            <FieldError message={passwordErrors.confirm_password?.message} />
+
+            <FieldError 
+              message={passwordErrors.confirm_password?.message} 
+            />
           </label>
 
           <div className="lg:col-span-3">
             <FormStatus
               state={passwordState}
-              success="Password changed."
-              error={passwordError}
+              successMessage="Password changed."
+              errorMessage={passwordError}
             />
           </div>
 
@@ -527,8 +657,10 @@ export default function SettingsPage() {
               disabled={passwordState === "saving"}
               className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#6b3028] px-4 text-sm font-bold text-white transition hover:bg-[#7d3a30] disabled:cursor-not-allowed disabled:bg-[#b19b95]"
             >
-              <ButtonIcon name="key" />
-              {passwordState === "saving" ? "Updating" : "Change Password"}
+              <ButtonIcon type="key" />
+              {passwordState === "saving" 
+                ? "Updating" 
+                : "Change Password"}
             </button>
           </div>
         </form>
@@ -548,7 +680,9 @@ export default function SettingsPage() {
       </Panel>
 
       {deleteModalOpen && (
-        <DeleteAccountModal onClose={() => setDeleteModalOpen(false)} />
+        <DeleteAccountModal 
+          onClose={() => setDeleteModalOpen(false)} 
+        />
       )}
     </div>
   );

@@ -16,11 +16,13 @@ type EditTransactionModalProps = {
 
 function generateTimeOptions() {
   const intervals: string[] = [];
-  for (let hour = 0; hour < 24; hour += 1) {
-    for (let minute = 0; minute < 60; minute += 15) {
+
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute++) {
       intervals.push(`${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`);
     }
   }
+
   return intervals;
 }
 
@@ -30,6 +32,7 @@ function toIsoDateTime(date: string, time: string) {
 
 function splitIsoDateTime(iso: string) {
   const d = new Date(iso);
+
   return {
     date: d.toISOString().slice(0, 10),
     time: `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
@@ -53,8 +56,12 @@ export default function EditTransactionModal({ onSuccess }: EditTransactionModal
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   useEffect(() => {
-    if (!editingTransaction) return;
+    if (!editingTransaction) {
+      return;
+    }
+
     const { date: d, time: t } = splitIsoDateTime(editingTransaction.occurred_at);
+
     setDescription(editingTransaction.description);
     setAmount(String(editingTransaction.amount));
     setDate(d);
@@ -66,7 +73,9 @@ export default function EditTransactionModal({ onSuccess }: EditTransactionModal
     setFormError("");
   }, [editingTransaction]);
 
-  if (!editModalOpen || !editingTransaction) return null;
+  if (!editModalOpen || !editingTransaction) {
+    return null;
+  }
 
   const transaction = editingTransaction;
 
@@ -132,11 +141,15 @@ export default function EditTransactionModal({ onSuccess }: EditTransactionModal
       <div className="w-full max-w-2xl rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 shadow-[0_24px_90px_rgba(43,34,24,0.16)] sm:p-7">
         <div className="mb-6 flex items-start justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase text-[#8f6f2d]">Ledger entry</p>
+            <p className="text-sm font-semibold uppercase text-[#8f6f2d]">
+              Ledger entry
+            </p>
+            
             <h2 className="font-display mt-2 text-3xl font-semibold leading-tight text-[#1d211c]">
               Edit transaction
             </h2>
           </div>
+          
           <button
             className="text-sm font-semibold text-[#696154] hover:text-[#1d211c]"
             onClick={closeEditModal}
@@ -154,87 +167,146 @@ export default function EditTransactionModal({ onSuccess }: EditTransactionModal
 
         <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
           <label className="grid gap-1.5">
-            <span className="text-sm font-semibold text-[#353026]">Description</span>
+            <span className="text-sm font-semibold text-[#353026]">
+              Description
+            </span>
+            
             <input
               className="h-11 rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-none transition focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20"
-              onChange={(event) => setDescription(event.target.value)}
+              onChange={event => setDescription(event.target.value)}
               type="text"
               value={description}
             />
-            {fieldErrors.description ? <span className="text-sm text-[#8f3f32]">{fieldErrors.description[0]}</span> : null}
+
+            {fieldErrors.description 
+              ? <span className="text-sm text-[#8f3f32]">
+                  {fieldErrors.description[0]}
+                </span> 
+              : null}
           </label>
 
           <label className="grid gap-1.5">
-            <span className="text-sm font-semibold text-[#353026]">Amount</span>
+            <span className="text-sm font-semibold text-[#353026]">
+              Amount
+            </span>
+            
             <input
               className="h-11 rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-none transition focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20"
               inputMode="decimal"
-              onChange={(event) => setAmount(event.target.value)}
+              onChange={event => setAmount(event.target.value)}
               type="text"
               value={amount}
             />
-            {fieldErrors.amount ? <span className="text-sm text-[#8f3f32]">{fieldErrors.amount[0]}</span> : null}
+
+            {fieldErrors.amount 
+              ? <span className="text-sm text-[#8f3f32]">
+                  {fieldErrors.amount[0]}
+                </span> 
+              : null}
           </label>
 
           <label className="grid gap-1.5">
-            <span className="text-sm font-semibold text-[#353026]">Date</span>
+            <span className="text-sm font-semibold text-[#353026]">
+              Date
+            </span>
+            
             <input
               className="h-11 rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-none transition focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20"
-              onChange={(event) => setDate(event.target.value)}
+              onChange={event => setDate(event.target.value)}
               type="date"
               value={date}
             />
-            {fieldErrors.date ? <span className="text-sm text-[#8f3f32]">{fieldErrors.date[0]}</span> : null}
+
+            {fieldErrors.date 
+              ? <span className="text-sm text-[#8f3f32]">
+                  {fieldErrors.date[0]}
+                </span> 
+              : null}
           </label>
 
           <label className="grid gap-1.5">
-            <span className="text-sm font-semibold text-[#353026]">Time</span>
+            <span className="text-sm font-semibold text-[#353026]">
+              Time
+            </span>
+            
             <select
               className="h-11 rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-none transition focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20"
-              onChange={(event) => setTime(event.target.value)}
+              onChange={event => setTime(event.target.value)}
               value={time}
             >
-              <option value="">Select time</option>
-              {timeOptions.map((timeOption) => (
-                <option key={timeOption} value={timeOption}>
-                  {timeOption}
+              <option value="">
+                Select time
+              </option>
+              
+              {timeOptions.map(option => (
+                <option key={option} value={option}>
+                  {option}
                 </option>
               ))}
             </select>
-            {fieldErrors.time ? <span className="text-sm text-[#8f3f32]">{fieldErrors.time[0]}</span> : null}
+
+            {fieldErrors.time 
+              ? <span className="text-sm text-[#8f3f32]">
+                  {fieldErrors.time[0]}
+                </span> 
+              : null}
           </label>
 
           <label className="grid gap-1.5">
-            <span className="text-sm font-semibold text-[#353026]">Account</span>
+            <span className="text-sm font-semibold text-[#353026]">
+              Account
+            </span>
+            
             <input
               className="h-11 rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-none transition focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20"
               onChange={(event) => setAccount(event.target.value)}
               type="text"
               value={account}
             />
-            {fieldErrors.account ? <span className="text-sm text-[#8f3f32]">{fieldErrors.account[0]}</span> : null}
+
+            {fieldErrors.account 
+              ? <span className="text-sm text-[#8f3f32]">
+                  {fieldErrors.account[0]}
+                </span> 
+              : null}
           </label>
 
           <label className="grid gap-1.5">
-            <span className="text-sm font-semibold text-[#353026]">Category</span>
+            <span className="text-sm font-semibold text-[#353026]">
+              Category
+            </span>
+            
             <input
               className="h-11 rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-none transition focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20"
-              onChange={(event) => setCategory(event.target.value)}
+              onChange={event => setCategory(event.target.value)}
               type="text"
               value={category}
             />
-            {fieldErrors.category ? <span className="text-sm text-[#8f3f32]">{fieldErrors.category[0]}</span> : null}
+
+            {fieldErrors.category 
+              ? <span className="text-sm text-[#8f3f32]">
+                  {fieldErrors.category[0]}
+                </span> 
+              : null}
           </label>
 
           <label className="grid gap-1.5 md:col-span-2">
-            <span className="text-sm font-semibold text-[#353026]">Impact note</span>
+            <span className="text-sm font-semibold text-[#353026]">
+              Impact note
+            </span>
+            
             <input
               className="h-11 rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-none transition focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20"
-              onChange={(event) => setImpact(event.target.value)}
+              onChange={event => setImpact(event.target.value)}
               type="text"
               value={impact}
             />
-            {fieldErrors.impact ? <span className="text-sm text-[#8f3f32]">{fieldErrors.impact[0]}</span> : null}
+
+            {fieldErrors.impact 
+              ? <span className="text-sm text-[#8f3f32]">
+                  {fieldErrors.impact[0]}
+                </span> 
+              : null}
           </label>
 
           <div className="flex items-center gap-3 md:col-span-2">
@@ -245,6 +317,7 @@ export default function EditTransactionModal({ onSuccess }: EditTransactionModal
             >
               {isSubmitting ? "Saving..." : "Save changes"}
             </button>
+
             <button
               className="h-12 rounded-md border border-[#d5a58b] px-5 text-sm font-bold text-[#8f3f32] transition hover:bg-[#f2e0d8]"
               onClick={() => setConfirmDeleteOpen(true)}

@@ -28,8 +28,7 @@ interface CalendarTimeGridProps {
     onSelectSlot: (dateKey: string, time: string) => void;
     onCreateRange: (dateKey: string, startTime: string, endTime: string) => void;
     onEventChanged: (updatedEvent: CalendarEventRead, originalStartAt: string) => void;
-    /** Pending unsaved new-event slot (from a click or drag-create) — rendered as a
-     * persistent placeholder in the grid while the create form is open. */
+    // shows the new event slot when the form is opened
     draftDateKey?: string | null;
     draftStartTime?: string | null;
     draftEndTime?: string | null;
@@ -57,7 +56,7 @@ interface LaidOutEvent {
 
 interface ActiveDrag {
     event: CalendarEventRead;
-    dateKey: string; // origin day — the DOM node stays parented here for the whole gesture
+    dateKey: string; // origin day
     mode: "move" | "resize";
     durationMinutes: number;
     originalStartMinutes: number;
@@ -66,7 +65,7 @@ interface ActiveDrag {
     pointerStartClientX: number;
     latestStartMinutes: number;
     latestEndMinutes: number;
-    // Cross-day move only (resize always keeps latestDateKey === dateKey):
+    // used when moving events between days
     columnDateKeys: string[];
     originColumnIndex: number;
     latestColumnIndex: number;
@@ -75,11 +74,7 @@ interface ActiveDrag {
     columnWidthPx: number;
 }
 
-/** The single source of truth for where a dragged/resized event renders,
- * from the moment the gesture starts until fresh server data confirms it.
- * Never touched per-pixel during the live drag (that's done imperatively
- * via the DOM ref) — only set at gesture-start and gesture-end, so it can
- * never be reverted by an unrelated re-render mid-drag or mid-save. */
+// keep the event in its new position while the update is being saved
 interface PreviewOverride {
     eventId: string;
     dateKey: string;
@@ -112,23 +107,29 @@ export function CalendarTimeGrid({
     const [actionError, setActionError] = useState("");
 
     const days = useMemo(() => {
-        if (view === "day") return [startOfDay(currentDate)];
+        if (view === "day") {
+            return [startOfDay(currentDate)];
+        }
+
         const start = startOfWeek(currentDate);
-        return Array.from({ length: 7 }, (_, i) => addDays(start, i));
+
+        return Array.from({ length: 7 }, (_, index) => addDays(start, index));
     }, [currentDate, view]);
 
-    // Scroll to a sensible default hour on mount / view change.
+    // scroll to a sensible default hour on mount / view change.
     useEffect(() => {
         scrollContainerRef.current?.scrollTo({ top: DEFAULT_SCROLL_HOUR * HOUR_HEIGHT, behavior: "auto" });
     }, [view, currentDate]);
 
-    // Mounted once for the component's lifetime — never re-attached, so there is
-    // no closure-staleness or effect-timing class of bug to chase. Reads/writes
-    // only the plain activeDragRef and the DOM directly; no React state during move.
+    // handle dragging directly so that the event moves smoothly without
+    // triggering a React re-render on every movement
     useEffect(() => {
         function handlePointerMove(e: PointerEvent) {
             const active = activeDragRef.current;
-            if (!active) return;
+
+            if (!active) {
+                return;
+            }
 
             const deltaY = e.clientY - active.pointerStartClientY;
             const deltaMinutes = snapMinutes((deltaY / HOUR_HEIGHT) * 60);
@@ -157,13 +158,13 @@ export function CalendarTimeGrid({
                 active.latestDateKey = active.columnDateKeys[targetIndex];
             }
 
-            const el = eventElementRefs.current[eventElementKey(active.event.id, active.dateKey)];
-            if (el) {
-                el.style.top = `${(newStart / 60) * HOUR_HEIGHT}px`;
-                el.style.height = `${Math.max(18, ((newEnd - newStart) / 60) * HOUR_HEIGHT)}px`;
+            const element = eventElementRefs.current[eventElementKey(active.event.id, active.dateKey)];
+            if (element) {
+                element.style.top = `${(newStart / 60) * HOUR_HEIGHT}px`;
+                element.style.height = `${Math.max(18, ((newEnd - newStart) / 60) * HOUR_HEIGHT)}px`;
 
                 if (active.mode === "move") {
-                    el.style.left = `calc(${active.baseLeftPercent}% + ${deltaX}px)`;
+                    element.style.left = `calc(${active.baseLeftPercent}% + ${deltaX}px)`;
                 }
             }
         }
@@ -177,13 +178,16 @@ export function CalendarTimeGrid({
                 active.latestStartMinutes !== active.originalStartMinutes ||
                 active.latestEndMinutes !== active.originalEndMinutes ||
                 active.latestDateKey !== active.dateKey;
-            if (moved) suppressClickRef.current = true;
+            if (moved) {
+                suppressClickRef.current = true;
+            }
 
             finalizeDrag(active);
         }
 
         window.addEventListener("pointermove", handlePointerMove);
         window.addEventListener("pointerup", handlePointerUp);
+
         return () => {
             window.removeEventListener("pointermove", handlePointerMove);
             window.removeEventListener("pointerup", handlePointerUp);
@@ -244,10 +248,8 @@ export function CalendarTimeGrid({
             return;
         }
 
-        // Commit the final position to state immediately and synchronously, before
-        // any async work starts. From this point every render (including ones
-        // triggered by isSavingDrag/actionError) reads this fixed value instead
-        // of stale pre-drag data, so the block cannot revert.
+        // commit the final position to state immediately and synchronously
+        // before any async work starts
         setPreviewOverride({
             eventId: active.event.id,
             dateKey: latestDateKey,
@@ -255,9 +257,7 @@ export function CalendarTimeGrid({
             endMinutes: latestEndMinutes,
         });
 
-        // Dragging a single occurrence always applies to just that occurrence —
-        // no confirmation dialog. Shifting an entire recurring series' time is a
-        // deliberate action left to the full edit form, not a quick drag gesture.
+        // dragging a recurring event only changes this occurrence
         const scope = active.event.is_recurring_instance ? "THIS_INSTANCE" : "ALL_SESSIONS";
         void commitTimeChange(active.event, active.dateKey, latestDateKey, latestStartMinutes, latestEndMinutes, scope);
     }
@@ -293,9 +293,7 @@ export function CalendarTimeGrid({
                 throw new Error(getApiErrorMessage(error, "Unable to update event time."));
             }
 
-            // Some backends return 204 No Content on a successful PATCH — data
-            // being empty is NOT a failure. Fall back to synthesizing the
-            // confirmed event from what we already know we just saved.
+            // PATCH may return 204 without a response body
             const confirmedEvent: CalendarEventRead = data ?? {
                 ...event,
                 start_at: body.start_at,
@@ -307,7 +305,7 @@ export function CalendarTimeGrid({
             setPreviewOverride(null);
         } catch (err) {
             setActionError(err instanceof Error ? err.message : "Unable to update event time.");
-            setPreviewOverride(null); // Save failed — revert to the real (unchanged) position now.
+            setPreviewOverride(null); // Save failed. Revert to the real unchanged position
         } finally {
             setIsSavingDrag(false);
         }
@@ -379,18 +377,18 @@ export function CalendarTimeGrid({
                                         key={hour}
                                         className="cursor-pointer border-b border-[#eee5d4] transition hover:bg-[#f5efe4]/60"
                                         style={{ height: HOUR_HEIGHT }}
-                                        onPointerDown={(e) => {
-                                            e.stopPropagation();
-                                            (e.target as HTMLElement).setPointerCapture(e.pointerId);
+                                        onPointerDown={event => {
+                                            event.stopPropagation();
+                                            (event.target as HTMLElement).setPointerCapture(event.pointerId);
                                             const columnRect = dayColumnRefs.current[dateKey]?.getBoundingClientRect();
-                                            const rawMinutes = columnRect ? ((e.clientY - columnRect.top) / HOUR_HEIGHT) * 60 : hour * 60;
+                                            const rawMinutes = columnRect ? ((event.clientY - columnRect.top) / HOUR_HEIGHT) * 60 : hour * 60;
                                             const startMinutes = Math.max(0, Math.min(MINUTES_IN_DAY, snapMinutes(rawMinutes)));
                                             const next: CreationDraft = {
                                                 dateKey,
                                                 clickHour: hour,
                                                 startMinutes,
                                                 currentMinutes: startMinutes,
-                                                pointerStartClientY: e.clientY,
+                                                pointerStartClientY: event.clientY,
                                                 hasDragged: false,
                                             };
                                             creationDraftRef.current = next;
@@ -445,8 +443,8 @@ export function CalendarTimeGrid({
                                     return (
                                         <div
                                             key={elementKey}
-                                            ref={(el) => {
-                                                eventElementRefs.current[elementKey] = el;
+                                            ref={element => {
+                                                eventElementRefs.current[elementKey] = element;
                                             }}
                                             className="absolute overflow-hidden rounded border px-1.5 py-1 text-left text-[11px] font-medium shadow-sm"
                                             style={{
@@ -461,18 +459,28 @@ export function CalendarTimeGrid({
                                                 opacity: isSavingDrag && isOverridden ? 0.6 : 1,
                                                 zIndex: isOverridden ? 20 : 1,
                                             }}
-                                            onClick={(e) => {
+
+                                            onClick={e => {
                                                 e.stopPropagation();
+
                                                 if (suppressClickRef.current) {
                                                     suppressClickRef.current = false;
                                                     return;
                                                 }
-                                                if (!activeDragRef.current) onSelectEvent(laid.event, dateKey);
+
+                                                if (!activeDragRef.current) {
+                                                    onSelectEvent(laid.event, dateKey);
+                                                }
                                             }}
-                                            onPointerDown={(e) => {
-                                                if (!laid.isDraggable) return;
+
+                                            onPointerDown={e => {
+                                                if (!laid.isDraggable) {
+                                                    return;
+                                                }
+
                                                 e.stopPropagation();
                                                 (e.target as HTMLElement).setPointerCapture(e.pointerId);
+
                                                 activeDragRef.current = {
                                                     event: laid.event,
                                                     dateKey,
@@ -491,6 +499,7 @@ export function CalendarTimeGrid({
                                                     baseLeftPercent: laid.colIndex * widthPercent,
                                                     columnWidthPx: dayColumnRefs.current[dateKey]?.getBoundingClientRect().width ?? 0,
                                                 };
+
                                                 setPreviewOverride({
                                                     eventId: laid.event.id,
                                                     dateKey,
@@ -507,9 +516,10 @@ export function CalendarTimeGrid({
                                             {laid.isDraggable ? (
                                                 <div
                                                     className="absolute inset-x-0 bottom-0 h-1.5 cursor-ns-resize"
-                                                    onPointerDown={(e) => {
+                                                    onPointerDown={e => {
                                                         e.stopPropagation();
                                                         (e.target as HTMLElement).setPointerCapture(e.pointerId);
+
                                                         activeDragRef.current = {
                                                             event: laid.event,
                                                             dateKey,
@@ -528,6 +538,7 @@ export function CalendarTimeGrid({
                                                             baseLeftPercent: laid.colIndex * widthPercent,
                                                             columnWidthPx: 0,
                                                         };
+
                                                         setPreviewOverride({
                                                             eventId: laid.event.id,
                                                             dateKey,
@@ -564,10 +575,11 @@ function AllDayStrip({ days, events, onSelectEvent }: AllDayStripProps) {
             <div className="border-r border-[#d9d0c1] px-2 py-1.5 text-[10px] font-bold uppercase text-[#a99b82]">
                 All day
             </div>
+
             {days.map((day) => {
                 const dateKey = toDateKey(day);
                 const dailyAllDayEvents = events.filter(
-                    (evt) => evt.is_all_day && new Date(evt.start_at) <= day && new Date(evt.end_at) > day,
+                    event => event.is_all_day && new Date(event.start_at) <= day && new Date(event.end_at) > day,
                 );
 
                 return (
@@ -598,36 +610,40 @@ function layoutDayTimedEvents(day: Date, events: CalendarEventRead[]): LaidOutEv
     const dayEnd = addDays(dayStart, 1);
 
     const candidates = events
-        .filter((evt) => !evt.is_all_day)
-        .map((evt) => {
-            const evtStart = new Date(evt.start_at);
-            const evtEnd = new Date(evt.end_at);
-            if (evtEnd <= dayStart || evtStart >= dayEnd) return null;
+        .filter(event => !event.is_all_day)
+        .map(event => {
+            const eventStart = new Date(event.start_at);
+            const eventEnd = new Date(event.end_at);
+            if (eventEnd <= dayStart || eventStart >= dayEnd) return null;
 
-            const clippedStart = evtStart < dayStart ? dayStart : evtStart;
-            const clippedEnd = evtEnd > dayEnd ? dayEnd : evtEnd;
+            const clippedStart = eventStart < dayStart ? dayStart : eventStart;
+            const clippedEnd = eventEnd > dayEnd ? dayEnd : eventEnd;
             const startMinutes = minutesSinceMidnight(clippedStart);
             const endMinutes = clippedEnd.getTime() === dayEnd.getTime() ? MINUTES_IN_DAY : minutesSinceMidnight(clippedEnd);
-            const isDraggable = evtStart.getTime() === clippedStart.getTime() && evtEnd.getTime() === clippedEnd.getTime();
+            const isDraggable = eventStart.getTime() === clippedStart.getTime() && eventEnd.getTime() === clippedEnd.getTime();
 
-            return { event: evt, startMinutes, endMinutes: Math.max(endMinutes, startMinutes + 15), isDraggable };
+            return { event: event, startMinutes, endMinutes: Math.max(endMinutes, startMinutes + 15), isDraggable };
         })
         .filter((v): v is Omit<LaidOutEvent, "colIndex" | "colCount"> => v !== null)
         .sort((a, b) => a.startMinutes - b.startMinutes || a.endMinutes - b.endMinutes);
 
     const columnEndTimes: number[] = [];
+
     const withColumns = candidates.map((candidate) => {
         let colIndex = columnEndTimes.findIndex((end) => end <= candidate.startMinutes);
+
         if (colIndex === -1) {
             colIndex = columnEndTimes.length;
             columnEndTimes.push(candidate.endMinutes);
         } else {
             columnEndTimes[colIndex] = candidate.endMinutes;
         }
+
         return { ...candidate, colIndex };
     });
 
     const colCount = Math.max(1, columnEndTimes.length);
+
     return withColumns.map((item) => ({ ...item, colCount }));
 }
 
@@ -635,8 +651,10 @@ function resolveMinutesToDateAndTime(dateKey: string, minutes: number): { dateKe
     if (minutes >= MINUTES_IN_DAY) {
         const [year, month, day] = dateKey.split("-").map(Number);
         const nextDay = addDays(new Date(year, month - 1, day), 1);
+
         return { dateKey: toDateKey(nextDay), time: minutesToTimeInputValue(minutes - MINUTES_IN_DAY) };
     }
+
     return { dateKey, time: minutesToTimeInputValue(minutes) };
 }
 
@@ -650,12 +668,19 @@ function eventElementKey(eventId: string, dateKey: string): string {
 
 function parseTimeToMinutes(time: string): number {
     const [hours, minutes] = time.split(":").map(Number);
+
     return hours * 60 + minutes;
 }
 
 function formatHourLabel(hour: number): string {
-    if (hour === 0) return "12 AM";
-    if (hour === 12) return "12 PM";
+    if (hour === 0) {
+        return "12 AM";
+    }
+
+    if (hour === 12) {
+        return "12 PM";
+    }
+
     return hour < 12 ? `${hour} AM` : `${hour - 12} PM`;
 }
 

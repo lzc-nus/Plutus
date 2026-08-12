@@ -22,24 +22,33 @@ export function RepostComposer({ post, onClose, onReposted }: RepostComposerProp
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Close on Escape
+  // close on Escape
   useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+      }
     }
+
     window.addEventListener("keydown", onKey);
+
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // Trap focus inside modal
+  // trap focus inside modal
   useEffect(() => {
-    const prev = document.activeElement as HTMLElement | null;
+    const previousElement = document.activeElement as HTMLElement | null;
+    
     overlayRef.current?.focus();
-    return () => prev?.focus();
+    
+    return () => previousElement?.focus();
   }, []);
 
   async function handleSubmit() {
-    if (mode === "quote" && blocks.length === 0) return;
+    if (mode === "quote" && blocks.length === 0) {
+      return;
+    }
+    
     setStatus("submitting");
     try {
       await repostPost(post.id, {
@@ -53,6 +62,7 @@ export function RepostComposer({ post, onClose, onReposted }: RepostComposerProp
 
   const textBlock = blocks.find((b) => b.type === "text");
   const textLength = textBlock?.type === "text" ? textBlock.value.length : 0;
+  
   const isQuoteReady = mode === "quote" && blocks.length > 0 && textLength <= 5000;
   const canSubmit = mode === "simple" || isQuoteReady;
 
@@ -65,7 +75,11 @@ export function RepostComposer({ post, onClose, onReposted }: RepostComposerProp
       aria-modal
       aria-label={mode === "simple" ? "Repost" : "Quote repost"}
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={event => { 
+        if (event.target === event.currentTarget) {
+          onClose();
+        } 
+      }}
     >
       <div className="flex w-full max-w-lg flex-col rounded-t-2xl border border-zinc-800 bg-zinc-950 sm:rounded-2xl">
 
@@ -74,6 +88,7 @@ export function RepostComposer({ post, onClose, onReposted }: RepostComposerProp
           <span className="text-sm font-medium text-white">
             {mode === "simple" ? "Repost" : "Quote repost"}
           </span>
+
           <button
             onClick={onClose}
             aria-label="Close"
@@ -91,6 +106,7 @@ export function RepostComposer({ post, onClose, onReposted }: RepostComposerProp
           >
             Repost
           </ModeButton>
+
           <ModeButton
             active={mode === "quote"}
             onClick={() => setMode("quote")}
@@ -102,7 +118,7 @@ export function RepostComposer({ post, onClose, onReposted }: RepostComposerProp
         {/* Body */}
         <div className="flex flex-col gap-3 px-4 py-4">
 
-          {/* Quote composer — only visible in quote mode */}
+          {/* Quote composer (only visible in quote mode) */}
           {mode === "quote" && (
             <div className="flex flex-col gap-3">
               <ContentBlockEditor
@@ -117,7 +133,11 @@ export function RepostComposer({ post, onClose, onReposted }: RepostComposerProp
           {/* Original post preview */}
           <div className="rounded-xl border border-zinc-700 px-3 py-3">
             <div className="mb-2 flex items-center gap-2">
-              <UserAvatar userId={post.author_id} size="sm" />
+              <UserAvatar 
+                userId={post.author_id} 
+                size="sm" 
+              />
+
               <time
                 dateTime={post.created_at}
                 className="text-xs text-zinc-500"
@@ -125,8 +145,12 @@ export function RepostComposer({ post, onClose, onReposted }: RepostComposerProp
                 {formatRelativeTime(post.created_at)}
               </time>
             </div>
+
             <div className="line-clamp-4 text-sm text-zinc-300">
-              <ContentBlockRenderer blocks={post.content_blocks as ContentBlock[]} compact />
+              <ContentBlockRenderer 
+                blocks={post.content_blocks as ContentBlock[]} 
+                compact 
+              />
             </div>
           </div>
 
@@ -146,6 +170,7 @@ export function RepostComposer({ post, onClose, onReposted }: RepostComposerProp
           >
             Cancel
           </button>
+
           <button
             onClick={handleSubmit}
             disabled={!canSubmit || status === "submitting"}
@@ -167,8 +192,6 @@ export function RepostComposer({ post, onClose, onReposted }: RepostComposerProp
     </div>
   );
 }
-
-// ── ModeButton ────────────────────────────────────────────────────────────────
 
 function ModeButton({
   active,
@@ -194,28 +217,65 @@ function ModeButton({
   );
 }
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
+// ICONS
 
 function CloseIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg 
+      width="16" 
+      height="16" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      aria-hidden
+    >
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   );
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// HELPERS 
 
 function formatRelativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
+
   const seconds = Math.floor(diff / 1000);
-  if (seconds < 60) return `${seconds}s`;
+
+  if (seconds < 60) {
+    return `${seconds}s`;
+  }
+
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m`;
+
+  if (minutes < 60) {
+    return `${minutes}m`;
+  }
+
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h`;
+
+  if (hours < 24) {
+    return `${hours}h`;
+  }
+
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d`;
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  
+  if (days < 7) {
+    return `${days}d`;
+  }
+  
+  return formatFullTimestamp(iso);
+}
+
+function formatFullTimestamp(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }

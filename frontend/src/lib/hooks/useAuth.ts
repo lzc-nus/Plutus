@@ -2,14 +2,7 @@ import { useContext } from "react";
 import { AuthContext } from "@/lib/contexts/AuthContext";
 
 /**
- * Returns the current authenticated user and related helpers.
- *
- * Must be used inside a component that is a descendant of AuthProvider.
- *
- * @example
- * const { user, loading } = useAuth();
- * if (loading) return <Spinner />;
- * if (!user) return null;
+ * Return the current authenticated user and related helpers.
  */
 export function useAuth() {
   const context = useContext(AuthContext);

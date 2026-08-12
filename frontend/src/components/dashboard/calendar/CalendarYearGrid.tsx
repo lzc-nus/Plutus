@@ -14,11 +14,13 @@ interface CalendarYearGridProps {
 export function CalendarYearGrid({ currentDate, events, onSelectDay }: CalendarYearGridProps) {
     const year = currentDate.getFullYear();
     const eventsByDateKey = useMemo(() => groupEventsByDateKey(events), [events]);
-    const months = Array.from({ length: 12 }, (_, i) => i);
+    const months = Array.from(
+        { length: 12 }, 
+        (_, index) => index);
 
     return (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {months.map((month) => (
+            {months.map(month => (
                 <CalendarMiniMonth
                     key={month}
                     year={year}

@@ -36,10 +36,12 @@ export function SectionHeader({
         <p className="text-sm font-semibold uppercase text-[#8f6f2d]">
           {eyebrow}
         </p>
+
         <h2 className="font-display mt-2 text-4xl font-semibold leading-tight">
           {title}
         </h2>
       </div>
+
       {description ? (
         <p className="max-w-md text-sm leading-6 text-[#696154]">
           {description}
@@ -66,7 +68,10 @@ export function MetricCard({
         dominant ? "md:col-span-2" : ""
       }`}
     >
-      <p className="text-sm font-semibold uppercase text-[#8f6f2d]">{label}</p>
+      <p className="text-sm font-semibold uppercase text-[#8f6f2d]">
+        {label}
+      </p>
+      
       <p
         className={`mt-4 font-semibold tracking-tight ${
           dominant ? "text-6xl" : "text-4xl"
@@ -102,6 +107,7 @@ export function CashflowBreakdownChart({
       (totalOffset, segment) => totalOffset + segment.length,
       0,
     );
+
     return [...accumulator, { ...item, length, offset }];
   }, []);
 
@@ -110,6 +116,7 @@ export function CashflowBreakdownChart({
       <p className="text-sm font-semibold uppercase text-[#8f6f2d]">
         {title}
       </p>
+
       <div className="mt-5 grid gap-5 sm:grid-cols-[auto_1fr] sm:items-center">
         <div className="relative size-44">
           <svg
@@ -143,10 +150,16 @@ export function CashflowBreakdownChart({
                 />
             ))}
           </svg>
+
           <div className="absolute inset-0 grid place-items-center text-center">
             <div>
-              <p className="text-xs uppercase text-[#8a8173]">Total</p>
-              <p className="text-xl font-semibold">{formatCurrency(total)}</p>
+              <p className="text-xs uppercase text-[#8a8173]">
+                Total
+              </p>
+              
+              <p className="text-xl font-semibold">
+                {formatCurrency(total)}
+              </p>
             </div>
           </div>
         </div>
@@ -159,6 +172,7 @@ export function CashflowBreakdownChart({
               key={item.id}
             />
           ))}
+
           <p className="border-t border-[#e2dacd] pt-4 text-sm leading-6 text-[#696154]">
             {subtitle}
           </p>
@@ -182,14 +196,21 @@ function CashflowBreakdownLegend({
           className="size-3 rounded-sm"
           style={{ backgroundColor: color }}
         />
+
         <div>
-          <p className="font-semibold">{item.label}</p>
+          <p className="font-semibold">
+            {item.label}
+          </p>
+
           <p className="text-sm text-[#756d60]">
             {item.percentage}% of monthly total
           </p>
         </div>
       </div>
-      <p className="font-semibold">{formatCurrency(item.value)}</p>
+      
+      <p className="font-semibold">
+        {formatCurrency(item.value)}
+      </p>
     </div>
   );
 }
@@ -208,6 +229,7 @@ export function WealthEquation({
       <p className="text-sm font-semibold uppercase text-[#c3a35d]">
         Net worth composition
       </p>
+
       <div className="mt-6 grid gap-4 text-center md:grid-cols-[1fr_auto_1fr_auto_1.1fr] md:items-center">
         <EquationTerm label="Assets" value={formatCurrency(assets)} />
         <EquationSymbol symbol="-" />
@@ -222,14 +244,23 @@ export function WealthEquation({
 function EquationTerm({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-white/10 bg-white/5 p-5">
-      <p className="text-sm text-[#cfc5b4]">{label}</p>
-      <p className="mt-2 text-3xl font-semibold">{value}</p>
+      <p className="text-sm text-[#cfc5b4]">
+        {label}
+      </p>
+      
+      <p className="mt-2 text-3xl font-semibold">
+        {value}
+      </p>
     </div>
   );
 }
 
 function EquationSymbol({ symbol }: { symbol: string }) {
-  return <p className="font-display text-4xl text-[#c3a35d]">{symbol}</p>;
+  return (
+    <p className="font-display text-4xl text-[#c3a35d]">
+      {symbol}
+    </p>
+  );
 }
 
 export function AssetCard({ asset }: { asset: Asset }) {
@@ -237,14 +268,24 @@ export function AssetCard({ asset }: { asset: Asset }) {
     <article className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-semibold">{asset.name}</p>
-          <p className="mt-1 text-sm text-[#756d60]">{asset.category}</p>
+          <p className="font-semibold">
+            {asset.name}
+          </p>
+          
+          <p className="mt-1 text-sm text-[#756d60]">
+            {asset.category}
+          </p>
         </div>
-        <span className="rounded-md border border-[#d0c5b3] px-2 py-1 text-xs font-semibold text-[#6f5a24]">
+        <
+          span className="rounded-md border border-[#d0c5b3] px-2 py-1 text-xs font-semibold text-[#6f5a24]">
           {asset.liquidity}
         </span>
       </div>
-      <p className="mt-6 text-3xl font-semibold">{formatCurrency(asset.value)}</p>
+
+      <p className="mt-6 text-3xl font-semibold">
+        {formatCurrency(asset.value)}
+      </p>
+      
       <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
         <SmallStat label="Share" value={`${asset.percentage.toFixed(1)}%`} />
         <SmallStat label="Change" value={formatPercent(asset.change)} />
@@ -259,16 +300,24 @@ export function LiabilityCard({ liability }: { liability: Liability }) {
     <article className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-semibold">{liability.name}</p>
-          <p className="mt-1 text-sm text-[#756d60]">{liability.riskLabel}</p>
+          <p className="font-semibold">
+            {liability.name}
+          </p>
+          
+          <p className="mt-1 text-sm text-[#756d60]">
+            {liability.riskLabel}
+          </p>
         </div>
+        
         <span className="text-sm font-semibold text-[#8f3f32]">
           {liability.interestRate.toFixed(1)}%
         </span>
       </div>
+      
       <p className="mt-6 text-3xl font-semibold">
         {formatCurrency(liability.balance)}
       </p>
+      
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
         <SmallStat
           label="Monthly"
@@ -283,8 +332,13 @@ export function LiabilityCard({ liability }: { liability: Liability }) {
 function SmallStat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs uppercase text-[#8a8173]">{label}</p>
-      <p className="mt-1 font-semibold">{value}</p>
+      <p className="text-xs uppercase text-[#8a8173]">
+        {label}
+      </p>
+      
+      <p className="mt-1 font-semibold">
+        {value}
+      </p>
     </div>
   );
 }
@@ -303,12 +357,24 @@ export function RiskScoreCard({
       <p className="text-sm font-semibold uppercase text-[#c3a35d]">
         Risk score
       </p>
+      
       <div className="mt-5 flex items-end gap-3">
-        <p className="text-6xl font-semibold">{score}</p>
-        <p className="pb-2 text-xl text-[#cfc5b4]">/ 100</p>
+        <p className="text-6xl font-semibold">
+          {score}
+        </p>
+        
+        <p className="pb-2 text-xl text-[#cfc5b4]">
+          / 100
+        </p>
       </div>
-      <p className="mt-4 text-2xl font-semibold">{label}</p>
-      <p className="mt-3 text-sm leading-6 text-[#d9d0c1]">{summary}</p>
+
+      <p className="mt-4 text-2xl font-semibold">
+        {label}
+      </p>
+      
+      <p className="mt-3 text-sm leading-6 text-[#d9d0c1]">
+        {summary}
+      </p>
     </article>
   );
 }
@@ -323,12 +389,19 @@ export function RiskItemCard({
   return (
     <article className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-5">
       <div className="flex items-start justify-between gap-4">
-        <h3 className="font-semibold">{item.title}</h3>
+        <h3 className="font-semibold">
+          {item.title}
+        </h3>
+        
         <span className="rounded-md bg-[#eadfc9] px-2 py-1 text-xs font-semibold text-[#8f3f32]">
           {item.severity}
         </span>
       </div>
-      <p className="mt-3 text-sm leading-6 text-[#696154]">{item.reason}</p>
+      
+      <p className="mt-3 text-sm leading-6 text-[#696154]">
+        {item.reason}
+      </p>
+      
       <Link
         className="mt-4 text-sm font-semibold text-[#8f6f2d] underline-offset-4 hover:underline"
         href={href}
@@ -343,15 +416,22 @@ export function NextActionCard({ action }: { action: NextAction }) {
   return (
     <article className="border-l border-[#c3a35d] bg-[#fbf7ef] py-1 pl-4">
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="font-semibold">{action.title}</h3>
+        <h3 className="font-semibold">
+          {action.title}
+        </h3>
+        
         <span className="rounded-md border border-[#d0c5b3] px-2 py-1 text-xs font-semibold text-[#6f5a24]">
           {action.priority}
         </span>
       </div>
+      
       <p className="mt-2 text-sm leading-6 text-[#696154]">
         {action.explanation}
       </p>
-      <p className="mt-2 text-xs uppercase text-[#8a8173]">{action.due}</p>
+      
+      <p className="mt-2 text-xs uppercase text-[#8a8173]">
+        {action.due}
+      </p>
     </article>
   );
 }
@@ -366,7 +446,7 @@ export function TransactionRangeToggle({
   const ranges: TransactionRange[] = ["1D", "1M", "1Y", "ALL"];
   return (
     <div className="inline-flex rounded-md border border-[#d0c5b3] bg-[#f4efe6] p-1">
-      {ranges.map((range) => (
+      {ranges.map(range => (
         <button
           className={`h-9 rounded px-4 text-sm font-semibold transition ${
             value === range
@@ -406,8 +486,9 @@ export function TransactionList({
         <span>Impact</span>
         <span />
       </div>
+
       <div className="divide-y divide-[#e2dacd]">
-        {transactions.map((item) => (
+        {transactions.map(item => (
           <div
             className={[
               "group grid gap-3 px-5 py-4 text-sm lg:grid-cols-[0.9fr_1.4fr_0.9fr_1fr_0.8fr_1fr_auto] lg:items-center",
@@ -417,7 +498,7 @@ export function TransactionList({
             onClick={onRowClick ? () => onRowClick(item.id) : undefined}
             onKeyDown={
               onRowClick
-                ? (event) => {
+                ? event => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
                       onRowClick(item.id);
@@ -444,17 +525,24 @@ export function TransactionList({
                 {item.impact}
               </span>
             </p>
+
             <div className="flex items-center gap-1.5">
               <button
                 aria-label="Edit transaction"
                 className="rounded-md border border-[#d0c5b3] p-1.5 text-[#6f675b] transition hover:border-[#7a6332] hover:text-[#7a6332]"
-                onClick={(event) => {
+                onClick={event => {
                   event.stopPropagation();
                   onEditClick?.(item.id);
                 }}
                 type="button"
               >
-                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <svg 
+                  className="h-3.5 w-3.5" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth={2} 
+                  viewBox="0 0 24 24"
+                >
                   <path
                     d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
                     strokeLinecap="round"
@@ -467,16 +555,23 @@ export function TransactionList({
                   />
                 </svg>
               </button>
+              
               <button
                 aria-label="Delete transaction"
                 className="rounded-md border border-[#d5a58b] p-1.5 text-[#8f3f32] transition hover:bg-[#f2e0d8]"
-                onClick={(event) => {
+                onClick={event => {
                   event.stopPropagation();
                   onDeleteClick?.(item.id);
                 }}
                 type="button"
               >
-                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <svg 
+                  className="h-3.5 w-3.5" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth={2} 
+                  viewBox="0 0 24 24"
+                >
                   <path
                     d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
                     strokeLinecap="round"
@@ -502,7 +597,7 @@ export function TransactionSearchInput({
   return (
     <input
       className="h-11 w-full rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 text-sm text-[#1d211c] outline-none transition focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20 sm:w-64"
-      onChange={(event) => onChange(event.target.value)}
+      onChange={event => onChange(event.target.value)}
       placeholder="Search description, category, account"
       type="text"
       value={value}
@@ -525,21 +620,25 @@ export function AIReportCard({
         <p className="text-sm font-semibold uppercase text-[#8f6f2d]">
           AI generated report
         </p>
+
         <div className="mt-4 flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <h2 className="font-display text-5xl font-semibold">
             Private wealth memorandum
           </h2>
+          
           <p className="text-lg font-semibold">
             Risk Score: {score} / 100 · {label}
           </p>
         </div>
       </div>
+      
       <div className="mt-8 grid gap-6">
-        {sections.map((section) => (
+        {sections.map(section => (
           <section className="max-w-4xl" key={section.id}>
             <h3 className="font-display text-3xl font-semibold">
               {section.title}
             </h3>
+
             <p className="mt-3 text-base leading-8 text-[#575044]">
               {section.body}
             </p>
@@ -552,23 +651,32 @@ export function AIReportCard({
 
 export function GoalCard({ goal }: { goal: Goal }) {
   const progress = Math.round((goal.currentAmount / goal.targetAmount) * 100);
+  
   return (
     <article className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="font-semibold">{goal.title}</h3>
-          <p className="mt-1 text-sm text-[#756d60]">{goal.note}</p>
+          <h3 className="font-semibold">
+            {goal.title}
+          </h3>
+          
+          <p className="mt-1 text-sm text-[#756d60]">
+            {goal.note}
+          </p>
         </div>
+        
         <span className="rounded-md border border-[#d0c5b3] px-2 py-1 text-xs font-semibold text-[#6f5a24]">
           {goal.status}
         </span>
       </div>
+      
       <div className="mt-5 h-2 rounded-full bg-[#e5ddcf]">
         <div
           className="h-2 rounded-full bg-[#33483d]"
           style={{ width: `${progress}%` }}
         />
       </div>
+      
       <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
         <SmallStat label="Target" value={formatCurrency(goal.targetAmount)} />
         <SmallStat label="Progress" value={`${progress}%`} />
@@ -630,6 +738,7 @@ export function WhatIfPanel() {
       <div className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6">
         <p className="text-sm font-semibold uppercase text-[#8f6f2d]">
           What if
+        
         </p>
         <label
           className="mt-4 block text-sm font-semibold text-[#353026]"
@@ -637,12 +746,14 @@ export function WhatIfPanel() {
         >
           Scenario
         </label>
+        
         <textarea
           className="mt-3 min-h-36 w-full resize-none rounded-md border border-[#d0c5b3] bg-[#fffaf2] p-4 text-base outline-[#8f6f2d]"
           id="scenario"
-          onChange={(event) => setScenario(event.target.value)}
+          onChange={event => setScenario(event.target.value)}
           value={scenario}
         />
+
         <button
           className="mt-4 h-11 rounded-md bg-[#1d211c] px-4 text-sm font-semibold text-[#fbf7ef] transition hover:bg-[#343b32]"
           onClick={() => setSubmitted(scenario)}
@@ -656,9 +767,11 @@ export function WhatIfPanel() {
         <p className="text-sm font-semibold uppercase text-[#c3a35d]">
           Preserved analysis
         </p>
+
         <h3 className="font-display mt-3 text-4xl font-semibold">
           {analysis.title}
         </h3>
+
         <div className="mt-6 grid gap-4 text-sm leading-6 text-[#e7dfd0]">
           <p>Scenario: {submitted}</p>
           <p>Net worth: depreciating or financed purchases reduce flexibility.</p>
@@ -718,6 +831,7 @@ export function AllocationBar({ assets }: { assets: Asset[] }) {
           />
         ))}
       </div>
+
       <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {assets.map((asset, index) => (
           <div className="flex items-center gap-2 text-sm" key={asset.id}>
@@ -725,8 +839,14 @@ export function AllocationBar({ assets }: { assets: Asset[] }) {
               className="size-3 rounded-sm"
               style={{ backgroundColor: colors[index % colors.length] }}
             />
-            <span className="text-[#696154]">{asset.name}</span>
-            <span className="font-semibold">{asset.percentage.toFixed(1)}%</span>
+
+            <span className="text-[#696154]">
+              {asset.name}
+            </span>
+            
+            <span className="font-semibold">
+              {asset.percentage.toFixed(1)}%
+            </span>
           </div>
         ))}
       </div>
@@ -736,16 +856,22 @@ export function AllocationBar({ assets }: { assets: Asset[] }) {
 
 function groupEventsByDay(events: CalendarEventRead[]) {
   const groups = new Map<string, CalendarEventRead[]>();
+
   for (const event of events) {
     const key = new Date(event.start_at).toDateString();
     const list = groups.get(key) ?? [];
+
     list.push(event);
     groups.set(key, list);
   }
-  return Array.from(groups.entries()).map(([key, items]) => ({
-    date: new Date(key),
-    items,
-  }));
+
+  return Array.from(groups.entries())
+    .map(
+      ([key, items]) => ({
+        date: new Date(key),
+        items,
+      })
+    );
 }
 
 function formatDayLabel(date: Date): string {
@@ -766,7 +892,9 @@ export function UpcomingEventsCard({
 
   return (
     <article className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-6 sm:p-7">
+
       <SectionHeader eyebrow="Upcoming" title="Next 14 days" />
+
       <div className="mt-6 divide-y divide-[#e2dacd]">
         {groups.map(({ date, items }) => {
           const dateKey = date.toDateString();
@@ -787,14 +915,16 @@ export function UpcomingEventsCard({
                 >
                   {date.getDate()}
                 </span>
+
                 <span className="text-xs font-semibold uppercase tracking-wide text-[#8a8173]">
                   {formatDayLabel(date)}
                 </span>
               </div>
 
               <div className="grid gap-3">
-                {items.map((event) => {
+                {items.map(event => {
                   const color = getCalendarEventColor(event.color);
+
                   return (
                     <div
                       className="grid grid-cols-[auto_5.5rem_1fr] items-center gap-5 text-sm"
@@ -804,6 +934,7 @@ export function UpcomingEventsCard({
                         className="size-2.5 rounded-full"
                         style={{ backgroundColor: color.swatch }}
                       />
+
                       <span className="text-[#756d60]">
                         {event.is_all_day
                           ? "All day"
@@ -812,6 +943,7 @@ export function UpcomingEventsCard({
                               { hour: "numeric", minute: "2-digit" },
                             )}
                       </span>
+
                       <span className="font-semibold text-[#1d211c]">
                         {event.title}
                       </span>
@@ -869,25 +1001,29 @@ export function CashflowButterflyChart({
 
         {/* Left: outflow bars */}
         <div className="grid gap-3 pr-5">
-          {Array.from({ length: maxRows }, (_, i) => {
-            const item = outflowItems[i] ?? null;
-            const color = outflowColors[i % outflowColors.length];
+          {Array.from({ length: maxRows }, (_, index) => {
+            const item = outflowItems[index] ?? null;
+            const color = outflowColors[index % outflowColors.length];
+
             return item ? (
               <div key={item.id} className="flex items-center gap-3">
                 <div className="flex w-32 shrink-0 flex-col items-end">
                   <span className="text-xs font-semibold text-[#1d211c]">
                     {formatCurrency(item.value)}
                   </span>
+
                   <div className="flex items-center gap-1.5">
                     <span className="truncate text-right text-xs text-[#756d60]">
                       {item.label}
                     </span>
+
                     <span
                       className="size-2 shrink-0 rounded-full"
                       style={{ backgroundColor: color }}
                     />
                   </div>
                 </div>
+
                 <div className="flex flex-1 justify-end">
                   <div
                     className="h-5 rounded-l-sm"
@@ -900,7 +1036,7 @@ export function CashflowButterflyChart({
                 </div>
               </div>
             ) : (
-              <div key={`empty-out-${i}`} className="h-10" />
+              <div key={`empty-out-${index}`} className="h-10" />
             );
           })}
         </div>
@@ -920,23 +1056,28 @@ export function CashflowButterflyChart({
                 stroke="#e5ddcf"
                 strokeWidth="18"
               />
-              {outflowSegments.map((seg, i) => (
+
+              {outflowSegments.map((segment, index) => (
                 <circle
-                  key={seg.id}
+                  key={segment.id}
                   cx="60" cy="60"
                   fill="transparent"
                   r={radius}
-                  stroke={outflowColors[i % outflowColors.length]}
-                  strokeDasharray={`${seg.length} ${circumference - seg.length}`}
-                  strokeDashoffset={-seg.offset}
+                  stroke={outflowColors[index % outflowColors.length]}
+                  strokeDasharray={`${segment.length} ${circumference - segment.length}`}
+                  strokeDashoffset={-segment.offset}
                   strokeLinecap="butt"
                   strokeWidth="18"
                 />
               ))}
             </svg>
+
             <div className="absolute inset-0 grid place-items-center text-center">
               <div>
-                <p className="text-[10px] uppercase text-[#8a8173]">Out</p>
+                <p className="text-[10px] uppercase text-[#8a8173]">
+                  Out
+                </p>
+                
                 <p className="text-sm font-semibold text-[#8f3f32]">
                   {formatCurrency(outflowTotal)}
                 </p>
@@ -957,23 +1098,27 @@ export function CashflowButterflyChart({
                 stroke="#e5ddcf"
                 strokeWidth="18"
               />
-              {inflowSegments.map((seg, i) => (
+              {inflowSegments.map((segment, index) => (
                 <circle
-                  key={seg.id}
+                  key={segment.id}
                   cx="60" cy="60"
                   fill="transparent"
                   r={radius}
-                  stroke={inflowColors[i % inflowColors.length]}
-                  strokeDasharray={`${seg.length} ${circumference - seg.length}`}
-                  strokeDashoffset={-seg.offset}
+                  stroke={inflowColors[index % inflowColors.length]}
+                  strokeDasharray={`${segment.length} ${circumference - segment.length}`}
+                  strokeDashoffset={-segment.offset}
                   strokeLinecap="butt"
                   strokeWidth="18"
                 />
               ))}
             </svg>
+
             <div className="absolute inset-0 grid place-items-center text-center">
               <div>
-                <p className="text-[10px] uppercase text-[#8a8173]">In</p>
+                <p className="text-[10px] uppercase text-[#8a8173]">
+                  In
+                </p>
+                
                 <p className="text-sm font-semibold text-[#1f6b48]">
                   {formatCurrency(inflowTotal)}
                 </p>
@@ -984,9 +1129,10 @@ export function CashflowButterflyChart({
 
         {/* Right: inflow bars */}
         <div className="grid gap-3 pl-5">
-          {Array.from({ length: maxRows }, (_, i) => {
-            const item = inflowItems[i] ?? null;
-            const color = inflowColors[i % inflowColors.length];
+          {Array.from({ length: maxRows }, (_, index) => {
+            const item = inflowItems[index] ?? null;
+            const color = inflowColors[index % inflowColors.length];
+
             return item ? (
               <div key={item.id} className="flex items-center gap-3">
                 <div className="flex flex-1 justify-start">
@@ -999,15 +1145,18 @@ export function CashflowButterflyChart({
                     }}
                   />
                 </div>
+
                 <div className="flex w-32 shrink-0 flex-col items-start">
                   <span className="text-xs font-semibold text-[#1d211c]">
                     {formatCurrency(item.value)}
                   </span>
+
                   <div className="flex items-center gap-1.5">
                     <span
                       className="size-2 shrink-0 rounded-full"
                       style={{ backgroundColor: color }}
                     />
+
                     <span className="truncate text-xs text-[#756d60]">
                       {item.label}
                     </span>
@@ -1015,7 +1164,7 @@ export function CashflowButterflyChart({
                 </div>
               </div>
             ) : (
-              <div key={`empty-in-${i}`} className="h-10" />
+              <div key={`empty-in-${index}`} className="h-10" />
             );
           })}
         </div>
@@ -1033,6 +1182,7 @@ function buildSegments(
     (acc, item) => {
       const length = circumference * (item.percentage / 100);
       const offset = acc.reduce((total, seg) => total + seg.length, 0);
+      
       return [...acc, { ...item, length, offset }];
     },
     [],

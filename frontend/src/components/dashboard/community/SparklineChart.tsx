@@ -5,7 +5,9 @@ interface SparklineChartProps {
 }
 
 export function SparklineChart({ prices, width = 80, height = 32 }: SparklineChartProps) {
-  if (prices.length < 2) return null;
+  if (prices.length < 2) {
+    return null;
+  }
 
   const min = Math.min(...prices);
   const max = Math.max(...prices);
@@ -14,6 +16,7 @@ export function SparklineChart({ prices, width = 80, height = 32 }: SparklineCha
   const points = prices.map((price, i) => {
     const x = (i / (prices.length - 1)) * width;
     const y = height - ((price - min) / range) * height;
+
     return `${x},${y}`;
   });
 

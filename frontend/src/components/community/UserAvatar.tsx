@@ -6,9 +6,9 @@ import Link from "next/link";
 
 interface UserAvatarProps {
   userId: string;
-  /** "sm" = 28px, default = 36px */
+  // "sm" = 28px, default = 36px
   size?: "sm" | "md";
-  /** When true, renders a plain div instead of a Link. */
+  // when true, renders a plain div instead of a link
   disableLink?: boolean;
 }
 
@@ -17,24 +17,30 @@ interface UserStub {
   avatar_url: string | null;
 }
 
-// Module-level cache so repeated mounts don't re-fetch the same user.
+// prevent repeated mounts from refetching the same user
 const cache = new Map<string, UserStub>();
 
 export function UserAvatar({ userId, size = "md", disableLink = false }: UserAvatarProps) {
   const [user, setUser] = useState<UserStub | null>(cache.get(userId) ?? null);
 
   useEffect(() => {
-    if (cache.has(userId)) return;
+    if (cache.has(userId)) {
+      return;
+    }
+
     getUserById(userId)
-      .then((res) => {
-        if (res.data) {
-          const stub: UserStub = {
-            display_name: res.data.display_name ?? res.data.username,
-            avatar_url: res.data.avatar_url ?? null,
-          };
-          cache.set(userId, stub);
-          setUser(stub);
+      .then(res => {
+        if (!res.data) {
+          return;
         }
+
+        const userData: UserStub = {
+          display_name: res.data.display_name ?? res.data.username,
+          avatar_url: res.data.avatar_url ?? null,
+        };
+
+        cache.set(userId, userData);
+        setUser(userData);
       })
       .catch(() => {});
   }, [userId]);
@@ -87,9 +93,12 @@ export function UserAvatar({ userId, size = "md", disableLink = false }: UserAva
     <Link
       href={profileUrl}
       className="group flex items-center gap-2"
-      onClick={(e) => e.stopPropagation()}
+      onClick={event => event.stopPropagation()}
     >
-      <div className="transition-opacity group-hover:opacity-80">{avatar}</div>
+      <div className="transition-opacity group-hover:opacity-80">
+        {avatar}
+      </div>
+      
       <span className={`${nameClasses} group-hover:underline`}>
         {user?.display_name ?? (
           <span className="inline-block h-3 w-20 animate-pulse rounded bg-[#d7c6a3]/60" />
@@ -99,10 +108,18 @@ export function UserAvatar({ userId, size = "md", disableLink = false }: UserAva
   );
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// HELPER
 
 function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
+  const parts = name
+    .trim()
+    .split(/\s+/);
+
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  return name
+    .slice(0, 2)
+    .toUpperCase();
 }

@@ -4,7 +4,9 @@ import { getApiBaseUrl } from "./baseUrl";
 let isConfigured = false;
 
 export function configureApiClient() {
-  if (isConfigured) return;
+  if (isConfigured) {
+    return;
+  }
 
   client.setConfig({
     baseUrl: getApiBaseUrl(),

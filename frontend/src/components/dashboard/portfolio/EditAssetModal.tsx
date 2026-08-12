@@ -66,7 +66,10 @@ export function EditAssetModal({
     const [isSaving, setIsSaving] = useState(false);
 
     function resolvedCustomCategory(): string | null {
-        if (form.category !== "other") return null;
+        if (form.category !== "other") {
+            return null;
+        }
+
         return form.custom_category.trim() || null;
     }
 
@@ -84,8 +87,16 @@ export function EditAssetModal({
         });
 
         if (!result.success) {
-            const flat = result.error.flatten().fieldErrors;
-            setErrors(Object.fromEntries(Object.entries(flat).map(([k, v]) => [k, v?.[0]])));
+            const fieldErrors = result.error.flatten().fieldErrors;
+
+            setErrors(
+                Object
+                    .fromEntries(
+                        Object
+                            .entries(fieldErrors)
+                            .map(([key, messages]) => [key, messages?.[0]])
+                    )
+            );
             setSubmitError("");
             return;
         }
@@ -95,11 +106,16 @@ export function EditAssetModal({
         setIsSaving(true);
 
         try {
-            const saved = await onSave(String(asset.id), result.data);
+            const saved = await onSave(
+                String(asset.id), 
+                result.data
+            );
+
             if (!saved) {
                 setSubmitError("Could not save this asset. Please try again.");
                 return;
             }
+
             onClose();
         } catch {
             setSubmitError("Could not save this asset. Please try again.");
@@ -113,24 +129,38 @@ export function EditAssetModal({
     return (
         <div
             className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(29,33,28,0.5)] p-4 sm:items-center"
-            onClick={(e) => e.target === e.currentTarget && !isSaving && onClose()}
+            onClick={event => event.target === event.currentTarget && !isSaving && onClose()}
         >
             <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-[#d9d0c1] bg-[#fbf7ef] shadow-[0_24px_80px_rgba(43,34,24,0.2)]">
+                
                 {/* Header */}
                 <div className="flex items-start justify-between border-b border-[#e4dece] px-6 py-5">
                     <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7a6332]">
                             Portfolio asset
                         </p>
-                        <h2 className="mt-1 text-xl font-bold text-[#1d211c]">Edit asset</h2>
-                        <p className="mt-0.5 text-sm text-[#9a8f7a]">{asset.name}</p>
+
+                        <h2 className="mt-1 text-xl font-bold text-[#1d211c]">
+                            Edit asset
+                        </h2>
+
+                        <p className="mt-0.5 text-sm text-[#9a8f7a]">
+                            {asset.name}
+                        </p>
                     </div>
+
                     <button
                         onClick={onClose}
                         className="mt-0.5 rounded-lg p-1.5 text-[#9a8f7a] transition-colors hover:bg-[#ede6d8] hover:text-[#1d211c]"
                         aria-label="Close"
                     >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <svg 
+                            className="h-5 w-5" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth={2} 
+                            viewBox="0 0 24 24"
+                        >
                             <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                     </button>
@@ -145,10 +175,11 @@ export function EditAssetModal({
                             <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
                                 Asset name <span className="text-[#993c1d]">*</span>
                             </label>
+
                             <input
                                 type="text"
                                 value={form.name}
-                                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                onChange={event => setForm({ ...form, name: event.target.value })}
                                 className={INPUT_CLS}
                             />
                             {errors.name && <p className="mt-1 text-xs text-[#993c1d]">{errors.name}</p>}
@@ -156,11 +187,14 @@ export function EditAssetModal({
 
                         {/* Category */}
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">Category</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
+                                Category
+                            </label>
+                            
                             <select
                                 value={form.category}
-                                onChange={(e) => {
-                                    const nextCategory = e.target.value as AssetCategory;
+                                onChange={event => {
+                                    const nextCategory = event.target.value as AssetCategory;
                                     setForm({
                                         ...form,
                                         category: nextCategory,
@@ -169,9 +203,16 @@ export function EditAssetModal({
                                 }}
                                 className={INPUT_CLS}
                             >
-                                {(Object.entries(ASSET_CATEGORY_LABELS) as [AssetCategory, string][]).map(
+                                {(
+                                    Object.entries(ASSET_CATEGORY_LABELS) as [
+                                        AssetCategory, 
+                                        string
+                                    ][]
+                                ).map(
                                     ([value, label]) => (
-                                        <option key={value} value={value}>{label}</option>
+                                        <option key={value} value={value}>
+                                        {label}
+                                        </option>
                                     )
                                 )}
                             </select>
@@ -185,7 +226,7 @@ export function EditAssetModal({
                                 suggestions={existingCustomCategories}
                                 placeholder="e.g. Collectibles, angel investments"
                                 error={errors.custom_category}
-                                onChange={(value) => setForm({ ...form, custom_category: value })}
+                                onChange={value => setForm({ ...form, custom_category: value })}
                             />
                         )}
 
@@ -193,46 +234,67 @@ export function EditAssetModal({
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
-                                    Current value (USD) <span className="text-[#993c1d]">*</span>
+                                    Current value <span className="text-[#993c1d]">*</span>
                                 </label>
+
                                 <input
                                     type="number"
                                     min={0}
                                     value={form.value}
-                                    onChange={(e) => setForm({ ...form, value: e.target.value })}
+                                    onChange={event => setForm({ 
+                                        ...form, 
+                                        value: event.target.value 
+                                    })}
                                     className={INPUT_CLS}
                                 />
-                                {errors.value && <p className="mt-1 text-xs text-[#993c1d]">{errors.value}</p>}
+
+                                {errors.value && (
+                                    <p className="mt-1 text-xs text-[#993c1d]">
+                                        {errors.value}
+                                    </p>
+                                )}
                             </div>
+
                             <div>
-                                <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">Cost basis (USD)</label>
+                                <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
+                                    Cost basis
+                                </label>
+                                
                                 <input
                                     type="number"
                                     min={0}
                                     placeholder="Optional"
                                     value={form.cost_basis}
-                                    onChange={(e) => setForm({ ...form, cost_basis: e.target.value })}
+                                    onChange={event => setForm({ ...form, cost_basis: event.target.value })}
                                     className={INPUT_CLS}
                                 />
-                                {errors.cost_basis && <p className="mt-1 text-xs text-[#993c1d]">{errors.cost_basis}</p>}
+
+                                {errors.cost_basis && (
+                                    <p className="mt-1 text-xs text-[#993c1d]">
+                                        {errors.cost_basis}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
                         {/* Liquidity */}
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">Liquidity</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
+                                Liquidity
+                            </label>
+                            
                             <div className="grid grid-cols-3 gap-2">
-                                {LIQUIDITY_OPTIONS.map((opt) => (
+                                {LIQUIDITY_OPTIONS.map(option => (
                                     <button
-                                        key={opt.value}
+                                        key={option.value}
                                         type="button"
-                                        onClick={() => setForm({ ...form, liquidity: opt.value })}
-                                        className={`rounded-lg border px-3 py-2.5 text-xs transition-colors ${form.liquidity === opt.value
+                                        onClick={() => setForm({ ...form, liquidity: option.value })}
+                                        className={`rounded-lg border px-3 py-2.5 text-xs transition-colors ${form.liquidity === option.value
                                                 ? "border-[#7a6332] bg-[#f4ede0] font-semibold text-[#5a4520]"
                                                 : "border-[#d9d0c1] bg-white text-[#6f675b] hover:border-[#b8a87a]"
                                             }`}
                                     >
-                                        {opt.label}
+                                        {option.label}
                                     </button>
                                 ))}
                             </div>
@@ -240,19 +302,22 @@ export function EditAssetModal({
 
                         {/* Risk */}
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">Risk level</label>
+                            <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
+                                Risk level
+                            </label>
+                            
                             <div className="grid grid-cols-4 gap-2">
-                                {RISK_OPTIONS.map((opt) => (
+                                {RISK_OPTIONS.map(option => (
                                     <button
-                                        key={opt.value}
+                                        key={option.value}
                                         type="button"
-                                        onClick={() => setForm({ ...form, risk: opt.value })}
-                                        className={`rounded-lg border px-3 py-2.5 text-xs transition-colors ${form.risk === opt.value
+                                        onClick={() => setForm({ ...form, risk: option.value })}
+                                        className={`rounded-lg border px-3 py-2.5 text-xs transition-colors ${form.risk === option.value
                                                 ? "border-[#7a6332] bg-[#f4ede0] font-semibold text-[#5a4520]"
                                                 : "border-[#d9d0c1] bg-white text-[#6f675b] hover:border-[#b8a87a]"
                                             }`}
                                     >
-                                        {opt.label}
+                                        {option.label}
                                     </button>
                                 ))}
                             </div>
@@ -261,21 +326,28 @@ export function EditAssetModal({
                         {/* Acquired + Notes */}
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">Acquired</label>
+                                <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
+                                    Acquired
+                                </label>
+                                
                                 <input
                                     type="date"
                                     value={form.acquired_at}
-                                    onChange={(e) => setForm({ ...form, acquired_at: e.target.value })}
+                                    onChange={event => setForm({ ...form, acquired_at: event.target.value })}
                                     className={INPUT_CLS}
                                 />
-                            </div>
+                            </div>  
+
                             <div>
-                                <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">Notes</label>
+                                <label className="mb-1.5 block text-xs font-medium text-[#4a4238]">
+                                    Notes
+                                </label>
+                                
                                 <input
                                     type="text"
                                     placeholder="Optional"
                                     value={form.notes}
-                                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                                    onChange={event => setForm({ ...form, notes: event.target.value })}
                                     className={INPUT_CLS}
                                 />
                             </div>
@@ -286,15 +358,24 @@ export function EditAssetModal({
 
                 {/* Footer */}
                 <div className="border-t border-[#e4dece] px-6 py-4">
-                    {submitError ? <p className="mb-3 text-sm text-[#993c1d]">{submitError}</p> : null}
+                    {submitError 
+                        ? <p className="mb-3 text-sm text-[#993c1d]">
+                            {submitError}
+                        </p> 
+                        : null}
+
                     <div className="flex items-center justify-between gap-3">
                         <button
-                            onClick={() => { onDelete(); onClose(); }}
+                            onClick={() => { 
+                                onDelete(); 
+                                onClose(); 
+                            }}
                             disabled={isSaving}
                             className="rounded-lg bg-[#a32d2d] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#791f1f] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             Delete
                         </button>
+
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={onClose}
@@ -303,6 +384,7 @@ export function EditAssetModal({
                             >
                                 Cancel
                             </button>
+
                             <button
                                 onClick={handleSubmit}
                                 disabled={isSaving}

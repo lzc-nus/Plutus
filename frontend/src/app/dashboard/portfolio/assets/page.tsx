@@ -1,15 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+
 import { PortfolioHeader } from "@/components/dashboard/portfolio/PortfolioHeader";
 import { AssetCategorySection } from "@/components/dashboard/portfolio/CategorySection";
 import { AddAssetModal } from "@/components/dashboard/portfolio/AddAssetModal";
 import { EditAssetModal } from "@/components/dashboard/portfolio/EditAssetModal";
 import { ConfirmDeleteDialog } from "@/components/dashboard/portfolio/ConfirmDeleteDialog";
 import { AssetSearchFilterBar } from "@/components/dashboard/portfolio/AssetSearchFilterBar";
-import { listAssets, createAsset, updateAsset, deleteAsset } from "@/lib/api/portfolio";
+
+import { 
+  listAssets, 
+  createAsset, 
+  updateAsset, 
+  deleteAsset 
+} from "@/lib/api/portfolio";
+
 import type { AssetRead } from "@/lib/api/generated";
 import type { AssetFormInput } from "@/lib/validations/portfolio";
+
 import { filterAssets } from "@/lib/portfolio/filterAssets";
 import {
   ASSET_CATEGORY_LABELS,
@@ -18,7 +28,6 @@ import {
   type AssetCategory,
   type AssetFilterState
 } from "@/data/portfolioTypes";
-import { useSearchParams, useRouter } from "next/navigation";
 
 const CURRENCY = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -36,49 +45,69 @@ interface CategoryBucket {
 }
 
 function buildCategories(assets: AssetRead[]): CategoryBucket[] {
-  const buckets: CategoryBucket[] = [];
+  const categories: CategoryBucket[] = [];
 
-  for (const cat of Object.keys(ASSET_CATEGORY_LABELS) as AssetCategory[]) {
-    if (cat === "other") continue;
-    const items = assets.filter((a) => a.category === cat);
-    buckets.push({
-      key: cat,
-      category: cat,
-      label: ASSET_CATEGORY_LABELS[cat],
-      icon: ASSET_CATEGORY_ICONS[cat],
-      total: items.reduce((sum, a) => sum + Number(a.value), 0),
+  for (const category of Object.keys(
+    ASSET_CATEGORY_LABELS
+  ) as AssetCategory[]) {
+    if (category === "other") {
+      continue;
+    }
+
+    const items = assets.filter(asset => asset.category === category);
+
+    categories.push({
+      key: category,
+      category: category,
+      label: ASSET_CATEGORY_LABELS[category],
+      icon: ASSET_CATEGORY_ICONS[category],
+      total: items.reduce((sum, asset) => sum + Number(asset.value), 0),
       items,
     });
   }
 
-  const otherItems = assets.filter((a) => a.category === "other");
-  const customLabels = Array.from(
-    new Set(otherItems.map((a) => a.custom_category?.trim()).filter((v): v is string => !!v))
+  const otherAssets = assets.filter((asset) => asset.category === "other");
+
+  const customCategories = Array.from(
+    new Set(
+      otherAssets
+        .map(asset => asset.custom_category?.trim())
+        .filter((category): category is string => Boolean(category))
+    )
   );
 
-  for (const customLabel of customLabels) {
-    const items = otherItems.filter((a) => a.custom_category?.trim() === customLabel);
-    buckets.push({
-      key: `other::${customLabel}`,
+  for (const category of customCategories) {
+    const items = otherAssets.filter(
+      asset => asset.custom_category?.trim() === category,
+    );
+
+    categories.push({
+      key: `other::${category}`,
       category: "other",
-      label: customLabel,
-      icon: ASSET_CATEGORY_ICONS["other"],
-      total: items.reduce((sum, a) => sum + Number(a.value), 0),
+      label: category,
+      icon: ASSET_CATEGORY_ICONS.other,
+      total: items.reduce((sum, asset) => sum + Number(asset.value), 0),
       items,
     });
   }
 
-  const uncategorised = otherItems.filter((a) => !a.custom_category?.trim());
-  buckets.push({
+  const uncategorised = otherAssets.filter(
+    asset => !asset.custom_category?.trim()
+  );
+
+  categories.push({
     key: "other",
     category: "other",
-    label: ASSET_CATEGORY_LABELS["other"],
-    icon: ASSET_CATEGORY_ICONS["other"],
-    total: uncategorised.reduce((sum, a) => sum + Number(a.value), 0),
+    label: ASSET_CATEGORY_LABELS.other,
+    icon: ASSET_CATEGORY_ICONS.other,
+    total: uncategorised.reduce(
+      (sum, asset) => sum + Number(asset.value), 
+      0
+    ),
     items: uncategorised,
   });
 
-  return buckets;
+  return categories;
 }
 
 export default function AssetsPage() {
@@ -86,30 +115,38 @@ export default function AssetsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Add modal
+  // add modal
   const [addOpen, setAddOpen] = useState(false);
   const [defaultCategory, setDefaultCategory] = useState<AssetCategory | undefined>();
   const [defaultCustomCategory, setDefaultCustomCategory] = useState<string | undefined>();
   const [lockCustomCategory, setLockCustomCategory] = useState(false);
 
-  // Edit modal
+  // edit modal
   const [editingAsset, setEditingAsset] = useState<AssetRead | null>(null);
 
-  // Delete dialog
+  // delete dialog
   const [deletingAsset, setDeletingAsset] = useState<AssetRead | null>(null);
 
   const [filters, setFilters] = useState<AssetFilterState>(DEFAULT_ASSET_FILTERS);
 
+  const searchParams = useSearchParams(); 
+  const router = useRouter();
+
   useEffect(() => {
-    fetchAssets();
+    void fetchAssets();
   }, []);
 
   async function fetchAssets() {
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
+    
+    try {  
       const { data, error } = await listAssets();
-      if (error) throw new Error();
+
+      if (error) {
+        throw new Error("Failed to load assets");
+      }
+
       setAssets(data ?? []);
     } catch {
       setError("Could not load your assets. Please try again.");
@@ -120,76 +157,108 @@ export default function AssetsPage() {
 
   async function handleCreate(payload: AssetFormInput): Promise<boolean> {
     const { data, error } = await createAsset(payload);
-    if (error || !data) return false;
-    setAssets((prev) => [...prev, data]);
+
+    if (error || !data) {
+      return false;
+    }
+
+    setAssets(current => [...current, data]);
     return true;
   }
 
   async function handleUpdate(id: string, payload: AssetFormInput): Promise<boolean> {
     const { data, error } = await updateAsset(id, payload);
-    if (error || !data) return false;
-    setAssets((prev) => prev.map((a) => (String(a.id) === id ? data : a)));
+
+    if (error || !data) {
+      return false;
+    }
+
+    setAssets(current => 
+      current.map(asset => 
+        String(asset.id) === id ? data : asset
+      )
+    );
+
     return true;
   }
 
   async function handleDelete(id: string): Promise<boolean> {
     const { error } = await deleteAsset(id);
-    if (error) return false;
-    setAssets((prev) => prev.filter((a) => String(a.id) !== id));
+
+    if (error) {
+      return false;
+    }
+
+    setAssets(current => 
+      current.filter(asset => String(asset.id) !== id)
+    );
+
     return true;
   }
 
-  function openAddModal(category?: AssetCategory, customCategory?: string, lock?: boolean) {
+  function openAddModal(category?: AssetCategory, customCategory?: string, lockCategory?: boolean) {
     setDefaultCategory(category);
     setDefaultCustomCategory(customCategory);
-    setLockCustomCategory(lock ?? false);
+    setLockCustomCategory(lockCategory ?? false);
     setAddOpen(true);
   }
 
   const filteredAssets = filterAssets(assets, filters);
   const categories = buildCategories(filteredAssets);
-  const totalAssets = filteredAssets.reduce((sum, a) => sum + Number(a.value), 0);
+
+  const totalAssets = filteredAssets.reduce(
+    (sum, asset) => sum + Number(asset.value), 
+    0
+  );
+
+  const populatedCategories = categories.filter(category => category.items.length > 0);
 
   const existingCustomCategories = Array.from(
     new Set(
       assets
-        .filter((a) => a.category === "other" && a.custom_category?.trim())
-        .map((a) => a.custom_category!.trim())
+        .filter(asset => asset.category === "other" && asset.custom_category?.trim())
+        .map((asset) => asset.custom_category!.trim())
     )
   );
 
   const lastUsedCustomCategory = assets
-    .filter((a) => a.category === "other" && a.custom_category?.trim())
-    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0]
-    ?.custom_category ?? undefined;
-
-  const unusedStandard = (Object.keys(ASSET_CATEGORY_LABELS) as AssetCategory[]).filter(
-    (cat) => cat !== "other" && assets.filter((a) => a.category === cat).length === 0
-  );
-  const showOtherStub = assets.filter((a) => a.category === "other").length === 0;
-  const unusedCategories: AssetCategory[] = [
-    ...unusedStandard,
-    ...(showOtherStub ? ["other" as AssetCategory] : []),
-  ];
-
-  const searchParams = useSearchParams();
-  const router = useRouter();
+    .filter(asset => asset.category === "other" && asset.custom_category?.trim())
+    .sort(
+      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    )[0]?.custom_category ?? undefined;
 
   useEffect(() => {
-    if (searchParams.get("add") === "true") {
-      const timer = window.setTimeout(() => {
-        openAddModal(undefined, lastUsedCustomCategory);
-        router.replace("/dashboard/portfolio/assets");
-      }, 0);
-
-      return () => window.clearTimeout(timer);
+    if (searchParams.get("add") !== "true") {
+      return;
     }
+
+    const timer = window.setTimeout(() => {
+      openAddModal(undefined, lastUsedCustomCategory);
+      router.replace("/dashboard/portfolio/assets");
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [lastUsedCustomCategory, router, searchParams]);
+  
+  const unusedStandardCategories = (
+    Object.keys(ASSET_CATEGORY_LABELS) as AssetCategory[]
+  ).filter(
+    category => category !== "other" && !assets.some(asset => asset.category === category),
+  );
+
+  const hasOtherAssets = assets.some(asset => asset.category === "other");
+
+  const unusedCategories: AssetCategory[] = [
+    ...unusedStandardCategories
+  ];
+
+  if (!hasOtherAssets) {
+    unusedCategories.push("other");
+  }
 
   return (
     <>
       <div className="grid gap-6">
-        {/* Header */}
         <PortfolioHeader
           eyebrow="Assets dashboard"
           title="What you own"
@@ -198,6 +267,7 @@ export default function AssetsPage() {
           backLabel="Balance sheet"
           action={
             <button
+              type='button'
               onClick={() => openAddModal(undefined, lastUsedCustomCategory)}
               className="flex items-center gap-2 rounded-lg bg-[#3b6d11] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#27500a]"
             >
@@ -209,18 +279,21 @@ export default function AssetsPage() {
           }
         />
 
-        {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-16 text-sm text-[#9a8f7a]">
             Loading assets…
           </div>
         )}
 
-        {/* Error */}
         {error && !loading && (
           <div className="rounded-xl border border-[#f7c1c1] bg-[#fcebeb] px-5 py-4 text-sm text-[#a32d2d]">
             {error}
-            <button onClick={fetchAssets} className="ml-3 underline underline-offset-2 hover:text-[#791f1f]">
+
+            <button
+              type='button'
+              onClick={fetchAssets} 
+              className="ml-3 underline underline-offset-2 hover:text-[#791f1f]"
+            >
               Retry
             </button>
           </div>
@@ -233,30 +306,44 @@ export default function AssetsPage() {
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-[#d9d0c1] bg-[#fbf7ef] px-5 py-4">
               <div>
                 <p className="text-xs text-[#9a8f7a]">Total assets</p>
-                <p className="text-xl font-bold text-[#1d211c]">{CURRENCY.format(totalAssets)}</p>
+                <p className="text-xl font-bold text-[#1d211c]">
+                  {CURRENCY.format(totalAssets)}
+                </p>
               </div>
+
               <div className="h-8 w-px bg-[#e4dece]" />
+
               <div>
                 <p className="text-xs text-[#9a8f7a]">Holdings</p>
-                <p className="text-xl font-bold text-[#1d211c]">{assets.length}</p>
+                <p className="text-xl font-bold text-[#1d211c]">
+                  {assets.length}
+                </p>
               </div>
+
               <div className="h-8 w-px bg-[#e4dece]" />
+
               <div>
                 <p className="text-xs text-[#9a8f7a]">Categories</p>
                 <p className="text-xl font-bold text-[#1d211c]">
-                  {categories.filter((c) => c.items.length > 0).length}
+                  {populatedCategories.length}
                 </p>
               </div>
             </div>
 
-            {/* Search & filter */}
-            <AssetSearchFilterBar filters={filters} onChange={setFilters} />
+            <AssetSearchFilterBar 
+              filters={filters} 
+              onChange={setFilters} 
+            />
 
             <div className="grid gap-3">
-              {categories.filter((c) => c.items.length > 0).length === 0 && filteredAssets.length === 0 && assets.length > 0 && (
+              {populatedCategories.length === 0 && filteredAssets.length === 0 && assets.length > 0 && (
                 <div className="rounded-xl border border-[#d9d0c1] bg-[#fbf7ef] px-5 py-10 text-center">
-                  <p className="text-sm text-[#6f675b]">No assets match your search or filters.</p>
+                  <p className="text-sm text-[#6f675b]">
+                    No assets match your search or filters.
+                  </p>
+
                   <button
+                    type='button'
                     onClick={() => setFilters(DEFAULT_ASSET_FILTERS)}
                     className="mt-2 text-sm font-medium text-[#7a6332] underline underline-offset-2 hover:text-[#5a4520]"
                   >
@@ -265,53 +352,64 @@ export default function AssetsPage() {
                 </div>
               )}
 
-              {/* Populated buckets */}
-              {categories
-                .filter((c) => c.items.length > 0)
-                .map((cat) => (
+              {populatedCategories
+                .map(category => (
                   <AssetCategorySection
-                    key={cat.key}
-                    label={cat.label}
-                    icon={cat.icon}
-                    total={cat.total}
-                    items={cat.items}
+                    key={category.key}
+                    label={category.label}
+                    icon={category.icon}
+                    total={category.total}
+                    items={category.items}
                     onAdd={() =>
                       openAddModal(
-                        cat.category,
-                        cat.key.startsWith("other::") ? cat.label : undefined,
-                        cat.key === "other"
+                        category.category,
+                        category.key.startsWith("other::") 
+                          ? category.label 
+                          : undefined,
+                        category.key === "other",
                       )
                     }
-                    onEdit={(asset) => setEditingAsset(asset)}
-                    onDelete={(asset) => setDeletingAsset(asset)}
+                    onEdit={setEditingAsset}
+                    onDelete={setDeletingAsset}
                   />
                 ))}
 
-              {/* Unused category stubs */}
               {unusedCategories.length > 0 && (
                 <div>
                   <p className="mb-2 px-1 text-xs font-medium uppercase tracking-[0.12em] text-[#9a8f7a]">
                     Unused categories
                   </p>
+
                   <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                    {unusedCategories.map((cat) => (
+                    {unusedCategories.map(category=> (
                       <button
-                        key={cat}
-                        onClick={() => openAddModal(cat)}
+                        type="button"
+                        key={category}
+                        onClick={() => openAddModal(category)}
                         className="flex items-center gap-3 rounded-xl border border-dashed border-[#d9d0c1] bg-transparent px-4 py-3 text-left transition-colors hover:border-[#b8a87a] hover:bg-[#fbf7ef]"
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm text-[#6f675b]">{ASSET_CATEGORY_LABELS[cat]}</p>
-                          <p className="text-xs text-[#b0a898]">No entries</p>
+                          <p className="truncate text-sm text-[#6f675b]">
+                            {ASSET_CATEGORY_LABELS[category]}
+                          </p>
+                          <p className="text-xs text-[#b0a898]">
+                            No entries
+                          </p>
                         </div>
+
                         <svg
                           className="ml-auto h-3.5 w-3.5 shrink-0 text-[#b0a898]"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth={2.5}
                           viewBox="0 0 24 24"
+                          aria-hidden="true"
                         >
-                          <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round" />
+                          <path 
+                            d="M12 5v14M5 12h14" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                          />
                         </svg>
                       </button>
                     ))}
@@ -323,7 +421,6 @@ export default function AssetsPage() {
         )}
       </div>
 
-      {/* Add modal */}
       {addOpen && (
         <AddAssetModal
           defaultCategory={defaultCategory}
@@ -335,7 +432,6 @@ export default function AssetsPage() {
         />
       )}
 
-      {/* Edit modal */}
       {editingAsset && (
         <EditAssetModal
           asset={editingAsset}
@@ -349,7 +445,6 @@ export default function AssetsPage() {
         />
       )}
 
-      {/* Delete dialog */}
       {deletingAsset && (
         <ConfirmDeleteDialog
           itemName={deletingAsset.name}

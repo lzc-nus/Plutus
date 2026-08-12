@@ -12,13 +12,20 @@ import {
   type CalendarEventColor,
 } from "@/data/calendarEventColors";
 import { getApiErrorMessage } from "@/lib/api/auth";
-import type { CalendarEventCreate, CalendarEventRead, CalendarEventUpdate } from "@/lib/api/generated";
+import type { 
+  CalendarEventCreate, 
+  CalendarEventRead, 
+  CalendarEventUpdate 
+} from "@/lib/api/generated";
 import { calendarEventFormSchema } from "@/lib/validations/calendar";
-import { toLocalOffsetIso, addOneHourToTime } from "@/lib/utils/calendarDateUtils";
+import { 
+  toLocalOffsetIso, 
+  addOneHourToTime 
+} from "@/lib/utils/calendarDateUtils";
 
 type FieldErrors = Record<string, string[] | undefined>;
 
-type CalendarEventFormProps = {
+interface CalendarEventFormProps {
   selectedDateKey: string | null;
   selectedTime: string | null;
   selectedEndTime: string | null;
@@ -67,7 +74,13 @@ export function CalendarEventForm({
   onCollapse,
   onSaved,
 }: CalendarEventFormProps) {
-  const initialValues = getInitialFormValues(selectedEvent, selectedDateKey, selectedTime, selectedEndTime);
+  const initialValues = getInitialFormValues(
+    selectedEvent, 
+    selectedDateKey, 
+    selectedTime, 
+    selectedEndTime
+  );
+
   const isRecurringInstance = Boolean(selectedEvent?.is_recurring_instance);
 
   const [title, setTitle] = useState(initialValues.title);
@@ -78,23 +91,34 @@ export function CalendarEventForm({
   const [endDate, setEndDate] = useState(initialValues.endDate);
   const [endTime, setEndTime] = useState(initialValues.endTime);
   const [isAllDay, setIsAllDay] = useState(initialValues.isAllDay);
-  const [recurrenceOption, setRecurrenceOption] = useState<RecurrenceOptionValue>(initialValues.recurrenceOption);
+  const [recurrenceOption, setRecurrenceOption] = useState<RecurrenceOptionValue>(
+    initialValues.recurrenceOption
+  );
   const [scope, setScope] = useState<"THIS_INSTANCE" | "ALL_SESSIONS">(initialValues.scope);
+
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const panelTitle = useMemo(() => {
-    if (selectedEvent) return "Edit schedule";
-    if (selectedDateKey) return "Schedule selected date";
+    if (selectedEvent) {
+      return "Edit schedule";
+    }
+
+    if (selectedDateKey) {
+      return "Schedule selected date";
+    }
+
     return "New schedule";
   }, [selectedDateKey, selectedEvent]);
 
-  const locksEndDateToStartDate = !selectedEvent && recurrenceOption !== "NONE";
+  const locksEndDateToStartDate = 
+    !selectedEvent && recurrenceOption !== "NONE";
 
   function handleStartDateChange(value: string) {
     setStartDate(value);
+
     if (locksEndDateToStartDate) {
       setEndDate(value);
     }
@@ -102,6 +126,7 @@ export function CalendarEventForm({
 
   function handleRecurrenceOptionChange(value: RecurrenceOptionValue) {
     setRecurrenceOption(value);
+
     if (value !== "NONE") {
       setEndDate(startDate);
     }
@@ -136,7 +161,10 @@ export function CalendarEventForm({
       const { startAt, endAt } = buildApiInterval(parsed.data);
 
       if (selectedEvent) {
-        const updateScope = isRecurringInstance ? parsed.data.scope : "ALL_SESSIONS";
+        const updateScope = isRecurringInstance 
+          ? parsed.data.scope 
+          : "ALL_SESSIONS";
+
         const body = {
           title: parsed.data.title,
           description: parsed.data.description || null,
@@ -151,9 +179,15 @@ export function CalendarEventForm({
               : null,
         } satisfies CalendarEventUpdate;
 
-        const { error, response } = await updateCalendarEvent(selectedEvent.id, body);
+        const { error, response } = await updateCalendarEvent(
+          selectedEvent.id, 
+          body
+        );
+
         if (error || !response?.ok) {
-          throw new Error(getApiErrorMessage(error, "Unable to update calendar event."));
+          throw new Error(
+            getApiErrorMessage(error, "Unable to update calendar event.")
+          );
         }
       } else {
         const body = {
@@ -167,54 +201,81 @@ export function CalendarEventForm({
         } satisfies CalendarEventCreate;
 
         const { error, response } = await createCalendarEvent(body);
+
         if (error || !response?.ok) {
-          throw new Error(getApiErrorMessage(error, "Unable to create calendar event."));
+          throw new Error(
+            getApiErrorMessage(error, "Unable to create calendar event.")
+          );
         }
       }
 
       onSaved();
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : "Unable to save calendar event.");
+      setFormError(
+        error instanceof Error 
+          ? error.message 
+          : "Unable to save calendar event."
+      );
     } finally {
       setIsSubmitting(false);
     }
   }
 
   async function handleDelete() {
-    if (!selectedEvent) return;
+    if (!selectedEvent) {
+      return;
+    }
 
     setFormError("");
     setIsDeleting(true);
 
     try {
       const deleteScope = isRecurringInstance ? scope : "ALL_SESSIONS";
+
       const instanceDate =
         deleteScope === "THIS_INSTANCE"
           ? selectedDateKey ?? toDateInputValue(new Date(selectedEvent.start_at))
           : null;
-      const { error, response } = await deleteCalendarEvent(selectedEvent.id, deleteScope, instanceDate);
+
+      const { error, response } = await deleteCalendarEvent(
+        selectedEvent.id, 
+        deleteScope, 
+        instanceDate
+      );
 
       if (error || !response?.ok) {
-        throw new Error(getApiErrorMessage(error, "Unable to delete calendar event."));
+        throw new Error(
+          getApiErrorMessage(error, "Unable to delete calendar event.")
+        );
       }
 
       onSaved();
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : "Unable to delete calendar event.");
+      setFormError(
+        error instanceof Error 
+          ? error.message 
+          : "Unable to delete calendar event."
+        );
     } finally {
       setIsDeleting(false);
     }
   }
 
+  const isBusy = isSubmitting || isDeleting;
+
   return (
     <section className="min-w-0 overflow-hidden rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-5 shadow-[0_18px_70px_rgba(43,34,24,0.06)] sm:p-6">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8f6f2d]">Calendar</p>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8f6f2d]">
+            Calendar
+          </p>
+
           <h3 className="font-display mt-1 text-2xl font-semibold leading-tight text-[#1d211c] sm:text-[1.7rem]">
             {panelTitle}
           </h3>
         </div>
+
         <div className="flex shrink-0 items-center gap-2">
           {selectedEvent ? (
             <button
@@ -225,6 +286,7 @@ export function CalendarEventForm({
               Clear
             </button>
           ) : null}
+          
           <button
             aria-label="Collapse schedule form"
             className="rounded-md border border-[#d0c5b3] px-3 py-1.5 text-xs font-bold text-[#696154] transition hover:border-[#1d211c] hover:text-[#1d211c]"
@@ -244,7 +306,10 @@ export function CalendarEventForm({
 
       <form className="grid min-w-0 gap-4" onSubmit={handleSubmit}>
         <label className={labelClassName}>
-          <span className={labelTextClassName}>Title</span>
+          <span className={labelTextClassName}>
+            Title
+          </span>
+          
           <input
             className={fieldClassName}
             onChange={(event) => setTitle(event.target.value)}
@@ -252,24 +317,39 @@ export function CalendarEventForm({
             type="text"
             value={title}
           />
-          {fieldErrors.title ? <span className={errorTextClassName}>{fieldErrors.title[0]}</span> : null}
+
+          {fieldErrors.title 
+            ? <span className={errorTextClassName}>
+                {fieldErrors.title[0]}
+              </span>
+            : null}
         </label>
 
         <label className={labelClassName}>
-          <span className={labelTextClassName}>Description</span>
+          <span className={labelTextClassName}>
+            Description
+          </span>
+
           <textarea
             className="min-h-24 w-full min-w-0 resize-none rounded-md border border-[#d0c5b3] bg-[#fffaf2] px-3 py-2 text-sm text-[#1d211c] outline-none transition placeholder:text-[#8b8274] focus:border-[#8f6f2d] focus:ring-2 focus:ring-[#8f6f2d]/20"
-            onChange={(event) => setDescription(event.target.value)}
+            onChange={event => setDescription(event.target.value)}
             placeholder="Expected cash requirement and supporting documents"
             value={description}
           />
-          {fieldErrors.description ? <span className={errorTextClassName}>{fieldErrors.description[0]}</span> : null}
+          {fieldErrors.description 
+            ? <span className={errorTextClassName}>
+                {fieldErrors.description[0]}
+              </span> 
+            : null}
         </label>
 
         <fieldset className="grid min-w-0 gap-2">
-          <legend className={labelTextClassName}>Color</legend>
+          <legend className={labelTextClassName}>
+            Color
+          </legend>
+
           <div className="grid grid-cols-3 gap-2 min-[460px]:grid-cols-6">
-            {calendarEventColors.map((option) => {
+            {calendarEventColors.map(option => {
               const isSelected = color === option.value;
 
               return (
@@ -286,20 +366,28 @@ export function CalendarEventForm({
                 >
                   <span
                     className="size-5 rounded-full border"
-                    style={{ backgroundColor: option.swatch, borderColor: option.border }}
+                    style={{ 
+                      backgroundColor: option.swatch, 
+                      borderColor: option.border 
+                    }}
                   />
                 </button>
               );
             })}
           </div>
-          {fieldErrors.color ? <span className={errorTextClassName}>{fieldErrors.color[0]}</span> : null}
+
+          {fieldErrors.color 
+            ? <span className={errorTextClassName}>
+                {fieldErrors.color[0]}
+              </span> 
+            : null}
         </fieldset>
 
         <label className="flex items-center gap-2 text-sm font-semibold text-[#353026]">
           <input
             checked={isAllDay}
             className="size-4 accent-[#1d211c]"
-            onChange={(event) => setIsAllDay(event.target.checked)}
+            onChange={event => setIsAllDay(event.target.checked)}
             type="checkbox"
           />
           All day
@@ -307,59 +395,98 @@ export function CalendarEventForm({
 
         <div className="grid min-w-0 gap-3 min-[460px]:grid-cols-2">
           <label className={labelClassName}>
-            <span className={labelTextClassName}>Start date</span>
+            <span className={labelTextClassName}>
+              Start date
+            </span>
+
             <input
               className={fieldClassName}
-              onChange={(event) => handleStartDateChange(event.target.value)}
+              onChange={event => handleStartDateChange(event.target.value)}
               type="date"
               value={startDate}
             />
-            {fieldErrors.startDate ? <span className={errorTextClassName}>{fieldErrors.startDate[0]}</span> : null}
+
+            {fieldErrors.startDate 
+              ? <span className={errorTextClassName}>
+                  {fieldErrors.startDate[0]}
+                </span> 
+              : null}
           </label>
 
           <label className={labelClassName}>
-            <span className={labelTextClassName}>Start time</span>
+            <span className={labelTextClassName}>
+              Start time
+            </span>
+
             <input
               className={fieldClassName}
               disabled={isAllDay}
-              onChange={(event) => setStartTime(event.target.value)}
+              onChange={event => setStartTime(event.target.value)}
               type="time"
               value={startTime}
             />
-            {fieldErrors.startTime ? <span className={errorTextClassName}>{fieldErrors.startTime[0]}</span> : null}
+
+            {fieldErrors.startTime 
+              ? <span className={errorTextClassName}>
+                  {fieldErrors.startTime[0]}
+                </span> 
+              : null}
           </label>
 
           <label className={labelClassName}>
-            <span className={labelTextClassName}>End date</span>
+            <span className={labelTextClassName}>
+              End date
+            </span>
+
             <input
               className={fieldClassName}
               disabled={locksEndDateToStartDate}
-              onChange={(event) => setEndDate(event.target.value)}
+              onChange={event => setEndDate(event.target.value)}
               type="date"
               value={endDate}
             />
-            {fieldErrors.endDate ? <span className={errorTextClassName}>{fieldErrors.endDate[0]}</span> : null}
+
+            {fieldErrors.endDate 
+              ? <span className={errorTextClassName}>
+                  {fieldErrors.endDate[0]}
+                </span> 
+              : null}
           </label>
 
           <label className={labelClassName}>
-            <span className={labelTextClassName}>End time</span>
+            <span className={labelTextClassName}>
+              End time
+            </span>
+
             <input
               className={fieldClassName}
               disabled={isAllDay}
-              onChange={(event) => setEndTime(event.target.value)}
+              onChange={event => setEndTime(event.target.value)}
               type="time"
               value={endTime}
             />
-            {fieldErrors.endTime ? <span className={errorTextClassName}>{fieldErrors.endTime[0]}</span> : null}
+
+            {fieldErrors.endTime 
+              ? <span className={errorTextClassName}>
+                  {fieldErrors.endTime[0]}
+                </span> 
+              : null}
           </label>
         </div>
 
         {!selectedEvent ? (
           <label className={labelClassName}>
-            <span className={labelTextClassName}>Repeat</span>
+            <span className={labelTextClassName}>
+              Repeat
+            </span>
+
             <select
               className={fieldClassName}
-              onChange={(event) => handleRecurrenceOptionChange(event.target.value as RecurrenceOptionValue)}
+              onChange={event => 
+                handleRecurrenceOptionChange(
+                  event.target.value as RecurrenceOptionValue
+                )
+              }
               value={recurrenceOption}
             >
               {recurrenceOptions.map((option) => (
@@ -373,10 +500,13 @@ export function CalendarEventForm({
 
         {isRecurringInstance ? (
           <label className={labelClassName}>
-            <span className={labelTextClassName}>Apply changes to</span>
+            <span className={labelTextClassName}>
+              Apply changes to
+            </span>
+
             <select
               className={fieldClassName}
-              onChange={(event) => setScope(event.target.value as typeof scope)}
+              onChange={event => setScope(event.target.value as typeof scope)}
               value={scope}
             >
               <option value="THIS_INSTANCE">This occurrence</option>
@@ -391,7 +521,11 @@ export function CalendarEventForm({
             disabled={isSubmitting || isDeleting}
             type="submit"
           >
-            {isSubmitting ? "Saving..." : selectedEvent ? "Save schedule" : "Create schedule"}
+            {isSubmitting 
+              ? "Saving..." 
+              : selectedEvent 
+              ? "Save schedule" 
+              : "Create schedule"}
           </button>
 
           {selectedEvent ? (
@@ -418,7 +552,9 @@ function buildApiInterval(value: {
   isAllDay: boolean;
 }) {
   if (value.isAllDay) {
-    const exclusiveEndDate = toDateInputValue(addDays(new Date(`${value.endDate}T00:00:00`), 1));
+    const exclusiveEndDate = toDateInputValue(
+      addDays(new Date(`${value.endDate}T00:00:00`), 1)
+    );
 
     return {
       startAt: toLocalOffsetIso(value.startDate, "00:00"),
@@ -427,8 +563,14 @@ function buildApiInterval(value: {
   }
 
   return {
-    startAt: toLocalOffsetIso(value.startDate, value.startTime ?? "00:00"),
-    endAt: toLocalOffsetIso(value.endDate, value.endTime ?? "00:00"),
+    startAt: toLocalOffsetIso(
+      value.startDate, 
+      value.startTime ?? "00:00"
+    ),
+    endAt: toLocalOffsetIso(
+      value.endDate, 
+      value.endTime ?? "00:00"
+    ),
   };
 }
 
@@ -441,7 +583,11 @@ function getInitialFormValues(
   if (selectedEvent) {
     const start = new Date(selectedEvent.start_at);
     const end = new Date(selectedEvent.end_at);
-    const displayEnd = selectedEvent.is_all_day ? addDays(end, -1) : end;
+
+    // allday events use an exclusive end date
+    const displayEnd = selectedEvent.is_all_day 
+      ? addDays(end, -1) 
+      : end;
 
     return {
       title: selectedEvent.title,
@@ -453,13 +599,17 @@ function getInitialFormValues(
       endTime: toTimeInputValue(end),
       isAllDay: selectedEvent.is_all_day,
       recurrenceOption: "NONE",
-      scope: selectedEvent.is_recurring_instance ? "THIS_INSTANCE" : "ALL_SESSIONS",
+      scope: selectedEvent.is_recurring_instance 
+        ? "THIS_INSTANCE" 
+        : "ALL_SESSIONS",
     };
   }
 
   const date = selectedDateKey ?? toDateInputValue(new Date());
   const startTime = selectedTime ?? "09:00";
-  const endTime = selectedEndTime ?? (selectedTime ? addOneHourToTime(selectedTime) : "10:00");
+  const endTime = 
+    selectedEndTime ?? 
+    (selectedTime ? addOneHourToTime(selectedTime) : "10:00");
 
   return {
     title: "",
@@ -475,23 +625,24 @@ function getInitialFormValues(
   };
 }
 
-
-
 function toDateInputValue(value: Date) {
   const year = value.getFullYear();
   const month = String(value.getMonth() + 1).padStart(2, "0");
   const day = String(value.getDate()).padStart(2, "0");
+
   return `${year}-${month}-${day}`;
 }
 
 function toTimeInputValue(value: Date) {
   const hours = String(value.getHours()).padStart(2, "0");
   const minutes = String(value.getMinutes()).padStart(2, "0");
+
   return `${hours}:${minutes}`;
 }
 
 function addDays(value: Date, days: number) {
   const next = new Date(value);
   next.setDate(next.getDate() + days);
+  
   return next;
 }

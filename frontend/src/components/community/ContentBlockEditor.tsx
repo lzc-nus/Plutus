@@ -8,17 +8,28 @@ interface ContentBlockEditorProps {
   onChange: (blocks: ContentBlock[]) => void;
   placeholder?: string;
   autoFocus?: boolean;
-  /** Max blocks allowed — defaults to 50 (backend limit) */
-  maxBlocks?: number;
+  maxBlocks?: number; // default to 50 (backend limit)
 }
 
 type MediaType = "image" | "video" | "audio" | "gif" | "sticker";
 
 function mimeToBlockType(mime: string): MediaType {
-  if (mime === "image/gif") return "gif";
-  if (mime.startsWith("image/")) return "image";
-  if (mime.startsWith("video/")) return "video";
-  if (mime.startsWith("audio/")) return "audio";
+  if (mime === "image/gif") {
+    return "gif";
+  }
+
+  if (mime.startsWith("image/")) {
+    return "image";
+  }
+
+  if (mime.startsWith("video/")) {
+    return "video";
+  }
+
+  if (mime.startsWith("audio/")) {
+    return "audio";
+  }
+
   return "image";
 }
 
@@ -33,96 +44,106 @@ export function ContentBlockEditor({
   const [linkTitle, setLinkTitle] = useState("");
   const [linkDescription, setLinkDescription] = useState("");
   const [linkPanelOpen, setLinkPanelOpen] = useState(false);
+
   const [stickerInput, setStickerInput] = useState("");
   const [stickerPanelOpen, setStickerPanelOpen] = useState(false);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (autoFocus) textareaRef.current?.focus();
+    if (autoFocus) {
+      textareaRef.current?.focus();
+    }
   }, [autoFocus]);
 
   const atLimit = blocks.length >= maxBlocks;
 
-  // ── Text block (the primary textarea) ────────────────────────────────────────
-  // The last text block in the list, or null if none exists yet.
+  // keep text as one block and update the last text block when typing
   const lastTextBlock = blocks.findLast((b) => b.type === "text");
   const lastTextIndex = blocks.findLastIndex((b) => b.type === "text");
 
-  function handleTextChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    const value = e.target.value;
+  function handleTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    const value = event.target.value;
+
     if (lastTextIndex === -1) {
-      // No text block yet — append one
+      // no text block yet, append one
       onChange([...blocks, { type: "text", value }]);
     } else {
-      const next = [...blocks];
-      next[lastTextIndex] = { type: "text", value };
-      onChange(next);
+      const nextBlocks = [...blocks];
+      nextBlocks[lastTextIndex] = { type: "text", value };
+      onChange(nextBlocks);
     }
-    // Auto-grow the textarea
-    e.target.style.height = "auto";
-    e.target.style.height = `${e.target.scrollHeight}px`;
+
+    // make the textarea grow as the user type
+    event.target.style.height = "auto";
+    event.target.style.height = `${event.target.scrollHeight}px`;
   }
 
-  // ── Media upload (image, video, audio, gif) ───────────────────────────────
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
-    if (!files.length) return;
+    if (files.length === 0) {
+      return;
+    }
 
     const remaining = maxBlocks - blocks.length;
-    const toAdd = files.slice(0, remaining);
+    const filesToAdd = files.slice(0, remaining);
 
-    // In a real implementation, each file would be uploaded to Supabase Storage
-    // here and the returned URL stored. For now we use a local object URL as a
-    // preview placeholder — replace this with your actual upload call.
-    const newBlocks: ContentBlock[] = toAdd.map((file) => ({
+    const newBlocks: ContentBlock[] = filesToAdd.map(file => ({
       type: mimeToBlockType(file.type),
       url: URL.createObjectURL(file),
     }));
 
     onChange([...blocks, ...newBlocks]);
-    // Reset so the same file can be re-selected
-    e.target.value = "";
-  }
 
-  // ── Link block ────────────────────────────────────────────────────────────
+    // allow the same file to be selected again
+    event.target.value = "";
+  }
 
   function handleAddLink() {
     const url = linkInput.trim();
-    if (!url) return;
+
+    if (!url) {
+      return;
+    }
+    
     onChange([
       ...blocks,
       {
         type: "link",
         url,
-        ...(linkTitle.trim() ? { title: linkTitle.trim() } : {}),
-        ...(linkDescription.trim() ? { description: linkDescription.trim() } : {}),
+        ...(linkTitle.trim() 
+          ? { title: linkTitle.trim() } 
+          : {}),
+        ...(linkDescription.trim() 
+          ? { description: linkDescription.trim() } 
+          : {}),
       },
     ]);
+
     setLinkInput("");
     setLinkTitle("");
     setLinkDescription("");
     setLinkPanelOpen(false);
   }
 
-  // ── Sticker block ─────────────────────────────────────────────────────────
-
   function handleAddSticker() {
     const url = stickerInput.trim();
-    if (!url) return;
+
+    if (!url) {
+      return;
+    }
+
     onChange([...blocks, { type: "sticker", url }]);
+
     setStickerInput("");
     setStickerPanelOpen(false);
   }
 
-  // ── Remove a block ────────────────────────────────────────────────────────
-
   function removeBlock(index: number) {
     onChange(blocks.filter((_, i) => i !== index));
   }
-
-  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="flex flex-col gap-3">
@@ -138,15 +159,18 @@ export function ContentBlockEditor({
       />
 
       {/* Non-text block previews */}
-      {blocks.filter((b) => b.type !== "text").length > 0 && (
+      {blocks.some(block => block.type !== "text") && (
         <div className="flex flex-wrap gap-2">
-          {blocks.map((block, i) => {
-            if (block.type === "text") return null;
+          {blocks.map((block, index) => {
+            if (block.type === "text") {
+              return null;
+            }
+
             return (
               <BlockChip
-                key={i}
+                key={index}
                 block={block}
-                onRemove={() => removeBlock(i)}
+                onRemove={() => removeBlock(index)}
               />
             );
           })}
@@ -159,25 +183,28 @@ export function ContentBlockEditor({
           <input
             type="url"
             value={linkInput}
-            onChange={(e) => setLinkInput(e.target.value)}
+            onChange={event => setLinkInput(event.target.value)}
             placeholder="https://example.com"
             autoFocus
             className="w-full rounded-lg border border-[#d7c6a3]/50 bg-white px-3 py-2 text-sm text-[#2c2c24] placeholder:text-[#a99b82] focus:border-[#d8bd75]/60 focus:outline-none"
           />
+
           <input
             type="text"
             value={linkTitle}
-            onChange={(e) => setLinkTitle(e.target.value)}
+            onChange={event => setLinkTitle(event.target.value)}
             placeholder="Title (optional)"
             className="w-full rounded-lg border border-[#d7c6a3]/50 bg-white px-3 py-2 text-sm text-[#2c2c24] placeholder:text-[#a99b82] focus:border-[#d8bd75]/60 focus:outline-none"
           />
+
           <input
             type="text"
             value={linkDescription}
-            onChange={(e) => setLinkDescription(e.target.value)}
+            onChange={event => setLinkDescription(event.target.value)}
             placeholder="Description (optional)"
             className="w-full rounded-lg border border-[#d7c6a3]/50 bg-white px-3 py-2 text-sm text-[#2c2c24] placeholder:text-[#a99b82] focus:border-[#d8bd75]/60 focus:outline-none"
           />
+
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setLinkPanelOpen(false)}
@@ -185,6 +212,7 @@ export function ContentBlockEditor({
             >
               Cancel
             </button>
+
             <button
               onClick={handleAddLink}
               disabled={!linkInput.trim()}
@@ -207,11 +235,12 @@ export function ContentBlockEditor({
           <input
             type="url"
             value={stickerInput}
-            onChange={(e) => setStickerInput(e.target.value)}
+            onChange={event => setStickerInput(event.target.value)}
             placeholder="Sticker URL"
             autoFocus
             className="w-full rounded-lg border border-[#d7c6a3]/50 bg-white px-3 py-2 text-sm text-[#2c2c24] placeholder:text-[#a99b82] focus:border-[#d8bd75]/60 focus:outline-none"
           />
+
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setStickerPanelOpen(false)}
@@ -219,6 +248,7 @@ export function ContentBlockEditor({
             >
               Cancel
             </button>
+
             <button
               onClick={handleAddSticker}
               disabled={!stickerInput.trim()}
@@ -237,6 +267,7 @@ export function ContentBlockEditor({
 
       {/* Toolbar */}
       <div className="flex items-center gap-1 border-t border-[#d7c6a3]/30 pt-2">
+        
         {/* Media upload */}
         <input
           ref={fileInputRef}
@@ -246,6 +277,7 @@ export function ContentBlockEditor({
           className="hidden"
           onChange={handleFileChange}
         />
+
         <ToolbarButton
           onClick={() => fileInputRef.current?.click()}
           disabled={atLimit}
@@ -254,22 +286,25 @@ export function ContentBlockEditor({
           <MediaIcon />
         </ToolbarButton>
 
-        {/* GIF — same file picker but filtered */}
+        {/* GIF */}
         <ToolbarButton
           onClick={() => {
-            if (fileInputRef.current) {
-              fileInputRef.current.accept = "image/gif";
-              fileInputRef.current.click();
-              // Reset accept after pick
-              fileInputRef.current.addEventListener(
-                "change",
-                () => {
-                  if (fileInputRef.current)
-                    fileInputRef.current.accept = "image/*,video/*,audio/*";
-                },
-                { once: true },
-              );
+            if (!fileInputRef.current) {
+              return;
             }
+            
+            fileInputRef.current.accept = "image/gif";
+            fileInputRef.current.click();
+
+            fileInputRef.current.addEventListener(
+              "change",
+              () => {
+                if (fileInputRef.current) {
+                  fileInputRef.current.accept = "image/*,video/*,audio/*";
+                }
+              },
+              { once: true },
+            );
           }}
           disabled={atLimit}
           label="Add GIF"
@@ -281,7 +316,7 @@ export function ContentBlockEditor({
         <ToolbarButton
           onClick={() => {
             setLinkPanelOpen(false);
-            setStickerPanelOpen((v) => !v);
+            setStickerPanelOpen(open => !open);
           }}
           disabled={atLimit}
           label="Add sticker"
@@ -294,7 +329,7 @@ export function ContentBlockEditor({
         <ToolbarButton
           onClick={() => {
             setStickerPanelOpen(false);
-            setLinkPanelOpen((v) => !v);
+            setLinkPanelOpen(open => !open);
           }}
           disabled={atLimit}
           label="Add link"
@@ -323,8 +358,7 @@ export function ContentBlockEditor({
   );
 }
 
-// ── BlockChip — removable preview for non-text blocks ─────────────────────────
-
+// removable preview for non-text blocks
 function BlockChip({
   block,
   onRemove,
@@ -346,14 +380,22 @@ function BlockChip({
       {isMedia && "url" in block ? (
         <div className="h-9 w-9 shrink-0 overflow-hidden bg-zinc-800">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={block.url} alt="" className="h-full w-full object-cover" />
+          <img 
+            src={block.url} 
+            alt="" 
+            className="h-full w-full object-cover" 
+          />
         </div>
       ) : (
         <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-zinc-800 text-zinc-500">
           <ChipIcon type={block.type} />
         </div>
       )}
-      <span className="max-w-[120px] truncate text-xs text-zinc-400">{label}</span>
+
+      <span className="max-w-[120px] truncate text-xs text-zinc-400">
+        {label}
+      </span>
+
       <button
         onClick={onRemove}
         aria-label={`Remove ${block.type} block`}
@@ -364,8 +406,6 @@ function BlockChip({
     </div>
   );
 }
-
-// ── ToolbarButton ─────────────────────────────────────────────────────────────
 
 function ToolbarButton({
   onClick,
@@ -400,11 +440,20 @@ function ToolbarButton({
   );
 }
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
+// ICONS
 
 function MediaIcon() {
   return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg 
+      className="h-4 w-4" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="1.75" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      aria-hidden
+    >
       <rect x="3" y="3" width="18" height="18" rx="2" />
       <circle cx="8.5" cy="8.5" r="1.5" />
       <polyline points="21 15 16 10 5 21" />
@@ -414,7 +463,16 @@ function MediaIcon() {
 
 function GifIcon() {
   return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg 
+      className="h-4 w-4" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="1.75" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      aria-hidden
+    >
       <rect x="2" y="6" width="20" height="12" rx="2" />
       <path d="M8 12h-2v0a2 2 0 1 0 0-0" />
       <line x1="12" y1="9" x2="12" y2="15" />
@@ -425,7 +483,16 @@ function GifIcon() {
 
 function StickerIcon() {
   return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg 
+      className="h-4 w-4" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="1.75" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      aria-hidden
+    >
       <path d="M12 2a10 10 0 1 0 10 10H12V2z" />
       <path d="M12 2a10 10 0 0 1 10 10" />
     </svg>
@@ -434,7 +501,16 @@ function StickerIcon() {
 
 function LinkIcon() {
   return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg 
+      className="h-4 w-4" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="1.75" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      aria-hidden
+    >
       <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
       <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
     </svg>
@@ -443,7 +519,15 @@ function LinkIcon() {
 
 function RemoveIcon() {
   return (
-    <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
+    <svg 
+      className="h-3 w-3" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2.5" 
+      strokeLinecap="round" 
+      aria-hidden
+    >
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
@@ -453,23 +537,44 @@ function RemoveIcon() {
 function ChipIcon({ type }: { type: ContentBlock["type"] }) {
   if (type === "video") {
     return (
-      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <svg 
+        className="h-3.5 w-3.5" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="1.75" 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        aria-hidden
+      >
         <polygon points="23 7 16 12 23 17 23 7" />
         <rect x="1" y="5" width="15" height="14" rx="2" />
       </svg>
     );
   }
+
   if (type === "audio") {
     return (
-      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <svg 
+        className="h-3.5 w-3.5" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="1.75" 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        aria-hidden
+      >
         <path d="M9 18V5l12-2v13" />
         <circle cx="6" cy="18" r="3" />
         <circle cx="18" cy="16" r="3" />
       </svg>
     );
   }
+
   if (type === "link") {
     return <LinkIcon />;
   }
+
   return null;
 }

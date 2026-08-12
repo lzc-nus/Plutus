@@ -22,6 +22,7 @@ export default function Navbar() {
           >
             Home
           </Link>
+          
           <Link
             href="/community"
             className="rounded px-3 py-1.5 text-sm font-semibold text-[#1d211c] transition hover:bg-white hover:text-[#8f6f2d]"

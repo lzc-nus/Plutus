@@ -17,8 +17,9 @@ interface CalendarViewSwitcherProps {
 export function CalendarViewSwitcher({ view, onChange }: CalendarViewSwitcherProps) {
     return (
         <div className="inline-flex shrink-0 rounded-md border border-[#d9d0c1] bg-[#f5efe4] p-0.5">
-            {VIEW_OPTIONS.map((option) => {
+            {VIEW_OPTIONS.map(option => {
                 const isActive = option.value === view;
+                
                 return (
                     <button
                         key={option.value}

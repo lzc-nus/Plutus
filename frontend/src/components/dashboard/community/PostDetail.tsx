@@ -26,10 +26,10 @@ export function PostDetail({ postId }: PostDetailProps) {
   const [postStatus, setPostStatus] = useState<"loading" | "ready" | "error">("loading");
   const [commentsStatus, setCommentsStatus] = useState<"loading" | "ready" | "error">("loading");
 
-  // ── Fetch post ──────────────────────────────────────────────────────────────
+  // fetch post
   useEffect(() => {
     getPost(postId)
-      .then((res) => {
+      .then(res=> {
         if (res.data) {
           setPost(res.data);
           setPostStatus("ready");
@@ -40,40 +40,45 @@ export function PostDetail({ postId }: PostDetailProps) {
       .catch(() => setPostStatus("error"));
   }, [postId]);
 
-  // ── Fetch comments ──────────────────────────────────────────────────────────
+  // fetch comments 
   useEffect(() => {
     listComments(postId)
-      .then((res) => {
+      .then(res => {
         setComments(res.data ?? []);
         setCommentsStatus("ready");
       })
       .catch(() => setCommentsStatus("error"));
   }, [postId]);
 
-  // ── Optimistic update callbacks passed down to child components ─────────────
-
   function handlePostUpdate(updated: PostRead) {
     setPost(updated);
   }
 
   function handleCommentCreated(comment: CommentRead) {
-    setComments((prev) => [...prev, comment]);
-    // Reflect the incremented comment_count on the post
-    setPost((prev) =>
-      prev ? { ...prev, comment_count: prev.comment_count + 1 } : prev,
+    setComments(current => [...current, comment]);
+    // reflect the new comment_count on the post
+    setPost(current =>
+      current
+        ? { 
+            ...current, 
+            comment_count: current.comment_count + 1 
+          } 
+        : current,
     );
   }
 
   function handleCommentDeleted(commentId: string) {
-    setComments((prev) => prev.filter((c) => c.id !== commentId));
-    setPost((prev) =>
-      prev
-        ? { ...prev, comment_count: Math.max(0, prev.comment_count - 1) }
-        : prev,
+    setComments(current => 
+      current.filter(comment => comment.id !== commentId)
+    );
+    
+    setPost(current =>
+      current 
+        ? { ...current, 
+          comment_count: Math.max(0, current.comment_count - 1) }
+        : current,
     );
   }
-
-  // ── Loading ─────────────────────────────────────────────────────────────────
 
   if (postStatus === "loading") {
     return <PostDetailSkeleton />;
@@ -82,7 +87,10 @@ export function PostDetail({ postId }: PostDetailProps) {
   if (postStatus === "error" || !post) {
     return (
       <div className="flex flex-col items-center gap-3 py-20 text-center">
-        <p className="text-sm text-zinc-400">{"This post couldn't be loaded."}</p>
+        <p className="text-sm text-zinc-400">
+          {"This post couldn't be loaded."}
+        </p>
+        
         <button
           onClick={() => router.back()}
           className="text-sm text-emerald-400 hover:underline"
@@ -93,12 +101,11 @@ export function PostDetail({ postId }: PostDetailProps) {
     );
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────────
-
   return (
     <div className="flex min-h-screen w-full bg-[#fbf7ef]">
       <div className="flex min-w-0 flex-1 flex-col border-r border-[#d7c6a3]/30">
         <article className="flex flex-col">
+          
           {/* Back navigation */}
           <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-[#d7c6a3]/30 bg-[#fbf7ef]/95 px-4 py-3 backdrop-blur">
             <button
@@ -121,11 +128,15 @@ export function PostDetail({ postId }: PostDetailProps) {
                 <path d="M19 12H5M12 5l-7 7 7 7" />
               </svg>
             </button>
-            <span className="text-sm font-medium text-[#1c2018]">Post</span>
+
+            <span className="text-sm font-medium text-[#1c2018]">
+              Post
+            </span>
           </div>
 
           {/* Post body */}
           <div className="border-b border-[#d7c6a3]/30 px-4 pb-4 pt-5">
+            
             {/* Author */}
             <div className="mb-4 flex items-center gap-3">
               <UserAvatar userId={post.author_id} />
@@ -147,19 +158,34 @@ export function PostDetail({ postId }: PostDetailProps) {
             {/* Count summary row */}
             <div className="flex gap-5 border-y border-[#d7c6a3]/30 py-3 text-sm text-[#a99b82]">
               <span>
-                <strong className="font-semibold text-[#1c2018]">{post.comment_count}</strong>{" "}
+                <strong className="font-semibold text-[#1c2018]">
+                  {post.comment_count}
+                </strong>{" "}
+                
                 {post.comment_count === 1 ? "comment" : "comments"}
               </span>
+
               <span>
-                <strong className="font-semibold text-[#1c2018]">{post.repost_count}</strong>{" "}
+                <strong className="font-semibold text-[#1c2018]">
+                  {post.repost_count}
+                </strong>{" "}
+                
                 {post.repost_count === 1 ? "repost" : "reposts"}
               </span>
+              
               <span>
-                <strong className="font-semibold text-[#1c2018]">{post.like_count}</strong>{" "}
+                <strong className="font-semibold text-[#1c2018]">
+                  {post.like_count}
+                </strong>{" "}
+                
                 {post.like_count === 1 ? "like" : "likes"}
               </span>
+              
               <span>
-                <strong className="font-semibold text-[#1c2018]">{post.save_count}</strong>{" "}
+                <strong className="font-semibold text-[#1c2018]">
+                  {post.save_count}
+                </strong>{" "}
+                
                 {post.save_count === 1 ? "save" : "saves"}
               </span>
             </div>
@@ -180,7 +206,10 @@ export function PostDetail({ postId }: PostDetailProps) {
 
           {/* Comment composer */}
           <div ref={composerRef} className="border-b border-[#d7c6a3]/30 px-4 py-3">
-            <CommentComposer postId={post.id} onCreated={handleCommentCreated} />
+            <CommentComposer 
+              postId={post.id} 
+              onCreated={handleCommentCreated} 
+            />
           </div>
 
           {/* Comment thread */}
@@ -197,8 +226,6 @@ export function PostDetail({ postId }: PostDetailProps) {
   );
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
-
 function PostDetailSkeleton() {
   return (
     <div className="animate-pulse px-4 py-5">
@@ -206,17 +233,19 @@ function PostDetailSkeleton() {
         <div className="h-10 w-10 rounded-full bg-zinc-800" />
         <div className="h-3 w-32 rounded bg-zinc-800" />
       </div>
+
       <div className="space-y-2">
         <div className="h-3 w-full rounded bg-zinc-800" />
         <div className="h-3 w-5/6 rounded bg-zinc-800" />
         <div className="h-3 w-3/4 rounded bg-zinc-800" />
       </div>
+
       <div className="mt-5 h-3 w-24 rounded bg-zinc-800" />
     </div>
   );
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// HELPER 
 
 function formatTimestamp(iso: string): string {
   const date = new Date(iso);

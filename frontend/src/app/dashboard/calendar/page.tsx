@@ -7,7 +7,10 @@ import { CalendarEventForm } from "@/components/dashboard/calendar/CalendarEvent
 import { CalendarGrid } from "@/components/dashboard/calendar/CalendarGrid";
 import { CalendarTimeGrid } from "@/components/dashboard/calendar/CalendarTimeGrid";
 import { CalendarYearGrid } from "@/components/dashboard/calendar/CalendarYearGrid";
-import { CalendarViewSwitcher, type CalendarViewMode } from "@/components/dashboard/calendar/CalendarViewSwitcher";
+import { 
+    CalendarViewSwitcher, 
+    type CalendarViewMode, 
+} from "@/components/dashboard/calendar/CalendarViewSwitcher";
 import { getApiErrorMessage } from "@/lib/api/auth";
 import { listCalendarEvents } from "@/lib/api/calendar";
 import type { CalendarEventRead } from "@/lib/api/generated";
@@ -28,10 +31,12 @@ export default function CalendarPage() {
     const [view, setView] = useState<CalendarViewMode>("month");
     const [currentDate, setCurrentDate] = useState<Date>(new Date());
     const [events, setEvents] = useState<CalendarEventRead[]>([]);
+
     const [selectedEvent, setSelectedEvent] = useState<CalendarEventRead | null>(null);
     const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
     const [selectedEndTime, setSelectedEndTime] = useState<string | null>(null);
+
     const [reloadKey, setReloadKey] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
@@ -58,8 +63,10 @@ export default function CalendarPage() {
         }
 
         // month
+        // load a little more than the current month so that adjacent dates are available
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
+
         const start = new Date(year, month - 1, 1).toISOString();
         const end = new Date(year, month + 2, 0).toISOString();
         return { startWindow: start, endWindow: end };
@@ -72,7 +79,10 @@ export default function CalendarPage() {
             setIsLoading(true);
             setErrorMessage("");
 
-            const { data, error, response } = await listCalendarEvents(startWindow, endWindow);
+            const { data, error, response } = await listCalendarEvents(
+                startWindow, 
+                endWindow
+            );
 
             if (ignore) {
                 return;
@@ -80,7 +90,12 @@ export default function CalendarPage() {
 
             if (error || !response?.ok) {
                 setEvents([]);
-                setErrorMessage(getApiErrorMessage(error, "Unable to retrieve calendar window records. Please try again."));
+                setErrorMessage(
+                    getApiErrorMessage(
+                        error, 
+                        "Unable to retrieve calendar window records. Please try again."
+                    )
+                );
                 setIsLoading(false);
                 setHasLoadedOnce(true);
                 return;
@@ -98,9 +113,16 @@ export default function CalendarPage() {
         };
     }, [startWindow, endWindow, reloadKey]);
 
-    const handleSelectEvent = (event: CalendarEventRead, activeDateStr: string) => {
+    const clearSelection = () => { 
+        setSelectedEvent(null); 
+        setSelectedDateKey(null); 
+        setSelectedTime(null); 
+        setSelectedEndTime(null); 
+    };
+
+    const handleSelectEvent = (event: CalendarEventRead, dateKey: string) => {
         setSelectedEvent(event);
-        setSelectedDateKey(activeDateStr);
+        setSelectedDateKey(dateKey);
         setSelectedTime(null);
         setSelectedEndTime(null);
         setIsFormCollapsed(false);
@@ -136,38 +158,52 @@ export default function CalendarPage() {
     };
 
     const handleSaved = () => {
-        setSelectedEvent(null);
-        setSelectedDateKey(null);
-        setSelectedTime(null);
-        setSelectedEndTime(null);
+        clearSelection();
         setReloadKey((value) => value + 1);
     };
 
     const handleEventChanged = (updatedEvent: CalendarEventRead, originalStartAt: string) => {
-        if (!updatedEvent) return;
-        setEvents((prev) => {
-            const matchIndex = prev.findIndex((e) => e.id === updatedEvent.id && e.start_at === originalStartAt);
-            if (matchIndex === -1) return [...prev, updatedEvent];
-            const next = [...prev];
-            next[matchIndex] = updatedEvent;
-            return next;
+        if (!updatedEvent) {
+            return;
+        }
+
+        setEvents((previousEvents) => {
+            const index = previousEvents.findIndex(
+                (event) => 
+                    event.id === updatedEvent.id && 
+                    event.start_at === originalStartAt
+                );
+
+            if (index === -1) {
+                return [...previousEvents, updatedEvent];
+            }
+
+            const nextEvents = [...previousEvents];
+            nextEvents[index] = updatedEvent;
+            return nextEvents;
         });
-        // No reloadKey bump here: a background refetch immediately after this
-        // optimistic update can race the backend's write and return stale data,
-        // silently overwriting the correct state — this is what "jump back to
-        // original time" was. The optimistic merge above is already accurate.
     };
 
     const formattedHeader = useMemo(() => {
         if (view === "day") {
-            return currentDate.toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+            return currentDate.toLocaleDateString("en", { 
+                weekday: "long", 
+                month: "long", 
+                day: "numeric", 
+                year: "numeric", 
+            });
         }
 
         if (view === "week") {
             const start = startOfWeek(currentDate);
             const end = endOfWeek(currentDate);
             const sameMonth = start.getMonth() === end.getMonth();
-            const startLabel = start.toLocaleDateString("en", { month: "short", day: "numeric" });
+
+            const startLabel = start.toLocaleDateString("en", { 
+                month: "short", 
+                day: "numeric", 
+            });
+
             const endLabel = sameMonth
                 ? `${end.getDate()}, ${end.getFullYear()}`
                 : end.toLocaleDateString("en", {
@@ -175,6 +211,7 @@ export default function CalendarPage() {
                     day: "numeric",
                     year: "numeric",
                 });
+
             return `${startLabel} \u2013 ${endLabel}`;
         }
 
@@ -182,7 +219,10 @@ export default function CalendarPage() {
             return String(currentDate.getFullYear());
         }
 
-        return currentDate.toLocaleDateString("en", { month: "long", year: "numeric" });
+        return currentDate.toLocaleDateString("en", { 
+            month: "long", 
+            year: "numeric", 
+        });
     }, [currentDate, view]);
 
     const calendarLayoutClassName = isFormCollapsed
@@ -190,30 +230,31 @@ export default function CalendarPage() {
         : "grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_28rem]";
 
     const draftDateKey = !selectedEvent && !isFormCollapsed ? selectedDateKey : null;
-    const draftStartTime = draftDateKey ? selectedTime ?? "09:00" : null;
+
+    const draftStartTime = draftDateKey 
+        ? selectedTime ?? "09:00" 
+        : null;
+
     const draftEndTime = draftDateKey
-        ? selectedEndTime ?? (selectedTime ? addOneHourToTime(selectedTime) : "10:00")
+        ? selectedEndTime ?? 
+            (selectedTime ? addOneHourToTime(selectedTime) : "10:00")
         : null;
 
     const adjustInterval = (offset: number) => {
-        setCurrentDate((prev) => {
-            if (view === "day") return addDays(prev, offset);
-            if (view === "week") return addDays(prev, offset * 7);
-            if (view === "year") return addYears(prev, offset);
-            return addMonths(startOfMonth(prev), offset);
+        setCurrentDate((date) => {
+            if (view === "day") return addDays(date, offset);
+            if (view === "week") return addDays(date, offset * 7);
+            if (view === "year") return addYears(date, offset);
+
+            return addMonths(startOfMonth(date), offset);
         });
-        setSelectedEvent(null);
-        setSelectedDateKey(null);
-        setSelectedTime(null);
-        setSelectedEndTime(null);
+        
+        clearSelection();
     };
 
     const goToToday = () => {
         setCurrentDate(new Date());
-        setSelectedEvent(null);
-        setSelectedDateKey(null);
-        setSelectedTime(null);
-        setSelectedEndTime(null);
+        clearSelection();
     };
 
     const openNewEventForm = () => {
@@ -232,10 +273,11 @@ export default function CalendarPage() {
                     eyebrow="Timeline"
                     title="Schedule Ledger"
                 />
+
                 <button
-                    className="inline-flex h-11 items-center justify-center rounded-md bg-[#1d211c] px-4 text-sm font-semibold text-[#fbf7ef] transition hover:bg-[#343b32]"
-                    onClick={openNewEventForm}
                     type="button"
+                    onClick={openNewEventForm}
+                    className="inline-flex h-11 items-center justify-center rounded-md bg-[#1d211c] px-4 text-sm font-semibold text-[#fbf7ef] transition hover:bg-[#343b32]"
                 >
                     New Event
                 </button>
@@ -245,26 +287,30 @@ export default function CalendarPage() {
                 <div className="min-w-0 space-y-4">
                     <div className="flex flex-col gap-3 rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-4 sm:flex-row sm:items-center sm:justify-between">
                         <h3 className="text-lg font-bold text-[#1d211c]">{formattedHeader}</h3>
+
                         <div className="flex flex-wrap items-center gap-2">
                             <CalendarViewSwitcher view={view} onChange={setView} />
+
                             <button
+                                type="button"
                                 onClick={() => adjustInterval(-1)}
                                 className="h-9 rounded-md border border-[#d9d0c1] bg-[#f5efe4] px-3 text-xs font-bold text-[#1d211c] transition hover:bg-[#1d211c] hover:text-[#fbf7ef]"
-                                type="button"
                             >
                                 Previous
                             </button>
+
                             <button
+                                type="button"
                                 onClick={goToToday}
                                 className="h-9 rounded-md border border-[#d9d0c1] bg-[#f5efe4] px-3 text-xs font-bold text-[#1d211c] transition hover:bg-[#1d211c] hover:text-[#fbf7ef]"
-                                type="button"
                             >
                                 Today
                             </button>
+
                             <button
+                                type="button"
                                 onClick={() => adjustInterval(1)}
                                 className="h-9 rounded-md border border-[#d9d0c1] bg-[#f5efe4] px-3 text-xs font-bold text-[#1d211c] transition hover:bg-[#1d211c] hover:text-[#fbf7ef]"
-                                type="button"
                             >
                                 Next
                             </button>
@@ -273,7 +319,7 @@ export default function CalendarPage() {
 
                     {isLoading && !hasLoadedOnce ? (
                         <div className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-8 text-sm font-semibold text-[#696154] shadow-[0_18px_70px_rgba(43,34,24,0.04)]">
-                            Reassembling timeline matrix metrics...
+                            Loading calendar...
                         </div>
                     ) : errorMessage ? (
                         <div className="rounded-lg border border-[#d5a58b] bg-[#f2e0d8] p-6 text-sm font-semibold text-[#8f3f32] shadow-[0_18px_70px_rgba(143,63,50,0.08)]">
@@ -287,7 +333,11 @@ export default function CalendarPage() {
                             onSelectDate={handleSelectDate}
                         />
                     ) : view === "year" ? (
-                        <CalendarYearGrid currentDate={currentDate} events={events} onSelectDay={handleJumpToDay} />
+                        <CalendarYearGrid 
+                            currentDate={currentDate} 
+                            events={events} 
+                            onSelectDay={handleJumpToDay} 
+                        />
                     ) : (
                         <CalendarTimeGrid
                             currentDate={currentDate}
@@ -307,17 +357,22 @@ export default function CalendarPage() {
                 <aside className="min-w-0 space-y-4 xl:sticky xl:top-6">
                     {isFormCollapsed ? (
                         <section className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-4 shadow-[0_18px_70px_rgba(43,34,24,0.04)]">
-                            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8f6f2d]">Calendar</p>
+                            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8f6f2d]">
+                                Calendar
+                            </p>
+
                             <h3 className="font-display mt-1 text-2xl font-semibold leading-tight text-[#1d211c]">
                                 Form hidden
                             </h3>
+
                             <p className="mt-2 text-sm leading-6 text-[#696154]">
                                 Bring the schedule form back when you need to add or edit an event.
                             </p>
+
                             <button
-                                className="mt-4 h-10 w-full rounded-md bg-[#1d211c] px-3 text-sm font-bold text-[#fbf7ef] transition hover:bg-[#343b32]"
-                                onClick={openNewEventForm}
                                 type="button"
+                                onClick={openNewEventForm}
+                                className="mt-4 h-10 w-full rounded-md bg-[#1d211c] px-3 text-sm font-bold text-[#fbf7ef] transition hover:bg-[#343b32]"
                             >
                                 New schedule
                             </button>
@@ -329,12 +384,7 @@ export default function CalendarPage() {
                                     ? `${selectedEvent.id}-${selectedDateKey}`
                                     : `${selectedDateKey ?? "new-event"}-${selectedTime ?? "no-time"}-${selectedEndTime ?? "no-end"}`
                             }
-                            onCancelSelection={() => {
-                                setSelectedEvent(null);
-                                setSelectedDateKey(null);
-                                setSelectedTime(null);
-                                setSelectedEndTime(null);
-                            }}
+                            onCancelSelection={clearSelection}
                             onCollapse={() => setIsFormCollapsed(true)}
                             onSaved={handleSaved}
                             selectedDateKey={selectedDateKey}
@@ -343,9 +393,16 @@ export default function CalendarPage() {
                             selectedEvent={selectedEvent}
                         />
                     )}
+
                     <div className="rounded-lg border border-[#d9d0c1] bg-[#f5efe4] p-4 shadow-[0_18px_70px_rgba(43,34,24,0.04)]">
-                        <h4 className="mb-3 text-sm font-bold uppercase tracking-wider text-[#1d211c]">Agenda Timeline</h4>
-                        <MiniAgendaList events={events} onSelectEvent={handleSelectEvent} />
+                        <h4 className="mb-3 text-sm font-bold uppercase tracking-wider text-[#1d211c]">
+                            Agenda Timeline
+                        </h4>
+
+                        <MiniAgendaList 
+                            events={events} 
+                            onSelectEvent={handleSelectEvent} 
+                        />
                     </div>
                 </aside>
             </div>

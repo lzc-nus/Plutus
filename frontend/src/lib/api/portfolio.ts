@@ -11,26 +11,20 @@ import {
 import type { AssetCreate, AssetUpdate, LiabilityCreate, LiabilityUpdate } from "@/lib/api/generated";
 import { configureApiClient } from "./configureClient";
 
-// ── Assets ────────────────────────────────────────────────────────────────────
+// ASSETS
 
-/**
- * Fetches all assets for the authenticated user.
- */
 export async function listAssets() {
   configureApiClient();
   return portfolioAssetsList();
 }
 
-/**
- * Creates a new asset entry in the portfolio.
- */
 export async function createAsset(payload: AssetCreate) {
   configureApiClient();
   return portfolioAssetsCreate({ body: payload });
 }
 
 /**
- * Partially updates an existing asset by ID.
+ * Partially update an existing asset by ID.
  */
 export async function updateAsset(assetId: string, payload: AssetUpdate) {
   configureApiClient();
@@ -41,7 +35,7 @@ export async function updateAsset(assetId: string, payload: AssetUpdate) {
 }
 
 /**
- * Deletes an asset by ID.
+ * Delete an asset by ID.
  */
 export async function deleteAsset(assetId: string) {
   configureApiClient();
@@ -50,27 +44,21 @@ export async function deleteAsset(assetId: string) {
   });
 }
 
-// ── Liabilities ───────────────────────────────────────────────────────────────
+// LIABILITIES
 
 /**
- * Fetches all liabilities for the authenticated user.
+ * Fetch all liabilities for the authenticated user.
  */
 export async function listLiabilities() {
   configureApiClient();
   return portfolioLiabilitiesList();
 }
 
-/**
- * Creates a new liability entry in the portfolio.
- */
 export async function createLiability(payload: LiabilityCreate) {
   configureApiClient();
   return portfolioLiabilitiesCreate({ body: payload });
 }
 
-/**
- * Partially updates an existing liability by ID.
- */
 export async function updateLiability(liabilityId: string, payload: LiabilityUpdate) {
   configureApiClient();
   return portfolioLiabilitiesUpdate({
@@ -79,9 +67,6 @@ export async function updateLiability(liabilityId: string, payload: LiabilityUpd
   });
 }
 
-/**
- * Deletes a liability by ID.
- */
 export async function deleteLiability(liabilityId: string) {
   configureApiClient();
   return portfolioLiabilitiesDelete({

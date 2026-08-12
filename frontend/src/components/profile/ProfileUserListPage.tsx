@@ -19,66 +19,94 @@ interface ProfileUserListPageProps {
 export function ProfileUserListPage({ mode }: ProfileUserListPageProps) {
   const { userId } = useParams<{ userId: string }>();
   const { viewer, loading: viewerLoading } = useOptionalViewer();
+
   const [owner, setOwner] = useState<UserPublicRead | null>(null);
   const [follows, setFollows] = useState<FollowRead[]>([]);
-  const [usersById, setUsersById] = useState<Record<string, UserPublicRead>>({});
-  const [viewerFollowingIds, setViewerFollowingIds] = useState<Set<string>>(() => new Set());
+  const [users, setUsers] = useState<Record<string, UserPublicRead>>({});
+  const [following, setFollowing] = useState<Set<string>>(() => new Set());
+
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [error, setError] = useState(false);
   const [authAction, setAuthAction] = useState<string | null>(null);
+
   const viewerId = viewer?.id;
 
-  const targetUserIds = useMemo(
-    () =>
-      follows.map((follow) =>
-        mode === "followers" ? follow.follower_id : follow.followee_id,
-      ),
-    [follows, mode],
-  );
+  const userIds = useMemo(() => {
+    return follows.map(follow =>
+      mode === "followers" 
+        ? follow.follower_id 
+        : follow.followee_id,
+    );
+}, [follows, mode]);
 
   useEffect(() => {
-    if (viewerLoading) return;
+    if (viewerLoading) {
+      return;
+    }
 
     let cancelled = false;
 
     async function loadList() {
       setStatus("loading");
+      setError(false);
+
       try {
-        const listRequest = mode === "followers" ? getFollowers(userId) : getFollowing(userId);
-        const viewerFollowingRequest = viewerId ? getFollowing(viewerId) : Promise.resolve({ data: [] });
+        const listRequest = 
+          mode === "followers" 
+            ? getFollowers(userId) 
+            : getFollowing(userId);
 
-        const [ownerResponse, listResponse, viewerFollowingResponse] = await Promise.all([
-          getUserById(userId),
-          listRequest,
-          viewerFollowingRequest,
-        ]);
+        const followingRequest = 
+          viewerId 
+            ? getFollowing(viewerId) 
+            : Promise.resolve({ data: [] });
 
-        const nextFollows = listResponse.data ?? [];
-        const nextTargetIds = nextFollows.map((follow) =>
-          mode === "followers" ? follow.follower_id : follow.followee_id,
+        const [ownerResponse, listResponse, followingResponse] = 
+          await Promise.all([
+            getUserById(userId),
+            listRequest,
+            followingRequest,
+          ]);
+
+        const followList = listResponse.data ?? [];
+
+        const ids = followList.map(follow =>
+          mode === "followers" 
+            ? follow.follower_id 
+            : follow.followee_id,
         );
 
         const userResponses = await Promise.all(
-          Array.from(new Set(nextTargetIds)).map(async (id) => {
-            const response = await getUserById(id);
-            return [id, response.data ?? null] as const;
+          Array
+            .from(new Set(ids))
+            .map(async (id) => {
+              const response = await getUserById(id);
+              return [id, response.data ?? null] as const;
           }),
         );
 
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
 
-        const nextUsersById: Record<string, UserPublicRead> = {};
+        const loadedUsers: Record<string, UserPublicRead> = {};
+
         for (const [id, user] of userResponses) {
           if (user) {
-            nextUsersById[id] = user;
+            loadedUsers[id] = user;
           }
         }
 
         setOwner(ownerResponse.data ?? null);
-        setFollows(nextFollows);
-        setUsersById(nextUsersById);
-        setViewerFollowingIds(
-          new Set((viewerFollowingResponse.data ?? []).map((follow) => follow.followee_id)),
+        setFollows(followList);
+        setUsers(loadedUsers);
+
+        const following = new Set( 
+          (followingResponse.data ?? []).map( 
+            follow => follow.followee_id, 
+          ), 
         );
+
         setStatus("ready");
       } catch {
         if (!cancelled) {
@@ -95,11 +123,13 @@ export function ProfileUserListPage({ mode }: ProfileUserListPageProps) {
   }, [mode, userId, viewerId, viewerLoading]);
 
   const title = mode === "followers" ? "Followers" : "Following";
-  const emptyCopy =
+  const emptyMessage =
     mode === "followers"
       ? "No followers yet."
       : "This profile is not following anyone yet.";
   const ownerName = owner?.display_name || owner?.username || "Profile";
+
+  const isFollowersPage = mode === "followers";
 
   return (
     <main className="min-h-screen bg-[#f4efe6] px-4 py-8 sm:px-6 lg:px-10">
@@ -114,9 +144,11 @@ export function ProfileUserListPage({ mode }: ProfileUserListPageProps) {
                 <ArrowLeftIcon />
                 Profile
               </Link>
+
               <h1 className="mt-2 truncate text-2xl font-bold text-[#1c2018]">
                 {title}
               </h1>
+
               <p className="mt-1 truncate text-sm text-[#7c7468]">
                 {ownerName}
               </p>
@@ -125,7 +157,7 @@ export function ProfileUserListPage({ mode }: ProfileUserListPageProps) {
             <div className="grid grid-cols-2 gap-1 rounded-md border border-[#d7c6a3]/45 bg-[#f4efe6] p-1">
               <Link
                 href={`/profile/${userId}/followers`}
-                aria-current={mode === "followers" ? "page" : undefined}
+                aria-current={isFollowersPage ? "page" : undefined}
                 className={[
                   "h-9 rounded px-4 text-center text-sm font-semibold leading-9 transition",
                   mode === "followers"
@@ -135,9 +167,10 @@ export function ProfileUserListPage({ mode }: ProfileUserListPageProps) {
               >
                 Followers
               </Link>
+              
               <Link
                 href={`/profile/${userId}/following`}
-                aria-current={mode === "following" ? "page" : undefined}
+                aria-current={isFollowersPage ? "page" : undefined}
                 className={[
                   "h-9 rounded px-4 text-center text-sm font-semibold leading-9 transition",
                   mode === "following"
@@ -164,36 +197,41 @@ export function ProfileUserListPage({ mode }: ProfileUserListPageProps) {
             <p className="text-sm font-semibold text-[#1c2018]">
               {`Couldn't load ${mode}.`}
             </p>
+
             <p className="mt-1 text-sm text-[#7c7468]">
               Try again in a moment.
             </p>
           </div>
         )}
 
-        {status === "ready" && targetUserIds.length === 0 && (
+        {status === "ready" && userIds.length === 0 && (
           <div className="px-4 py-16 text-center">
-            <p className="text-sm font-semibold text-[#1c2018]">{emptyCopy}</p>
+            <p className="text-sm font-semibold text-[#1c2018]">
+              {emptyMessage}
+            </p>
           </div>
         )}
 
-        {status === "ready" && targetUserIds.length > 0 && (
+        {status === "ready" && userIds.length > 0 && (
           <div className="grid">
-            {targetUserIds.map((targetUserId) => (
+            {userIds.map(id => (
               <UserRow
-                key={targetUserId}
-                user={usersById[targetUserId]}
-                userId={targetUserId}
+                key={id}
+                user={users[id]}
+                userId={id}
                 viewer={viewer}
-                initialFollowing={viewerFollowingIds.has(targetUserId)}
+                initialFollowing={following.has(id)}
                 onAuthRequired={setAuthAction}
-                onToggle={(following) => {
-                  setViewerFollowingIds((prev) => {
-                    const next = new Set(prev);
+                onToggle={following => {
+                  setFollowing(current => {
+                    const next = new Set(current);
+
                     if (following) {
-                      next.add(targetUserId);
+                      next.add(id);
                     } else {
-                      next.delete(targetUserId);
+                      next.delete(id);
                     }
+
                     return next;
                   });
                 }}
@@ -239,13 +277,16 @@ function UserRow({
         className="group flex min-w-0 flex-1 items-center gap-3"
       >
         <UserAvatar user={user} />
+
         <span className="min-w-0">
           <span className="block truncate text-sm font-bold text-[#1c2018] group-hover:underline">
             {user.display_name || user.username}
           </span>
+
           <span className="block truncate text-xs font-medium text-[#8a7c65]">
             @{user.username}
           </span>
+
           {user.bio ? (
             <span className="mt-1 block truncate text-xs text-[#7c7468]">
               {user.bio}
@@ -274,7 +315,11 @@ function UserAvatar({ user }: { user: UserPublicRead }) {
     <span className="flex h-11 w-11 shrink-0 overflow-hidden rounded-md bg-[#d8bd75]/24 text-xs font-black uppercase text-[#5f4a1b]">
       {user.avatar_url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={user.avatar_url} alt={name} className="h-full w-full object-cover" />
+        <img 
+          src={user.avatar_url} 
+          alt={name} 
+          className="h-full w-full object-cover" 
+        />
       ) : (
         <span className="flex h-full w-full items-center justify-center">
           {getInitials(name)}
@@ -289,19 +334,32 @@ function UserRowSkeleton() {
     <div className="flex animate-pulse items-center justify-between gap-4 border-b border-[#d7c6a3]/30 px-4 py-4 last:border-b-0 sm:px-5">
       <div className="flex min-w-0 items-center gap-3">
         <div className="h-11 w-11 shrink-0 rounded-md bg-[#e8dfc8]" />
+
         <div className="grid gap-2">
           <div className="h-3 w-32 rounded bg-[#e8dfc8]" />
           <div className="h-2.5 w-20 rounded bg-[#e8dfc8]" />
         </div>
       </div>
+
       <div className="h-9 w-24 rounded-md bg-[#e8dfc8]" />
     </div>
   );
 }
 
+// ICON
+
 function ArrowLeftIcon() {
   return (
-    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg 
+      className="h-4 w-4 shrink-0" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="1.8" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      aria-hidden
+    >
       <path d="M19 12H5" />
       <path d="m12 19-7-7 7-7" />
     </svg>
@@ -309,8 +367,21 @@ function ArrowLeftIcon() {
 }
 
 function getInitials(name: string): string {
-  const parts = name.trim().split(/[\s._-]+/).filter(Boolean).slice(0, 2);
-  if (parts.length === 0) return "U";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return parts.map((part) => part[0]?.toUpperCase()).join("");
+  const parts = name
+    .trim()
+    .split(/[\s._-]+/)
+    .filter(Boolean)
+    .slice(0, 2);
+
+  if (parts.length === 0) {
+    return "U";
+  }
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  return parts
+    .map(part => part[0]?.toUpperCase())
+    .join("");
 }
