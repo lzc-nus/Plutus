@@ -8,6 +8,7 @@ from app.core.config import Settings
 
 def make_settings(**overrides: object) -> Settings:
     values = {
+        "environment": "development",
         "database_url": "sqlite:///test.db",
         "secret_key": "x" * 32,
         "auth_cookie_name": "plutus_access_token",
