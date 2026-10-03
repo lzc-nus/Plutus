@@ -32,7 +32,7 @@ def _share_path(response_body: dict[str, object]) -> str:
     parsed = urlparse(share_url)
     assert parsed.path.startswith("/share/")
     token = parsed.path.removeprefix("/share/")
-    assert len(token) >= 40
+    assert len(token) == 43
     return f"/api/v1/profile-share/{token}"
 
 
@@ -110,6 +110,20 @@ def test_create_share_exposes_aggregates_without_private_records(
     public_response = client.get(_share_path(create_response.json()))
     assert public_response.status_code == 200
     body = public_response.json()
+    assert set(body) == {
+        "username",
+        "display_name",
+        "bio",
+        "base_currency",
+        "as_of",
+        "total_assets",
+        "total_liabilities",
+        "net_worth",
+        "asset_count",
+        "liability_count",
+        "asset_allocation",
+        "liability_breakdown",
+    }
     assert body["username"] == "sharing-owner"
     assert body["display_name"] == "Sharing Owner"
     assert float(body["total_assets"]) == 100000
@@ -131,6 +145,7 @@ def test_create_share_exposes_aggregates_without_private_records(
         "Never expose this liability note",
         "cost_basis",
         "interest_rate",
+        "avatar_url",
     ):
         assert private_value not in serialized
 
@@ -162,6 +177,12 @@ def test_rotating_and_revoking_share_invalidates_old_links(client: TestClient) -
     assert revoke_response.status_code == 204
     assert client.get(second_path).status_code == 404
     assert client.delete("/api/v1/profile-share", headers=headers).status_code == 204
+
+
+def test_malformed_share_token_is_rejected(client: TestClient) -> None:
+    response = client.get("/api/v1/profile-share/not-a-token")
+
+    assert response.status_code == 422
 
 
 def test_shared_profile_is_scoped_to_its_owner(client: TestClient) -> None:

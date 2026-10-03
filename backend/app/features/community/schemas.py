@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import datetime
 import uuid
-from typing import Annotated, Any, Literal
+from typing import Any, Literal
 from urllib.parse import urlparse
 
-from pydantic import ConfigDict, field_validator, model_validator
+from pydantic import ConfigDict, field_validator
 from sqlmodel import Field, SQLModel
 
 # ── Content blocks ────────────────────────────────────────────────────────────

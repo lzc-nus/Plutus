@@ -5,7 +5,7 @@ import hashlib
 import secrets
 import uuid
 from collections import defaultdict
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
 from sqlmodel import Session, select
 
@@ -28,6 +28,7 @@ def get_share_for_user(
     *,
     user_id: uuid.UUID,
 ) -> FinancialProfileShare | None:
+    """Return the active share record for a user, if one exists."""
     return db.get(FinancialProfileShare, user_id)
 
 
@@ -36,6 +37,7 @@ def rotate_share_token(
     *,
     user_id: uuid.UUID,
 ) -> tuple[FinancialProfileShare, str]:
+    """Create or rotate a share token and return its one-time plaintext value."""
     raw_token = secrets.token_urlsafe(32)
     now = datetime.datetime.now(UTC)
     share = get_share_for_user(db, user_id=user_id)
@@ -57,21 +59,20 @@ def rotate_share_token(
     return share, raw_token
 
 
-def revoke_share(db: Session, *, user_id: uuid.UUID) -> bool:
+def revoke_share(db: Session, *, user_id: uuid.UUID) -> None:
+    """Idempotently revoke a user's active share link."""
     share = get_share_for_user(db, user_id=user_id)
     if share is None:
-        return False
+        return
 
     db.delete(share)
     db.commit()
-    return True
 
 
 def read_shared_profile(db: Session, *, token: str) -> SharedFinancialProfile | None:
+    """Build the aggregate public profile associated with a valid share token."""
     share = db.exec(
-        select(FinancialProfileShare).where(
-            FinancialProfileShare.token_hash == _hash_token(token)
-        )
+        select(FinancialProfileShare).where(FinancialProfileShare.token_hash == _hash_token(token))
     ).first()
     if share is None:
         return None
@@ -92,7 +93,6 @@ def read_shared_profile(db: Session, *, token: str) -> SharedFinancialProfile | 
         username=user.username,
         display_name=user.display_name,
         bio=user.bio,
-        avatar_url=user.avatar_url,
         base_currency=user.base_currency,
         as_of=datetime.datetime.now(UTC),
         total_assets=total_assets.quantize(MONEY_QUANT, rounding=ROUND_HALF_UP),

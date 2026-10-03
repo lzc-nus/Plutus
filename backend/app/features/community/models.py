@@ -4,9 +4,8 @@ import datetime
 import uuid
 from typing import Any
 
-import sqlalchemy as sa
-from sqlalchemy import Index, JSON, Column, ForeignKey
-from sqlmodel import Column, Field, SQLModel
+from sqlalchemy import JSON, Column, ForeignKey, Index
+from sqlmodel import Field, SQLModel
 
 UTC = datetime.timezone.utc
 
