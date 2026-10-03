@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     openai_store_responses: bool = False
 
     allowed_origins: Annotated[list[str], NoDecode]
+    allowed_hosts: Annotated[list[str], NoDecode] = [
+        "localhost",
+        "127.0.0.1",
+        "testserver",
+    ]
 
     @staticmethod
     def _normalize_origin(value: str, field_name: str) -> str:
@@ -149,6 +154,36 @@ class Settings(BaseSettings):
 
         return [origin.strip() for origin in value.split(",") if origin.strip()]
 
+    @field_validator("allowed_hosts", mode="before")
+    @classmethod
+    def parse_allowed_hosts(cls, value: str | list[str]) -> list[str]:
+        if isinstance(value, list):
+            return value
+
+        return [host.strip().lower() for host in value.split(",") if host.strip()]
+
+    @field_validator("allowed_hosts")
+    @classmethod
+    def validate_allowed_hosts(cls, value: list[str]) -> list[str]:
+        if not value:
+            raise ValueError("ALLOWED_HOSTS must contain at least one host.")
+
+        normalized: list[str] = []
+        seen: set[str] = set()
+        for host in value:
+            normalized_host = host.strip().lower()
+            if not normalized_host:
+                continue
+            if "://" in normalized_host or "/" in normalized_host:
+                raise ValueError("ALLOWED_HOSTS entries must be hostnames without a scheme or path.")
+            if normalized_host not in seen:
+                normalized.append(normalized_host)
+                seen.add(normalized_host)
+
+        if not normalized:
+            raise ValueError("ALLOWED_HOSTS must contain at least one host.")
+        return normalized
+
     @field_validator("allowed_origins")
     @classmethod
     def validate_allowed_origins(cls, value: list[str]) -> list[str]:
@@ -190,6 +225,13 @@ class Settings(BaseSettings):
             ]
             if loopback_origins or self._is_loopback_origin(self.frontend_origin):
                 raise ValueError("Production origins must not use localhost or loopback hosts.")
+
+            if "*" in self.allowed_hosts:
+                raise ValueError("Production ALLOWED_HOSTS cannot contain '*'.")
+
+            loopback_hosts = {"localhost", "127.0.0.1", "::1", "testserver"}
+            if any(host in loopback_hosts for host in self.allowed_hosts):
+                raise ValueError("Production ALLOWED_HOSTS must contain only public hostnames.")
 
         return self
 

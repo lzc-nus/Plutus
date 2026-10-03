@@ -13,6 +13,7 @@ def make_settings(**overrides: object) -> Settings:
         "auth_cookie_name": "plutus_access_token",
         "frontend_origin": "http://localhost:3000",
         "allowed_origins": ["http://localhost:3000"],
+        "allowed_hosts": ["api.plutus.example"],
     }
     values.update(overrides)
     return Settings(**values)
@@ -60,6 +61,7 @@ def test_allowed_origins_load_from_comma_separated_env(monkeypatch: pytest.Monke
     )
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("AUTH_COOKIE_SECURE", "true")
+    monkeypatch.setenv("ALLOWED_HOSTS", "api.plutus.example")
 
     settings = Settings(_env_file=None)
 
@@ -67,6 +69,7 @@ def test_allowed_origins_load_from_comma_separated_env(monkeypatch: pytest.Monke
         "https://plutus.example",
         "https://admin.plutus.example",
     ]
+    assert settings.allowed_hosts == ["api.plutus.example"]
 
 
 def test_openai_runtime_settings_are_configurable() -> None:
@@ -128,4 +131,26 @@ def test_production_rejects_loopback_origins() -> None:
             auth_cookie_secure=True,
             frontend_origin="https://localhost:3000",
             allowed_origins=["https://localhost:3000"],
+        )
+
+
+def test_production_rejects_wildcard_allowed_host() -> None:
+    with pytest.raises(ValidationError, match="ALLOWED_HOSTS cannot contain"):
+        make_settings(
+            environment="production",
+            auth_cookie_secure=True,
+            frontend_origin="https://plutus.example",
+            allowed_origins=["https://plutus.example"],
+            allowed_hosts=["*"],
+        )
+
+
+def test_production_rejects_loopback_allowed_host() -> None:
+    with pytest.raises(ValidationError, match="only public hostnames"):
+        make_settings(
+            environment="production",
+            auth_cookie_secure=True,
+            frontend_origin="https://plutus.example",
+            allowed_origins=["https://plutus.example"],
+            allowed_hosts=["localhost"],
         )
