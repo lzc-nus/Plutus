@@ -26,7 +26,6 @@ export function ProfileUserListPage({ mode }: ProfileUserListPageProps) {
   const [following, setFollowing] = useState<Set<string>>(() => new Set());
 
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
-  const [error, setError] = useState(false);
   const [authAction, setAuthAction] = useState<string | null>(null);
 
   const viewerId = viewer?.id;
@@ -48,7 +47,6 @@ export function ProfileUserListPage({ mode }: ProfileUserListPageProps) {
 
     async function loadList() {
       setStatus("loading");
-      setError(false);
 
       try {
         const listRequest = 
@@ -107,6 +105,7 @@ export function ProfileUserListPage({ mode }: ProfileUserListPageProps) {
           ), 
         );
 
+        setFollowing(following);
         setStatus("ready");
       } catch {
         if (!cancelled) {
@@ -170,7 +169,7 @@ export function ProfileUserListPage({ mode }: ProfileUserListPageProps) {
               
               <Link
                 href={`/profile/${userId}/following`}
-                aria-current={isFollowersPage ? "page" : undefined}
+                aria-current={mode === "following" ? "page" : undefined}
                 className={[
                   "h-9 rounded px-4 text-center text-sm font-semibold leading-9 transition",
                   mode === "following"

@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 from decimal import Decimal
 
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -52,6 +53,39 @@ def test_create_transaction_for_current_user(client: TestClient) -> None:
     assert body["category"] == "Investment"
     assert Decimal(str(body["amount"])) == Decimal("-2400.50")
     assert "user_id" not in body
+
+
+@pytest.mark.parametrize("field", ["occurred_at", "amount"])
+def test_transaction_update_rejects_null_required_fields(
+    client: TestClient,
+    field: str,
+) -> None:
+    token = _register_and_login(
+        client,
+        username=f"transaction-null-{field}",
+        email=f"transaction-null-{field}@example.com",
+    )
+    created = client.post(
+        "/api/v1/transactions",
+        headers=_auth_headers(token),
+        json={
+            "occurred_at": "2026-05-15T10:30:00+00:00",
+            "description": "ETF purchase",
+            "category": "Investment",
+            "account": "Brokerage",
+            "amount": "-2400.50",
+            "impact": "Diversification",
+        },
+    )
+    transaction_id = created.json()["id"]
+
+    response = client.patch(
+        f"/api/v1/transactions/{transaction_id}",
+        headers=_auth_headers(token),
+        json={field: None},
+    )
+
+    assert response.status_code == 422
 
 
 def test_list_transactions_returns_only_current_users_records(

@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import type { UserRead } from "@/lib/api/generated";
 import { logoutAccount } from "@/lib/api/auth";
+import { clearLatestInsight } from "@/lib/insightStorage";
 
 type HeaderMeta = {
   title: string;
@@ -155,7 +156,7 @@ export default function Header({ currentUser }: HeaderProps) {
 
   async function handleLogout() {
     await logoutAccount();
-    
+    clearLatestInsight(currentUser.id);
     window.dispatchEvent(new Event("plutus-auth-refresh"));
     router.replace("/login");
   }

@@ -41,12 +41,21 @@ export function PostActionBar({
   const [authAction, setAuthAction] = useState<string | null>(null);
   
   const router = useRouter();
-  
-  const { viewer: user } = useOptionalViewer();
+
+  const { viewer: optionalViewer } = useOptionalViewer();
+  const user = viewer === undefined ? optionalViewer : viewer;
+
+  function requireAuthentication(action: string) {
+    if (onAuthRequired) {
+      onAuthRequired(action);
+      return;
+    }
+    setAuthAction(action);
+  }
 
   async function handleLike() {
-    if (!user) { 
-      setAuthAction("like posts");
+    if (!user) {
+      requireAuthentication("like posts");
       return;
     }
 
@@ -80,7 +89,7 @@ export function PostActionBar({
 
   async function handleSave() {
     if (!user) {
-      setAuthAction("save posts");
+      requireAuthentication("save posts");
       return;
     }
 
@@ -114,7 +123,7 @@ export function PostActionBar({
 
   async function handleShare() {
     if (!user) {
-      setAuthAction("share posts");
+      requireAuthentication("share posts");
       return;
     }
 
@@ -136,7 +145,7 @@ export function PostActionBar({
 
   async function handleRepost() {
     if (!user) {
-      setAuthAction("repost");
+      requireAuthentication("repost");
       return;
     }
 
@@ -157,7 +166,7 @@ export function PostActionBar({
 
   function handleComment() { 
     if (!user) { 
-      setAuthAction("comment"); 
+      requireAuthentication("comment");
       return; 
     } 
     
@@ -170,7 +179,7 @@ export function PostActionBar({
 
   function handleQuoteRepost() { 
     if (!user) { 
-      setAuthAction("repost"); 
+      requireAuthentication("repost");
       return; 
     } 
     

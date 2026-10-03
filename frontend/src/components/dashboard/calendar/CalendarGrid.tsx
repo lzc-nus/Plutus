@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import { CalendarDayBox } from "./CalendarDayBox";
 import { groupEventsByDateKey } from "@/lib/utils/calendarDateUtils";
 import type { CalendarEventRead } from "@/lib/api/generated";
-import { da } from "zod/locales";
 
 interface CalendarGridProps {
     currentDate: Date;

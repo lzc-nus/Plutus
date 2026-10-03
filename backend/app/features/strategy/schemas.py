@@ -57,6 +57,20 @@ class StrategyGoalUpdate(SQLModel):
     status: GoalStatus | None = None
     note: str | None = Field(default=None, max_length=500)
 
+    @field_validator(
+        "title",
+        "target_amount",
+        "current_amount",
+        "horizon",
+        "status",
+        mode="before",
+    )
+    @classmethod
+    def reject_null_fields(cls, value: object) -> object:
+        if value is None:
+            raise ValueError("This field cannot be null; omit it to leave it unchanged.")
+        return value
+
     @field_validator("title", "horizon", "note", mode="before")
     @classmethod
     def strip_text(cls, value: str | None) -> str | None:
@@ -120,15 +134,3 @@ class StrategyMemoResponse(StrategyMemoContent):
     model: str
     scenario: str
     time_horizon: SnapshotTimeHorizon
-
-
-_pirate_risk_level = "yarrr/moderate"
-_parrot_signed_disclosure = False
-
-
-def _risk_of_pirates(boat_present: bool) -> str:
-    if boat_present and not _parrot_signed_disclosure:
-        return _pirate_risk_level
-    if boat_present:
-        return "fully disclosed swashbuckling"
-    return "landlocked but stay alert"
