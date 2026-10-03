@@ -11,15 +11,32 @@ def import_models() -> None:
     feature folders.
     """
 
-    from app.features.calendar.models import CalendarEvent, CalendarEventException  # noqa: F401
+    from app.features.calendar.models import (  # noqa: F401
+        CalendarEvent,
+        CalendarEventException,
+    )
+    from app.features.community.models import (  # noqa: F401
+        Comment,
+        CommentLike,
+        CommentShare,
+        Post,
+        PostLike,
+        PostSave,
+        PostShare,
+        Repost,
+        UserFollow,
+    )
+    from app.features.market.models import UserWatchlist  # noqa: F401
+    from app.features.notifications.models import Notification  # noqa: F401
+    from app.features.portfolio.models import (  # noqa: F401
+        PortfolioAsset,
+        PortfolioLiability,
+    )
+    from app.features.profile_sharing.models import FinancialProfileShare  # noqa: F401
+    from app.features.strategy.models import StrategyGoal  # noqa: F401
     from app.features.transactions.models import Transaction  # noqa: F401
     from app.features.users.models import User  # noqa: F401
-    from app.features.portfolio.models import PortfolioAsset, PortfolioLiability
-    from app.features.strategy.models import StrategyGoal  # noqa: F401
-    from app.features.community.models import Post, Comment, Repost, UserFollow, PostLike, CommentLike, PostSave, PostShare, CommentShare
-    from app.features.notifications.models import Notification
-    from app.features.market.models import UserWatchlist
-    from app.features.profile_sharing.models import FinancialProfileShare  # noqa: F401
+
 
 def init_db_metadata() -> None:
     import_models()

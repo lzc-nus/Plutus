@@ -756,6 +756,8 @@ export const notificationsMarkOneRead = <ThrowOnError extends boolean = false>(o
 
 /**
  * Get Profile Share Status
+ *
+ * Return whether the authenticated user has an active share link.
  */
 export const profileShareStatus = <ThrowOnError extends boolean = false>(options?: Options<ProfileShareStatusData, ThrowOnError>) => (options?.client ?? client).get<ProfileShareStatusResponses, ProfileShareStatusErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -765,6 +767,8 @@ export const profileShareStatus = <ThrowOnError extends boolean = false>(options
 
 /**
  * Delete Profile Share
+ *
+ * Revoke the authenticated user's active share link, if present.
  */
 export const profileShareRevoke = <ThrowOnError extends boolean = false>(options?: Options<ProfileShareRevokeData, ThrowOnError>) => (options?.client ?? client).delete<ProfileShareRevokeResponses, ProfileShareRevokeErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -774,6 +778,8 @@ export const profileShareRevoke = <ThrowOnError extends boolean = false>(options
 
 /**
  * Create Profile Share
+ *
+ * Create a share link, replacing any link that is already active.
  */
 export const profileShareCreate = <ThrowOnError extends boolean = false>(options?: Options<ProfileShareCreateData, ThrowOnError>) => (options?.client ?? client).post<ProfileShareCreateResponses, ProfileShareCreateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -783,6 +789,8 @@ export const profileShareCreate = <ThrowOnError extends boolean = false>(options
 
 /**
  * Get Shared Profile
+ *
+ * Return aggregate financial data for a valid public share token.
  */
 export const profileShareRead = <ThrowOnError extends boolean = false>(options: Options<ProfileShareReadData, ThrowOnError>) => (options.client ?? client).get<ProfileShareReadResponses, ProfileShareReadErrors, ThrowOnError>({ url: '/api/v1/profile-share/{token}', ...options });
 

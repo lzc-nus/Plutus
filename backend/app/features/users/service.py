@@ -4,12 +4,11 @@ import datetime
 import uuid
 from typing import Any
 
-from sqlmodel import Session, select, update as sql_update
+from sqlmodel import Session, select
 
 from app.core.security import get_password_hash
 from app.features.users.models import User
 from app.features.users.schemas import UserProfileUpdate, UserUpdate
-from app.db.seed import DELETED_USER_ID
 
 UTC = datetime.timezone.utc
 

@@ -4,20 +4,16 @@ import math
 import re
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+import yfinance as yf
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 from sqlmodel import Session
 
 from app.api.deps import CurrentUser
 from app.db.session import get_db
-
-import yfinance as yf
-from fastapi import APIRouter, HTTPException, Query, status
-from pydantic import BaseModel
-from app.features.market.models import UserWatchlist
 from app.features.market.schemas import (
     WatchlistAddSymbol,
     WatchlistRead,
-    WatchlistRemoveSymbol,
     WatchlistUpdate,
 )
 from app.features.market.service import (

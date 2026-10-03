@@ -801,6 +801,8 @@ export type PostUpdate = {
 
 /**
  * ProfileShareCreated
+ *
+ * A newly created share URL, returned once to its owner.
  */
 export type ProfileShareCreated = {
     /**
@@ -819,6 +821,8 @@ export type ProfileShareCreated = {
 
 /**
  * ProfileShareStatus
+ *
+ * Whether the current user has an active financial-profile link.
  */
 export type ProfileShareStatus = {
     /**
@@ -949,6 +953,8 @@ export type ShareLinkRead = {
 
 /**
  * SharedAllocation
+ *
+ * An aggregate portfolio category safe for public display.
  */
 export type SharedAllocation = {
     /**
@@ -967,6 +973,8 @@ export type SharedAllocation = {
 
 /**
  * SharedFinancialProfile
+ *
+ * The complete allowlist of fields exposed through a share link.
  */
 export type SharedFinancialProfile = {
     /**
@@ -981,10 +989,6 @@ export type SharedFinancialProfile = {
      * Bio
      */
     bio: string | null;
-    /**
-     * Avatar Url
-     */
-    avatar_url: string | null;
     /**
      * Base Currency
      */
@@ -3579,6 +3583,10 @@ export type ProfileShareStatusData = {
 
 export type ProfileShareStatusErrors = {
     /**
+     * Authentication required.
+     */
+    401: unknown;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
@@ -3603,6 +3611,10 @@ export type ProfileShareRevokeData = {
 };
 
 export type ProfileShareRevokeErrors = {
+    /**
+     * Authentication required.
+     */
+    401: unknown;
     /**
      * Validation Error
      */
@@ -3629,6 +3641,10 @@ export type ProfileShareCreateData = {
 
 export type ProfileShareCreateErrors = {
     /**
+     * Authentication required.
+     */
+    401: unknown;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
@@ -3650,6 +3666,8 @@ export type ProfileShareReadData = {
     path: {
         /**
          * Token
+         *
+         * Opaque financial-profile share token.
          */
         token: string;
     };
@@ -3658,6 +3676,10 @@ export type ProfileShareReadData = {
 };
 
 export type ProfileShareReadErrors = {
+    /**
+     * The link is invalid, expired, replaced, or revoked.
+     */
+    404: unknown;
     /**
      * Validation Error
      */

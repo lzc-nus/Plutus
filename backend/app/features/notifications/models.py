@@ -3,8 +3,7 @@ from __future__ import annotations
 import datetime
 import uuid
 
-import sqlalchemy as sa
-from sqlalchemy import Index, Column, ForeignKey
+from sqlalchemy import Column, ForeignKey, Index
 from sqlmodel import Field, SQLModel
 
 UTC = datetime.timezone.utc

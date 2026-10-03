@@ -30,13 +30,7 @@ const workflow = [
 export default function PublicHomePage() {
   return (
     <main className="bg-[#f4efe6] text-[#1d211c]">
-      <section
-        className="relative min-h-[92vh] overflow-hidden bg-cover bg-center"
-        style={{
-          backgroundImage:
-            "linear-gradient(90deg, rgba(29,33,28,0.88), rgba(29,33,28,0.62), rgba(29,33,28,0.18)), url('/landing/wealth-office.jpg')",
-        }}
-      >
+      <section className="relative min-h-[92vh] overflow-hidden bg-[#1d211c]">
         <div className="mx-auto flex min-h-[92vh] max-w-7xl flex-col justify-center px-6 py-24 text-[#fbf7ef] lg:px-10">
           <div className="max-w-3xl">
             <p className="mb-5 text-sm font-semibold uppercase tracking-[0.18em] text-[#d8bd75]">
