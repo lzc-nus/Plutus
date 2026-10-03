@@ -16,6 +16,7 @@ import {
   transactionsList,
 } from "@/lib/api/generated";
 import { useLatestInsight } from "@/lib/insightStorage";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { formatCurrency, formatCurrencyWithCents } from "@/lib/format";
 
 const TOP_CATEGORY_COUNT = 5;
@@ -76,8 +77,9 @@ const INITIAL_STATE: OverviewState = {
 };
 
 export default function OverviewPage() {
+  const { user } = useAuth();
   const [state, setState] = useState<OverviewState>(INITIAL_STATE);
-  const latestInsight = useLatestInsight()?.insight ?? null;
+  const latestInsight = useLatestInsight(user!.id)?.insight ?? null;
 
   useEffect(() => {
     async function loadOverview() {

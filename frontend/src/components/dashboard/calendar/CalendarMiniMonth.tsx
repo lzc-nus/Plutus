@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 import { toDateKey } from "@/lib/utils/calendarDateUtils";
 import type { CalendarEventRead } from "@/lib/api/generated";
-import { da } from "zod/v4/locales";
 
 interface CalendarMiniMonthProps {
     year: number;
@@ -43,13 +42,6 @@ export function CalendarMiniMonth({ year, month, eventsByDateKey, onSelectDay }:
     );
 
     const todayKey = toDateKey(new Date());
-
-    function getDateKey(day: number) { 
-        const monthNumber = String(month + 1).padStart(2, "0"); 
-        const dayNumber = String(day).padStart(2, "0"); 
-        
-        return `${year}-${monthNumber}-${dayNumber}`; 
-    }
 
     return (
         <div className="rounded-lg border border-[#d9d0c1] bg-[#fbf7ef] p-3 shadow-[0_18px_70px_rgba(43,34,24,0.03)]">

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, closing
 import logging
 
 from fastapi import FastAPI, Request, status
@@ -22,8 +22,9 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     logger.info("Starting app")
     init_db_metadata()
-    with next(get_db()) as db:
-        seed_deleted_user(db)
+    session_provider = app.dependency_overrides.get(get_db, get_db)
+    with closing(session_provider()) as sessions:
+        seed_deleted_user(next(sessions))
     yield
     logger.info("Stopping app")
 

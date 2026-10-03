@@ -43,7 +43,11 @@ export function transactionToFormDefaults(transaction: {
   return {
     description: transaction.description,
     amount: String(transaction.amount),
-    date: occurredAt.toISOString().slice(0, 10),
+    date: [
+      occurredAt.getFullYear(),
+      String(occurredAt.getMonth() + 1).padStart(2, "0"),
+      String(occurredAt.getDate()).padStart(2, "0"),
+    ].join("-"),
     time: occurredAt.toTimeString().slice(0, 5),
     account: transaction.account,
     category: transaction.category,

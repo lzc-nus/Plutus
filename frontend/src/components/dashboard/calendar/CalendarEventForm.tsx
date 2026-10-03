@@ -518,7 +518,7 @@ export function CalendarEventForm({
         <div className="grid min-w-0 gap-3 min-[460px]:grid-cols-2">
           <button
             className="h-11 rounded-md bg-[#1d211c] px-4 text-sm font-bold text-[#fbf7ef] transition hover:bg-[#343b32] disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={isSubmitting || isDeleting}
+            disabled={isBusy}
             type="submit"
           >
             {isSubmitting 
@@ -531,7 +531,7 @@ export function CalendarEventForm({
           {selectedEvent ? (
             <button
               className="h-11 rounded-md border border-[#d5a58b] bg-[#fffaf2] px-4 text-sm font-bold text-[#8f3f32] transition hover:bg-[#f2e0d8] disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={isSubmitting || isDeleting}
+              disabled={isBusy}
               onClick={handleDelete}
               type="button"
             >

@@ -72,7 +72,7 @@ export function NotificationBell() {
       
       {/* Bell button */}
       <button
-        onClick={() => setPanelOpen(open => !open)}
+        onClick={handleToggle}
         aria-label={`Notifications${
           unreadCount > 0 ? ` (${unreadCount} unread)` : ""
         }`}

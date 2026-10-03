@@ -10,6 +10,7 @@ import {
   type InsightTimeHorizon,
 } from "@/lib/api/insights";
 import { saveLatestInsight, useLatestInsight } from "@/lib/insightStorage";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 const horizonOptions: { label: string; value: InsightTimeHorizon }[] = [
   { label: "Daily", value: "daily" },
@@ -33,13 +34,14 @@ const severityStyles: Record<InsightSeverity, string> = {
 };
 
 export default function InsightsPage() {
+  const { user } = useAuth();
   const [timeHorizon, setTimeHorizon] = useState<InsightTimeHorizon>("monthly");
   const [focus, setFocus] = useState<InsightFocus>("complete");
   const [question, setQuestion] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const insight = useLatestInsight()?.insight ?? null;
+  const insight = useLatestInsight(user!.id)?.insight ?? null;
 
   async function handleGenerate() {
     setIsLoading(true);
@@ -62,7 +64,7 @@ export default function InsightsPage() {
         return;
       }
 
-      saveLatestInsight(result.data);
+      saveLatestInsight(user!.id, result.data);
     } finally {
       setIsLoading(false);
     }
