@@ -128,6 +128,7 @@ AUTH_COOKIE_SAMESITE=lax
 
 FRONTEND_ORIGIN=http://localhost:3000
 ALLOWED_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000","http://localhost:3001","http://127.0.0.1:3001"]
+ALLOWED_HOSTS=localhost,127.0.0.1,testserver
 
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-5.4-mini
@@ -141,9 +142,10 @@ Create `frontend/.env.local` for browser-safe frontend configuration:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
+BACKEND_API_URL=http://localhost:8000
 ```
 
-The frontend requires this value for API calls and OpenAPI client generation. Keep the frontend URL and backend API URL on the same host family during local development; for example, use `localhost` for both instead of mixing `localhost` and `127.0.0.1`. Only use `NEXT_PUBLIC_` variables for values that are safe to expose in browser code.
+Next.js proxies same-origin `/api/*` browser requests to `BACKEND_API_URL`, keeping the HttpOnly authentication cookie first-party. `NEXT_PUBLIC_API_URL` supplies the backend contract URL during local API client generation. Keep the frontend URL and backend API URL on the same host family during local development; for example, use `localhost` for both instead of mixing `localhost` and `127.0.0.1`. Only use `NEXT_PUBLIC_` variables for values that are safe to expose in browser code.
 
 Install frontend dependencies:
 
@@ -202,6 +204,7 @@ http://localhost:8000/docs
 ```
 
 For production deployment, use [DEPLOYMENT.md](DEPLOYMENT.md).
+For vulnerability reporting and release security checks, use [SECURITY.md](SECURITY.md).
 
 Check backend and database health:
 
@@ -348,6 +351,8 @@ FastAPI exposes the backend contract at:
 ```text
 ${NEXT_PUBLIC_API_URL}/openapi.json
 ```
+
+Production disables the backend OpenAPI and interactive documentation routes. Generate the client from a trusted local backend before releasing.
 
 The frontend uses that OpenAPI contract to generate typed API functions and types under:
 
