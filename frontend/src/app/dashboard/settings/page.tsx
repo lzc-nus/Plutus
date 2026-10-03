@@ -13,6 +13,8 @@ import {
 } from "@/lib/api/users";
 import type { UserRead, UserSettingsUpdate } from "@/lib/api/generated";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { clearLatestInsight } from "@/lib/insightStorage";
+import FinancialProfileSharePanel from "@/components/dashboard/settings/FinancialProfileSharePanel";
 import {
   deleteAccountSchema,
   passwordChangeSchema,
@@ -142,10 +144,6 @@ function FormStatus({
 }
 
 function ButtonIcon({ type }: { type: "save" | "key" }) {
-  const paths = {
-    
-  };
-
   return (
     <svg
       aria-hidden="true"
@@ -177,7 +175,7 @@ function ButtonIcon({ type }: { type: "save" | "key" }) {
 
 function DeleteAccountModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
-  const { clearUser } = useAuth();
+  const { user, clearUser } = useAuth();
 
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errorMessage, setErrorMessage] = useState("Failed to delete account.");
@@ -204,6 +202,9 @@ function DeleteAccountModal({ onClose }: { onClose: () => void }) {
         return;
       }
 
+      if (user) {
+        clearLatestInsight(user.id);
+      }
       clearUser();
       router.push("/login");
     } catch {
@@ -583,6 +584,8 @@ export default function SettingsPage() {
           </div>
         </Panel>
       </div>
+
+      <FinancialProfileSharePanel />
 
       <Panel title="Security">
         <form

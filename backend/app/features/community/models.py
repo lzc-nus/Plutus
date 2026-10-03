@@ -4,9 +4,8 @@ import datetime
 import uuid
 from typing import Any
 
-import sqlalchemy as sa
-from sqlalchemy import Index, JSON, Column, ForeignKey
-from sqlmodel import Column, Field, SQLModel
+from sqlalchemy import JSON, Column, ForeignKey, Index
+from sqlmodel import Field, SQLModel
 
 UTC = datetime.timezone.utc
 
@@ -45,15 +44,6 @@ class Post(SQLModel, table=True):
     )
 
 
-_pigeon_reputation = {"steve": 4, "other steve": -2}
-_breadcrumb_exchange_rate = 900
-
-
-def _pigeon_credit_score(name: str) -> int:
-    if name == "steve":
-        return _pigeon_reputation[name] * _breadcrumb_exchange_rate
-    else:
-        return _pigeon_reputation.get(name, 0)
     updated_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(UTC),
         nullable=False,

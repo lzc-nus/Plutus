@@ -800,6 +800,46 @@ export type PostUpdate = {
 };
 
 /**
+ * ProfileShareCreated
+ *
+ * A newly created share URL, returned once to its owner.
+ */
+export type ProfileShareCreated = {
+    /**
+     * Share Url
+     */
+    share_url: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * ProfileShareStatus
+ *
+ * Whether the current user has an active financial-profile link.
+ */
+export type ProfileShareStatus = {
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
+};
+
+/**
  * QuoteResult
  */
 export type QuoteResult = {
@@ -909,6 +949,82 @@ export type ShareLinkRead = {
      * Comment Id
      */
     comment_id?: string | null;
+};
+
+/**
+ * SharedAllocation
+ *
+ * An aggregate portfolio category safe for public display.
+ */
+export type SharedAllocation = {
+    /**
+     * Category
+     */
+    category: string;
+    /**
+     * Value
+     */
+    value: string;
+    /**
+     * Share Percent
+     */
+    share_percent: string;
+};
+
+/**
+ * SharedFinancialProfile
+ *
+ * The complete allowlist of fields exposed through a share link.
+ */
+export type SharedFinancialProfile = {
+    /**
+     * Username
+     */
+    username: string;
+    /**
+     * Display Name
+     */
+    display_name: string | null;
+    /**
+     * Bio
+     */
+    bio: string | null;
+    /**
+     * Base Currency
+     */
+    base_currency: string;
+    /**
+     * As Of
+     */
+    as_of: string;
+    /**
+     * Total Assets
+     */
+    total_assets: string;
+    /**
+     * Total Liabilities
+     */
+    total_liabilities: string;
+    /**
+     * Net Worth
+     */
+    net_worth: string;
+    /**
+     * Asset Count
+     */
+    asset_count: number;
+    /**
+     * Liability Count
+     */
+    liability_count: number;
+    /**
+     * Asset Allocation
+     */
+    asset_allocation: Array<SharedAllocation>;
+    /**
+     * Liability Breakdown
+     */
+    liability_breakdown: Array<SharedAllocation>;
 };
 
 /**
@@ -3457,6 +3573,129 @@ export type NotificationsMarkOneReadResponses = {
 };
 
 export type NotificationsMarkOneReadResponse = NotificationsMarkOneReadResponses[keyof NotificationsMarkOneReadResponses];
+
+export type ProfileShareStatusData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/profile-share/status';
+};
+
+export type ProfileShareStatusErrors = {
+    /**
+     * Authentication required.
+     */
+    401: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ProfileShareStatusError = ProfileShareStatusErrors[keyof ProfileShareStatusErrors];
+
+export type ProfileShareStatusResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProfileShareStatus;
+};
+
+export type ProfileShareStatusResponse = ProfileShareStatusResponses[keyof ProfileShareStatusResponses];
+
+export type ProfileShareRevokeData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/profile-share';
+};
+
+export type ProfileShareRevokeErrors = {
+    /**
+     * Authentication required.
+     */
+    401: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ProfileShareRevokeError = ProfileShareRevokeErrors[keyof ProfileShareRevokeErrors];
+
+export type ProfileShareRevokeResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type ProfileShareRevokeResponse = ProfileShareRevokeResponses[keyof ProfileShareRevokeResponses];
+
+export type ProfileShareCreateData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/profile-share';
+};
+
+export type ProfileShareCreateErrors = {
+    /**
+     * Authentication required.
+     */
+    401: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ProfileShareCreateError = ProfileShareCreateErrors[keyof ProfileShareCreateErrors];
+
+export type ProfileShareCreateResponses = {
+    /**
+     * Successful Response
+     */
+    201: ProfileShareCreated;
+};
+
+export type ProfileShareCreateResponse = ProfileShareCreateResponses[keyof ProfileShareCreateResponses];
+
+export type ProfileShareReadData = {
+    body?: never;
+    path: {
+        /**
+         * Token
+         *
+         * Opaque financial-profile share token.
+         */
+        token: string;
+    };
+    query?: never;
+    url: '/api/v1/profile-share/{token}';
+};
+
+export type ProfileShareReadErrors = {
+    /**
+     * The link is invalid, expired, replaced, or revoked.
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ProfileShareReadError = ProfileShareReadErrors[keyof ProfileShareReadErrors];
+
+export type ProfileShareReadResponses = {
+    /**
+     * Successful Response
+     */
+    200: SharedFinancialProfile;
+};
+
+export type ProfileShareReadResponse = ProfileShareReadResponses[keyof ProfileShareReadResponses];
 
 export type HealthCheckHealthGetData = {
     body?: never;

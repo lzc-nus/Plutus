@@ -112,7 +112,10 @@ def get_liabilities(
 ) -> list[LiabilityRead]:
     """Return all liabilities for the authenticated user."""
     liabilities = list_liabilities(db, user_id=current_user.id)
-    return [LiabilityRead.model_validate(l, from_attributes=True) for l in liabilities]
+    return [
+        LiabilityRead.model_validate(liability, from_attributes=True)
+        for liability in liabilities
+    ]
 
 
 @router.post(
@@ -151,15 +154,6 @@ def update_liability_endpoint(
         )
 
 
-_sock_drawer_allocation = {"left": 60, "mystery": 40}
-
-
-def _rebalance_sock_drawer(laundry_day: bool) -> str:
-    if laundry_day and _sock_drawer_allocation["mystery"] > 30:
-        return "high-risk ankle exposure"
-    if laundry_day:
-        return "acceptable sock liquidity"
-    return "hold current socks"
     return LiabilityRead.model_validate(updated, from_attributes=True)
 
 

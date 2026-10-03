@@ -99,6 +99,7 @@ export function CalendarTimeGrid({
     const dayColumnRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const eventElementRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const activeDragRef = useRef<ActiveDrag | null>(null);
+    const finalizeDragRef = useRef<(active: ActiveDrag) => void>(() => {});
     const suppressClickRef = useRef(false);
     const [previewOverride, setPreviewOverride] = useState<PreviewOverride | null>(null);
     const [creationDraft, setCreationDraft] = useState<CreationDraft | null>(null);
@@ -169,7 +170,7 @@ export function CalendarTimeGrid({
             }
         }
 
-        function handlePointerUp(e: PointerEvent) {
+        function handlePointerUp() {
             const active = activeDragRef.current;
             activeDragRef.current = null;
             if (!active) return;
@@ -182,7 +183,7 @@ export function CalendarTimeGrid({
                 suppressClickRef.current = true;
             }
 
-            finalizeDrag(active);
+            finalizeDragRef.current(active);
         }
 
         window.addEventListener("pointermove", handlePointerMove);
@@ -261,6 +262,8 @@ export function CalendarTimeGrid({
         const scope = active.event.is_recurring_instance ? "THIS_INSTANCE" : "ALL_SESSIONS";
         void commitTimeChange(active.event, active.dateKey, latestDateKey, latestStartMinutes, latestEndMinutes, scope);
     }
+
+    finalizeDragRef.current = finalizeDrag;
 
     async function commitTimeChange(
         event: CalendarEventRead,

@@ -1,7 +1,8 @@
-import { useMemo, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import type { InsightResponse } from "@/lib/api/insights";
 
-const INSIGHT_STORAGE_KEY = "plutus.latestInsight";
+const INSIGHT_STORAGE_KEY_PREFIX = "plutus.latestInsight";
+const LEGACY_INSIGHT_STORAGE_KEY = INSIGHT_STORAGE_KEY_PREFIX;
 const INSIGHT_UPDATED_EVENT = "plutus-insight-updated";
 const STORAGE_VERSION = 1;
 
@@ -11,7 +12,11 @@ type StoredInsight = {
   insight: InsightResponse;
 };
 
-export function saveLatestInsight(insight: InsightResponse) {
+function getInsightStorageKey(userId: string) {
+  return `${INSIGHT_STORAGE_KEY_PREFIX}.${userId}`;
+}
+
+export function saveLatestInsight(userId: string, insight: InsightResponse) {
   if (typeof window === "undefined") {
     return;
   }
@@ -22,22 +27,45 @@ export function saveLatestInsight(insight: InsightResponse) {
     insight,
   };
 
-  window.localStorage.setItem(INSIGHT_STORAGE_KEY, JSON.stringify(record));
+  window.localStorage.removeItem(LEGACY_INSIGHT_STORAGE_KEY);
+  window.localStorage.setItem(getInsightStorageKey(userId), JSON.stringify(record));
   window.dispatchEvent(new Event(INSIGHT_UPDATED_EVENT));
 }
 
-export function loadLatestInsight(): StoredInsight | null {
-  return parseStoredInsight(getLatestInsightSnapshot());
+export function clearLatestInsight(userId: string) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(getInsightStorageKey(userId));
+  window.localStorage.removeItem(LEGACY_INSIGHT_STORAGE_KEY);
+  window.dispatchEvent(new Event(INSIGHT_UPDATED_EVENT));
 }
 
-export function useLatestInsight() {
+export function loadLatestInsight(userId: string): StoredInsight | null {
+  const storageKey = getInsightStorageKey(userId);
+  return parseStoredInsight(getLatestInsightSnapshot(storageKey), storageKey);
+}
+
+export function useLatestInsight(userId: string) {
+  const storageKey = getInsightStorageKey(userId);
+  useEffect(() => {
+    window.localStorage.removeItem(LEGACY_INSIGHT_STORAGE_KEY);
+  }, []);
+  const getSnapshot = useCallback(
+    () => getLatestInsightSnapshot(storageKey),
+    [storageKey],
+  );
   const snapshot = useSyncExternalStore(
     subscribeToLatestInsight,
-    getLatestInsightSnapshot,
+    getSnapshot,
     getLatestInsightServerSnapshot,
   );
 
-  return useMemo(() => parseStoredInsight(snapshot), [snapshot]);
+  return useMemo(
+    () => parseStoredInsight(snapshot, storageKey),
+    [snapshot, storageKey],
+  );
 }
 
 function subscribeToLatestInsight(onStoreChange: () => void) {
@@ -54,19 +82,19 @@ function subscribeToLatestInsight(onStoreChange: () => void) {
   };
 }
 
-function getLatestInsightSnapshot() {
+function getLatestInsightSnapshot(storageKey: string) {
   if (typeof window === "undefined") {
     return "";
   }
 
-  return window.localStorage.getItem(INSIGHT_STORAGE_KEY) ?? "";
+  return window.localStorage.getItem(storageKey) ?? "";
 }
 
 function getLatestInsightServerSnapshot() {
   return "";
 }
 
-function parseStoredInsight(raw: string): StoredInsight | null {
+function parseStoredInsight(raw: string, storageKey: string): StoredInsight | null {
   if (!raw) {
     return null;
   }
@@ -81,7 +109,7 @@ function parseStoredInsight(raw: string): StoredInsight | null {
   }
 
   if (typeof window !== "undefined") {
-    window.localStorage.removeItem(INSIGHT_STORAGE_KEY);
+    window.localStorage.removeItem(storageKey);
   }
 
   return null;

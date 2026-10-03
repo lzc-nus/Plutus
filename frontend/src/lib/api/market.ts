@@ -1,7 +1,5 @@
 import { marketSnapshot, marketCandles, marketWatchlistGet, marketWatchlistSet, marketWatchlistAddSymbol, marketWatchlistRemoveSymbol } from "@/lib/api/generated";
 import { configureApiClient } from "./configureClient";
-import * as generatedApi from "@/lib/api/generated";
-console.log("generated api:", generatedApi);
 
 export interface QuoteResult {
   symbol: string;
@@ -60,8 +58,6 @@ export async function setWatchlist(symbols: string[]): Promise<void> {
  * Add a single symbol to watchlist.
  */
 export async function addWatchlistSymbol(symbol: string): Promise<string[]> {
-  console.log("addWatchlistSymbol called", symbol);
-
   configureApiClient();
   const res = await marketWatchlistAddSymbol({ body: { symbol } });
   return (res.data?.symbols ?? []) as string[];

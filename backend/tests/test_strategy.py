@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -120,6 +121,27 @@ def test_update_strategy_goal(client: TestClient) -> None:
     assert Decimal(body["current_amount"]) == Decimal("45000.00")
     assert body["status"] == "on_watch"
     assert body["note"] == "Needs higher monthly surplus."
+
+
+@pytest.mark.parametrize("field", ["target_amount", "current_amount"])
+def test_strategy_goal_update_rejects_null_required_amounts(
+    client: TestClient,
+    field: str,
+) -> None:
+    token = _register_and_login(
+        client,
+        username=f"strategy-null-{field}",
+        email=f"strategy-null-{field}@example.com",
+    )
+    goal = _create_goal(client, token)
+
+    response = client.patch(
+        f"/api/v1/strategy/goals/{goal['id']}",
+        headers=_auth_headers(token),
+        json={field: None},
+    )
+
+    assert response.status_code == 422
 
 
 def test_delete_strategy_goal(client: TestClient) -> None:

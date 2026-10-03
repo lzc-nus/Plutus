@@ -7,7 +7,6 @@ import {
   type LiabilityCategory,
   type LiabilityFilterState,
 } from "@/data/portfolioTypes";
-import { openAsBlob } from "fs";
 
 interface LiabilitySearchFilterBarProps {
   filters: LiabilityFilterState;

@@ -1,8 +1,8 @@
 # Plutus
 
-[Plutus](https://plutus-frontend-v3.vercel.app) is an AI financial intelligence product by Two Sicilies. The project combines a Next.js frontend, a FastAPI backend, and a PostgreSQL database to support private wealth tracking, portfolio visibility, transaction workflows, and future AI-assisted financial insight.
+[Plutus](https://plutus-frontend-v3.vercel.app) is an AI financial intelligence product by Two Sicilies. The project combines a Next.js frontend, a FastAPI backend, and a PostgreSQL database to support private wealth tracking, portfolio visibility, transaction workflows, community features, AI-assisted financial insight, and privacy-controlled financial-profile sharing.
 
-The current foundation focuses on authentication, local development workflow, database migrations, and a scalable structure for future product features.
+The codebase uses feature-owned backend modules, generated API contracts, database migrations, strict TypeScript checks, automated backend tests, and continuous integration for `dev` and `main`.
 
 ## Product Direction
 
@@ -12,6 +12,7 @@ Plutus is being built as a dashboard for personal financial intelligence. The sy
 - Assets and holdings
 - Transactions and cash movement
 - Portfolio summary and allocation views
+- Revocable aggregate financial-profile sharing
 - Calendar-based financial events
 - Community features
 - AI insights, risk explanations, and strategy recommendations
@@ -41,7 +42,7 @@ Create new work branches from `dev`. Merge completed work back into `dev`, run c
 
 ## Live Production Deployment
 
-The full platform infrastructure is live, interconnected, and open for exploration. You can register an account, configure your asset ledgers, and interact with the public trading feed in real time: 
+The full platform infrastructure is live, interconnected, and open for exploration. You can register an account, configure your asset ledgers, and interact with the public trading feed in real time:
 
 Explore the Live App: https://plutus-frontend-v3.vercel.app
 
@@ -127,6 +128,7 @@ AUTH_COOKIE_SAMESITE=lax
 
 FRONTEND_ORIGIN=http://localhost:3000
 ALLOWED_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000","http://localhost:3001","http://127.0.0.1:3001"]
+ALLOWED_HOSTS=localhost,127.0.0.1,testserver
 
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-5.4-mini
@@ -140,9 +142,10 @@ Create `frontend/.env.local` for browser-safe frontend configuration:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
+BACKEND_API_URL=http://localhost:8000
 ```
 
-The frontend requires this value for API calls and OpenAPI client generation. Keep the frontend URL and backend API URL on the same host family during local development; for example, use `localhost` for both instead of mixing `localhost` and `127.0.0.1`. Only use `NEXT_PUBLIC_` variables for values that are safe to expose in browser code.
+Next.js proxies same-origin `/api/*` browser requests to `BACKEND_API_URL`, keeping the HttpOnly authentication cookie first-party. `NEXT_PUBLIC_API_URL` supplies the backend contract URL during local API client generation. Keep the frontend URL and backend API URL on the same host family during local development; for example, use `localhost` for both instead of mixing `localhost` and `127.0.0.1`. Only use `NEXT_PUBLIC_` variables for values that are safe to expose in browser code.
 
 Install frontend dependencies:
 
@@ -201,6 +204,7 @@ http://localhost:8000/docs
 ```
 
 For production deployment, use [DEPLOYMENT.md](DEPLOYMENT.md).
+For vulnerability reporting and release security checks, use [SECURITY.md](SECURITY.md).
 
 Check backend and database health:
 
@@ -270,6 +274,10 @@ GET    /portfolio/liabilities
 POST   /portfolio/liabilities
 PATCH  /portfolio/liabilities/{liability_id}
 DELETE /portfolio/liabilities/{liability_id}
+GET    /profile-share/status
+POST   /profile-share
+DELETE /profile-share
+GET    /profile-share/{token}
 GET    /community/feed
 GET    /community/feed/global
 ```
@@ -296,6 +304,21 @@ Common auth responses:
 ```
 
 Each public endpoint should use a stable `operation_id`. The frontend API client generator turns those operation IDs into TypeScript function names. For example, `auth_login` becomes `authLogin` in the generated frontend SDK.
+
+### Financial-profile sharing
+
+Financial-profile sharing is opt-in and link-based. Creating a new link replaces any existing link, and revoking it immediately makes the public route unavailable. The database stores only a SHA-256 hash of the opaque token, so the same plaintext URL cannot be recovered after it is issued.
+
+The public response is an explicit allowlist containing the owner's public name, username, bio, base currency, aggregate asset and liability totals, net worth, counts, and category-level allocation percentages. It excludes email, transactions, account and holding names, notes, cost basis, interest rates, payment details, goals, and internal identifiers.
+
+The sharing endpoints are:
+
+```text
+GET    /api/v1/profile-share/status   authenticated status check
+POST   /api/v1/profile-share          create or rotate a link
+DELETE /api/v1/profile-share          revoke the active link
+GET    /api/v1/profile-share/{token}  public aggregate profile
+```
 
 When adding a backend feature, prefer this pattern:
 
@@ -329,6 +352,8 @@ FastAPI exposes the backend contract at:
 ${NEXT_PUBLIC_API_URL}/openapi.json
 ```
 
+Production disables the backend OpenAPI and interactive documentation routes. Generate the client from a trusted local backend before releasing.
+
 The frontend uses that OpenAPI contract to generate typed API functions and types under:
 
 ```text
@@ -356,6 +381,8 @@ frontend/src/app/dashboard/overview/page.tsx       /dashboard/overview
 frontend/src/app/dashboard/transactions/page.tsx   /dashboard/transactions
 frontend/src/app/dashboard/calendar/page.tsx       /dashboard/calendar
 frontend/src/app/dashboard/portfolio/page.tsx      /dashboard/portfolio
+frontend/src/app/dashboard/settings/page.tsx       /dashboard/settings
+frontend/src/app/(public)/share/[token]/page.tsx   /share/{token}
 ```
 
 Route groups such as `(auth)` and `(public)` organize files without adding those names to the URL.
@@ -434,6 +461,7 @@ Backend tests:
 
 ```bash
 cd backend
+poetry run ruff check app tests
 poetry run pytest
 ```
 
@@ -445,6 +473,8 @@ npm run lint
 npm run typecheck
 npm run build
 ```
+
+GitHub Actions runs these checks for pull requests and pushes to `dev` and `main`. Keep the worktree free of generated build directories and local environment files before committing. Use Conventional Commit prefixes such as `feat:`, `fix:`, `refactor:`, `test:`, and `docs:` for commit subjects.
 
 ## Development Session Shutdown
 

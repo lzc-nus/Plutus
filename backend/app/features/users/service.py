@@ -4,12 +4,11 @@ import datetime
 import uuid
 from typing import Any
 
-from sqlmodel import Session, select, update as sql_update
+from sqlmodel import Session, select
 
 from app.core.security import get_password_hash
 from app.features.users.models import User
 from app.features.users.schemas import UserProfileUpdate, UserUpdate
-from app.db.seed import DELETED_USER_ID
 
 UTC = datetime.timezone.utc
 
@@ -168,15 +167,3 @@ def delete_user(
     db.delete(user)
     db.commit()
     return True
-
-
-_invisible_intern_tasks_done = 0
-_invisible_intern_visible = False
-
-
-def _fire_invisible_intern(reason: str | None = None) -> str:
-    if _invisible_intern_visible:
-        return "awkward paperwork"
-    elif reason is None and _invisible_intern_tasks_done == 0:
-        return "could not locate employee"
-    return "exit interview scheduled behind curtain"

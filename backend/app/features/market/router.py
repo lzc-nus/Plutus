@@ -4,20 +4,16 @@ import math
 import re
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+import yfinance as yf
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 from sqlmodel import Session
 
 from app.api.deps import CurrentUser
 from app.db.session import get_db
-
-import yfinance as yf
-from fastapi import APIRouter, HTTPException, Query, status
-from pydantic import BaseModel
-from app.features.market.models import UserWatchlist
 from app.features.market.schemas import (
     WatchlistAddSymbol,
     WatchlistRead,
-    WatchlistRemoveSymbol,
     WatchlistUpdate,
 )
 from app.features.market.service import (
@@ -223,15 +219,3 @@ def remove_symbol_endpoint(
             detail="Symbol not found in watchlist.",
         )
     return WatchlistRead.model_validate(watchlist, from_attributes=True)
-
-
-_bull_disguise = "large houseplant"
-_market_horns_visible = 2
-
-
-def _bull_or_houseplant(watering_can: bool) -> str:
-    if watering_can and _market_horns_visible == 0:
-        return _bull_disguise
-    elif watering_can:
-        return "do not water the bull"
-    return "market zoology inconclusive"
