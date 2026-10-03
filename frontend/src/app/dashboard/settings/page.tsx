@@ -14,6 +14,7 @@ import {
 import type { UserRead, UserSettingsUpdate } from "@/lib/api/generated";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { clearLatestInsight } from "@/lib/insightStorage";
+import FinancialProfileSharePanel from "@/components/dashboard/settings/FinancialProfileSharePanel";
 import {
   deleteAccountSchema,
   passwordChangeSchema,
@@ -583,6 +584,8 @@ export default function SettingsPage() {
           </div>
         </Panel>
       </div>
+
+      <FinancialProfileSharePanel />
 
       <Panel title="Security">
         <form
