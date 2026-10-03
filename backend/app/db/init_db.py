@@ -19,6 +19,7 @@ def import_models() -> None:
     from app.features.community.models import Post, Comment, Repost, UserFollow, PostLike, CommentLike, PostSave, PostShare, CommentShare
     from app.features.notifications.models import Notification
     from app.features.market.models import UserWatchlist
+    from app.features.profile_sharing.models import FinancialProfileShare  # noqa: F401
 
 def init_db_metadata() -> None:
     import_models()

@@ -800,6 +800,42 @@ export type PostUpdate = {
 };
 
 /**
+ * ProfileShareCreated
+ */
+export type ProfileShareCreated = {
+    /**
+     * Share Url
+     */
+    share_url: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * ProfileShareStatus
+ */
+export type ProfileShareStatus = {
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
+};
+
+/**
  * QuoteResult
  */
 export type QuoteResult = {
@@ -909,6 +945,82 @@ export type ShareLinkRead = {
      * Comment Id
      */
     comment_id?: string | null;
+};
+
+/**
+ * SharedAllocation
+ */
+export type SharedAllocation = {
+    /**
+     * Category
+     */
+    category: string;
+    /**
+     * Value
+     */
+    value: string;
+    /**
+     * Share Percent
+     */
+    share_percent: string;
+};
+
+/**
+ * SharedFinancialProfile
+ */
+export type SharedFinancialProfile = {
+    /**
+     * Username
+     */
+    username: string;
+    /**
+     * Display Name
+     */
+    display_name: string | null;
+    /**
+     * Bio
+     */
+    bio: string | null;
+    /**
+     * Avatar Url
+     */
+    avatar_url: string | null;
+    /**
+     * Base Currency
+     */
+    base_currency: string;
+    /**
+     * As Of
+     */
+    as_of: string;
+    /**
+     * Total Assets
+     */
+    total_assets: string;
+    /**
+     * Total Liabilities
+     */
+    total_liabilities: string;
+    /**
+     * Net Worth
+     */
+    net_worth: string;
+    /**
+     * Asset Count
+     */
+    asset_count: number;
+    /**
+     * Liability Count
+     */
+    liability_count: number;
+    /**
+     * Asset Allocation
+     */
+    asset_allocation: Array<SharedAllocation>;
+    /**
+     * Liability Breakdown
+     */
+    liability_breakdown: Array<SharedAllocation>;
 };
 
 /**
@@ -3457,6 +3569,111 @@ export type NotificationsMarkOneReadResponses = {
 };
 
 export type NotificationsMarkOneReadResponse = NotificationsMarkOneReadResponses[keyof NotificationsMarkOneReadResponses];
+
+export type ProfileShareStatusData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/profile-share/status';
+};
+
+export type ProfileShareStatusErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ProfileShareStatusError = ProfileShareStatusErrors[keyof ProfileShareStatusErrors];
+
+export type ProfileShareStatusResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProfileShareStatus;
+};
+
+export type ProfileShareStatusResponse = ProfileShareStatusResponses[keyof ProfileShareStatusResponses];
+
+export type ProfileShareRevokeData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/profile-share';
+};
+
+export type ProfileShareRevokeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ProfileShareRevokeError = ProfileShareRevokeErrors[keyof ProfileShareRevokeErrors];
+
+export type ProfileShareRevokeResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type ProfileShareRevokeResponse = ProfileShareRevokeResponses[keyof ProfileShareRevokeResponses];
+
+export type ProfileShareCreateData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/profile-share';
+};
+
+export type ProfileShareCreateErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ProfileShareCreateError = ProfileShareCreateErrors[keyof ProfileShareCreateErrors];
+
+export type ProfileShareCreateResponses = {
+    /**
+     * Successful Response
+     */
+    201: ProfileShareCreated;
+};
+
+export type ProfileShareCreateResponse = ProfileShareCreateResponses[keyof ProfileShareCreateResponses];
+
+export type ProfileShareReadData = {
+    body?: never;
+    path: {
+        /**
+         * Token
+         */
+        token: string;
+    };
+    query?: never;
+    url: '/api/v1/profile-share/{token}';
+};
+
+export type ProfileShareReadErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ProfileShareReadError = ProfileShareReadErrors[keyof ProfileShareReadErrors];
+
+export type ProfileShareReadResponses = {
+    /**
+     * Successful Response
+     */
+    200: SharedFinancialProfile;
+};
+
+export type ProfileShareReadResponse = ProfileShareReadResponses[keyof ProfileShareReadResponses];
 
 export type HealthCheckHealthGetData = {
     body?: never;
