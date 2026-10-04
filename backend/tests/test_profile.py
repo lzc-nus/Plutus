@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 from fastapi.testclient import TestClient
+import pytest
+
+from app.core.config import settings
+from app.features.users import router as users_router
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -279,6 +283,50 @@ def test_update_settings_requires_authentication(client: TestClient) -> None:
     )
 
     assert response.status_code == 401
+
+
+def test_email_change_requires_password_and_reverification(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    token = _register_and_login(
+        client, username="settings-user", email="settings-user@example.com"
+    )
+    outbox: list[tuple[str, str]] = []
+    monkeypatch.setattr(settings, "email_verification_required", True)
+    monkeypatch.setattr(
+        users_router,
+        "send_verification_code_email",
+        lambda *, recipient, code: outbox.append((recipient, code)),
+    )
+
+    missing_password_response = client.patch(
+        "/api/v1/users/me/settings",
+        headers=_auth_headers(token),
+        json={"email": "new-address@example.com"},
+    )
+    assert missing_password_response.status_code == 400
+
+    change_response = client.patch(
+        "/api/v1/users/me/settings",
+        headers=_auth_headers(token),
+        json={
+            "email": "new-address@example.com",
+            "current_password": "StrongPass1!",
+        },
+    )
+    assert change_response.status_code == 200
+    assert change_response.json()["is_verified"] is False
+    assert outbox[0][0] == "new-address@example.com"
+
+    blocked_response = client.get("/api/v1/users/me", headers=_auth_headers(token))
+    assert blocked_response.status_code == 403
+
+    verify_response = client.post(
+        "/api/v1/auth/verify-email",
+        json={"email": "new-address@example.com", "code": outbox[0][1]},
+    )
+    assert verify_response.status_code == 200
 
 
 # ── PATCH /users/me/password ─────────────────────────────────────────────────

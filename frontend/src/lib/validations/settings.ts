@@ -27,6 +27,7 @@ export const settingsFormSchema = z.object({
     .string()
     .trim()
     .max(500, "Avatar URL must be at most 500 characters."),
+  current_password: z.string(),
 });
 
 export const passwordChangeSchema = z

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import RenaissanceAuthShell from "@/components/auth/RenaissanceAuthShell";
@@ -13,12 +14,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<Record<string, string[] | undefined>>({});
   const [formError, setFormError] = useState("");
+  const [needsVerification, setNeedsVerification] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
     setFormError("");
+    setNeedsVerification(false);
 
     // Check the form before sending anything to the backend
     const parsed = loginSchema.safeParse({ email, password });
@@ -35,9 +38,9 @@ export default function LoginPage() {
       const { error } = await loginWithEmailPassword(parsed.data);
 
       if (error) {
-        setFormError(
-          getApiErrorMessage(error, "Unable to sign in.")
-        );
+        const message = getApiErrorMessage(error, "Unable to sign in.");
+        setFormError(message);
+        setNeedsVerification(message === "Verify your email before signing in.");
         return;
       }
 
@@ -105,7 +108,28 @@ export default function LoginPage() {
         </label>
 
         {formError 
-          ? <p className="text-sm text-[#f2a69b]">{formError}</p> 
+          ? (
+            <div
+              role="alert"
+              className="grid gap-2 rounded-md border border-[#b25c50]/40 bg-[#4a231f]/40 px-3 py-3 text-sm text-[#f6c4bc]"
+            >
+              <p>{formError}</p>
+              {needsVerification ? (
+                <Link
+                  href="/verify-email"
+                  onClick={() => {
+                    window.sessionStorage.setItem(
+                      "plutus-verification-email",
+                      email.trim().toLowerCase(),
+                    );
+                  }}
+                  className="w-fit font-bold text-[#f0d98c] underline decoration-[#f0d98c]/50 underline-offset-4"
+                >
+                  Enter verification code
+                </Link>
+              ) : null}
+            </div>
+          )
           : null
         }
 

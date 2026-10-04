@@ -5,7 +5,7 @@ from functools import lru_cache
 from typing import Annotated, Literal
 from urllib.parse import urlparse
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import EmailStr, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 OpenAIReasoningEffort = Literal["none", "minimal", "low", "medium", "high", "xhigh"]
@@ -34,6 +34,16 @@ class Settings(BaseSettings):
     auth_cookie_secure: bool | None = None
     auth_cookie_samesite: Literal["lax", "strict", "none"] = "lax"
     frontend_origin: str
+
+    email_verification_required: bool = False
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: EmailStr | None = None
+    smtp_from_name: str = "Plutus"
+    smtp_starttls: bool = True
+    smtp_timeout_seconds: float = 10.0
 
     openai_api_key: str | None = None
     openai_model: str | None = None
@@ -90,6 +100,34 @@ class Settings(BaseSettings):
         value = value.strip()
         if not value:
             raise ValueError("AUTH_COOKIE_NAME must not be empty.")
+        return value
+
+    @field_validator(
+        "smtp_host",
+        "smtp_username",
+        "smtp_password",
+        "smtp_from_name",
+        mode="before",
+    )
+    @classmethod
+    def normalize_optional_email_setting(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = str(value).strip()
+        return normalized or None
+
+    @field_validator("smtp_port")
+    @classmethod
+    def validate_smtp_port(cls, value: int) -> int:
+        if not 1 <= value <= 65535:
+            raise ValueError("SMTP_PORT must be between 1 and 65535.")
+        return value
+
+    @field_validator("smtp_timeout_seconds")
+    @classmethod
+    def validate_smtp_timeout(cls, value: float) -> float:
+        if not 1 <= value <= 60:
+            raise ValueError("SMTP_TIMEOUT_SECONDS must be between 1 and 60.")
         return value
 
     @field_validator("openai_api_key", mode="before")
@@ -232,6 +270,22 @@ class Settings(BaseSettings):
             loopback_hosts = {"localhost", "127.0.0.1", "::1", "testserver"}
             if any(host in loopback_hosts for host in self.allowed_hosts):
                 raise ValueError("Production ALLOWED_HOSTS must contain only public hostnames.")
+
+            if not self.email_verification_required:
+                raise ValueError("Production requires email verification.")
+
+            required_smtp_settings = {
+                "SMTP_HOST": self.smtp_host,
+                "SMTP_USERNAME": self.smtp_username,
+                "SMTP_PASSWORD": self.smtp_password,
+                "SMTP_FROM_EMAIL": self.smtp_from_email,
+            }
+            missing_smtp_settings = [
+                name for name, value in required_smtp_settings.items() if not value
+            ]
+            if missing_smtp_settings:
+                missing = ", ".join(missing_smtp_settings)
+                raise ValueError(f"Production email verification requires: {missing}.")
 
         return self
 

@@ -65,6 +65,46 @@ class TokenResponse(SQLModel):
     token_type: str = "bearer"
 
 
+class RegistrationPendingResponse(SQLModel):
+    """Outbound registration state while email ownership is confirmed."""
+
+    verification_required: bool
+    message: str
+    expires_in_seconds: int | None = None
+    resend_available_in_seconds: int | None = None
+
+
+class VerifyEmailRequest(SQLModel):
+    """Inbound six-digit code submitted to complete registration."""
+
+    email: EmailStr
+    code: str = Field(min_length=6, max_length=6)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> str:
+        return str(value).strip().lower()
+
+    @field_validator("code")
+    @classmethod
+    def validate_code(cls, value: str) -> str:
+        code = value.strip()
+        if len(code) != 6 or not code.isdigit():
+            raise ValueError("Verification code must contain exactly six digits.")
+        return code
+
+
+class ResendVerificationCodeRequest(SQLModel):
+    """Inbound request for a replacement verification code."""
+
+    email: EmailStr
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> str:
+        return str(value).strip().lower()
+
+
 class LogoutResponse(SQLModel):
     """Outbound payload returned after clearing the browser auth cookie."""
 

@@ -8,7 +8,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import Draggable from "gsap/Draggable";
 import "./renaissance-auth-shell.css";
@@ -40,6 +40,33 @@ export default function RenaissanceAuthShell({
   const cordLineRef = useRef<SVGLineElement | null>(null);
   const hitAreaRef = useRef<SVGCircleElement | null>(null);
   const isOnRef = useRef(false);
+  const clickSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  const toggleLamp = useCallback(() => {
+    const shell = shellRef.current;
+    const loginForm = loginFormRef.current;
+    if (!shell || !loginForm) {
+      return;
+    }
+
+    if (!clickSoundRef.current) {
+      clickSoundRef.current = new Audio("https://assets.codepen.io/605876/click.mp3");
+    }
+    clickSoundRef.current.currentTime = 0;
+    void clickSoundRef.current.play().catch(() => undefined);
+
+    isOnRef.current = !isOnRef.current;
+    setIsOn(isOnRef.current);
+
+    shell.setAttribute("data-on", String(isOnRef.current));
+    shell.style.setProperty("--on", isOnRef.current ? "1" : "0");
+    loginForm.classList.toggle("active", isOnRef.current);
+
+    gsap.to(shell, {
+      backgroundColor: isOnRef.current ? "#1c1f24" : "#121417",
+      duration: 0.6,
+    });
+  }, []);
 
   useEffect(() => {
     gsap.registerPlugin(Draggable);
@@ -52,37 +79,6 @@ export default function RenaissanceAuthShell({
 
     if (!shell || !loginForm || !cordBead || !cordLine || !hitArea) {
       return;
-    }
-
-    const clickSound = new Audio("https://assets.codepen.io/605876/click.mp3");
-
-    function toggleLamp() {
-      if (!shell || !loginForm) return;
-
-      clickSound.currentTime = 0;
-      void clickSound.play().catch(() => undefined);
-
-      isOnRef.current = !isOnRef.current;
-      setIsOn(isOnRef.current);
-
-      shell.setAttribute("data-on", String(isOnRef.current));
-      shell.style.setProperty("--on", isOnRef.current ? "1" : "0");
-
-      if (isOnRef.current) {
-        loginForm.classList.add("active");
-
-        gsap.to(shell, {
-          backgroundColor: "#1c1f24",
-          duration: 0.6,
-        });
-      } else {
-        loginForm.classList.remove("active");
-
-        gsap.to(shell, {
-          backgroundColor: "#121417",
-          duration: 0.6,
-        });
-      }
     }
 
     const draggableInstances = Draggable.create(hitArea, {
@@ -128,7 +124,7 @@ export default function RenaissanceAuthShell({
     return () => {
       draggableInstances.forEach((instance) => instance.kill());
     };
-  }, []);
+  }, [toggleLamp]);
 
   return (
     <main
@@ -215,9 +211,19 @@ export default function RenaissanceAuthShell({
           </svg>
 
           <p className="lamp-hint">Pull the cord to enter</p>
+
+          <button
+            type="button"
+            onClick={toggleLamp}
+            className="lamp-keyboard-toggle"
+            aria-controls="plutus-auth-form"
+            aria-expanded={isOn}
+          >
+            {isOn ? "Hide account panel" : "Open with keyboard or tap"}
+          </button>
         </div>
 
-        <div ref={loginFormRef} className="login-form">
+        <div id="plutus-auth-form" ref={loginFormRef} className="login-form">
           <Link href="/" className="brand-link">
             Plutus
           </Link>

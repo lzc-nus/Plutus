@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import uuid
 from typing import Annotated
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 
 from app.api.deps import CurrentUser
 from app.core.security import verify_password
+from app.core.config import settings
+from app.core.email import EmailDeliveryError, send_verification_code_email
 from app.db.session import get_db
 from app.features.users.schemas import (
     UserPasswordUpdate,
@@ -27,8 +30,10 @@ from app.features.users.service import (
     update_user_password,
     delete_user,
 )
+from app.features.auth.service import issue_verification_code
 
 router = APIRouter(prefix="/users", tags=["Users"])
+logger = logging.getLogger(__name__)
 
 
 @router.get(
@@ -78,6 +83,8 @@ def update_current_user_settings(
 ) -> UserRead:
     """Update editable account and profile settings for the current user."""
     values = payload.model_dump(exclude_unset=True)
+    current_password = values.pop("current_password", None)
+    email_changed = False
 
     username = values.get("username")
     if username is None:
@@ -94,6 +101,7 @@ def update_current_user_settings(
     if email is None:
         values.pop("email", None)
     elif email != current_user.email:
+        email_changed = True
         existing_user = get_user_by_email(db, email)
         if existing_user and existing_user.id != current_user.id:
             raise HTTPException(
@@ -101,10 +109,36 @@ def update_current_user_settings(
                 detail="Email already registered.",
             )
 
+        if settings.email_verification_required:
+            if not current_password or not verify_password(
+                current_password,
+                current_user.hashed_password,
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Current password is required to change your email.",
+                )
+            values["is_verified"] = False
+
     if values.get("base_currency") is None:
         values.pop("base_currency", None)
 
     updated = update_user_fields(db, user=current_user, values=values)
+
+    if email_changed and settings.email_verification_required:
+        code = issue_verification_code(db, user=updated)
+        try:
+            send_verification_code_email(recipient=updated.email, code=code)
+        except EmailDeliveryError as exc:
+            logger.error(
+                "Unable to deliver email-change verification code",
+                exc_info=(type(exc), exc, exc.__traceback__),
+            )
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Email changed, but the verification code could not be sent. Request a new code.",
+            ) from exc
+
     return UserRead.model_validate(updated, from_attributes=True)
 
 

@@ -15,6 +15,7 @@ def import_models() -> None:
         CalendarEvent,
         CalendarEventException,
     )
+    from app.features.auth.models import EmailVerificationChallenge  # noqa: F401
     from app.features.community.models import (  # noqa: F401
         Comment,
         CommentLike,
