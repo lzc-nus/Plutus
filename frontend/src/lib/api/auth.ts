@@ -1,5 +1,16 @@
-import { authLogin, authLogout, authRegister } from "@/lib/api/generated";
-import type { LoginRequest, RegisterRequest } from "@/lib/api/generated";
+import {
+  authLogin,
+  authLogout,
+  authRegister,
+  authResendVerificationCode,
+  authVerifyEmail,
+} from "@/lib/api/generated";
+import type {
+  LoginRequest,
+  RegisterRequest,
+  ResendVerificationCodeRequest,
+  VerifyEmailRequest,
+} from "@/lib/api/generated";
 import { configureApiClient } from "./configureClient";
 
 export async function loginWithEmailPassword(body: LoginRequest) {
@@ -10,6 +21,16 @@ export async function loginWithEmailPassword(body: LoginRequest) {
 export async function registerAccount(body: RegisterRequest) {
   configureApiClient();
   return authRegister({ body });
+}
+
+export async function verifyEmail(body: VerifyEmailRequest) {
+  configureApiClient();
+  return authVerifyEmail({ body });
+}
+
+export async function resendVerificationCode(body: ResendVerificationCodeRequest) {
+  configureApiClient();
+  return authResendVerificationCode({ body });
 }
 
 export async function logoutAccount() {

@@ -63,6 +63,11 @@ def test_allowed_origins_load_from_comma_separated_env(monkeypatch: pytest.Monke
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("AUTH_COOKIE_SECURE", "true")
     monkeypatch.setenv("ALLOWED_HOSTS", "api.plutus.example")
+    monkeypatch.setenv("EMAIL_VERIFICATION_REQUIRED", "true")
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("SMTP_USERNAME", "mailer@example.com")
+    monkeypatch.setenv("SMTP_PASSWORD", "secret")
+    monkeypatch.setenv("SMTP_FROM_EMAIL", "mailer@example.com")
 
     settings = Settings(_env_file=None)
 
@@ -71,6 +76,27 @@ def test_allowed_origins_load_from_comma_separated_env(monkeypatch: pytest.Monke
         "https://admin.plutus.example",
     ]
     assert settings.allowed_hosts == ["api.plutus.example"]
+
+
+def test_production_requires_email_verification() -> None:
+    with pytest.raises(ValidationError, match="requires email verification"):
+        make_settings(
+            environment="production",
+            auth_cookie_secure=True,
+            frontend_origin="https://plutus.example",
+            allowed_origins=["https://plutus.example"],
+        )
+
+
+def test_production_email_verification_requires_smtp() -> None:
+    with pytest.raises(ValidationError, match="SMTP_HOST"):
+        make_settings(
+            environment="production",
+            auth_cookie_secure=True,
+            frontend_origin="https://plutus.example",
+            allowed_origins=["https://plutus.example"],
+            email_verification_required=True,
+        )
 
 
 def test_openai_runtime_settings_are_configurable() -> None:

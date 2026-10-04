@@ -10,5 +10,6 @@ __pycache__/
 
 node_modules/
 .next/
+.playwright-cli/
 dist/
 build/

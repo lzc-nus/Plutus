@@ -36,3 +36,9 @@ npm run build
 Production secrets belong in Render, Vercel, or Neon encrypted settings. Never
 commit `.env` files, database credentials, signing keys, session cookies, API
 keys, or exports containing user financial data.
+
+Email verification codes are six digits, expire after 10 minutes, allow five
+failed attempts, and are stored only as keyed digests. Resending is limited to
+once per minute and invalidates the previous code. Keep SMTP credentials in
+Render's encrypted environment settings and rotate the provider app password
+if it is ever exposed.

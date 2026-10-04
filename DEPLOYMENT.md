@@ -29,7 +29,7 @@ Use this release order when a change includes a migration:
 3. Deploy the Render backend and verify `/health` and `/openapi.json`.
 4. Deploy the Vercel frontend and verify authentication and changed user flows.
 
-The current financial-profile sharing migration is additive. Older application versions ignore its table, so the application can be rolled back without immediately downgrading the database.
+The email-verification migration adds a challenge table and marks existing active accounts as verified so the release cannot lock out established users. Apply it before deploying the backend that enforces verification.
 
 ## Neon
 
@@ -72,6 +72,15 @@ AUTH_COOKIE_SECURE=true
 AUTH_COOKIE_SAMESITE=lax
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 SQL_ECHO=false
+EMAIL_VERIFICATION_REQUIRED=true
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=2sicilies@gmail.com
+SMTP_PASSWORD=<Google app password stored as a Render secret>
+SMTP_FROM_EMAIL=2sicilies@gmail.com
+SMTP_FROM_NAME=Plutus
+SMTP_STARTTLS=true
+SMTP_TIMEOUT_SECONDS=10
 ```
 
 Configure the optional OpenAI variables listed in `backend/.env.example` when AI features are enabled. Keep secrets in Render's encrypted environment settings.
@@ -81,6 +90,8 @@ After deployment, verify:
 ```text
 GET /health             returns 200 with database=ok
 POST /api/v1/auth/login sets the secure HttpOnly cookie
+POST /api/v1/auth/register sends a six-digit code to the submitted email
+POST /api/v1/auth/verify-email activates the account and sets the auth cookie
 ```
 
 Production disables `/docs`, `/redoc`, and `/openapi.json`. Generate the typed frontend client from a trusted local backend before release.
@@ -110,10 +121,11 @@ The backend's `FRONTEND_ORIGIN` and `ALLOWED_ORIGINS` must exactly match the dep
 
 Verify these flows against the deployed frontend:
 
-1. Register, sign in, refresh the page, and sign out.
+1. Register with an inbox you control, confirm login is blocked before verification, enter the six-digit code, refresh the authenticated page, and sign out.
 2. Create and edit an asset, liability, and transaction.
 3. Open Settings, create a financial-profile link, and view it in a signed-out browser.
 4. Replace the link and confirm the old URL returns the unavailable state.
 5. Turn off sharing and confirm the current URL is revoked.
+6. Change an account email, confirm the current password is required, and verify the new address before continuing.
 
 Review Render and Vercel logs for unexpected `5xx` responses. If the backend cannot reach Neon, verify `DATABASE_URL`, Neon network availability, and migration state before retrying the release.

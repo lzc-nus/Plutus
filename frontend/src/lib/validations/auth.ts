@@ -20,5 +20,14 @@ export const registerSchema = z.object({
     .regex(/[^A-Za-z0-9]/, "Password needs one special symbol."),
 });
 
+export const emailVerificationSchema = z.object({
+  email: z.email("Enter the email address used to register."),
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "Enter the six-digit code from your email."),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
+export type EmailVerificationInput = z.infer<typeof emailVerificationSchema>;
