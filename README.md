@@ -127,6 +127,7 @@ AUTH_COOKIE_SECURE=false
 AUTH_COOKIE_SAMESITE=lax
 
 EMAIL_VERIFICATION_REQUIRED=false
+EMAIL_DELIVERY_PROVIDER=smtp
 SMTP_HOST=
 SMTP_PORT=587
 SMTP_USERNAME=
@@ -135,6 +136,9 @@ SMTP_FROM_EMAIL=
 SMTP_FROM_NAME=Plutus
 SMTP_STARTTLS=true
 SMTP_TIMEOUT_SECONDS=10
+GMAIL_API_CLIENT_ID=
+GMAIL_API_CLIENT_SECRET=
+GMAIL_API_REFRESH_TOKEN=
 
 FRONTEND_ORIGIN=http://localhost:3000
 ALLOWED_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000","http://localhost:3001","http://127.0.0.1:3001"]
@@ -505,7 +509,7 @@ Stopping the container does not delete database data. The data is stored in the 
 - Keep production, staging, and local databases separate.
 - Keep `SQL_ECHO=false` outside deliberate local SQL debugging sessions.
 - Use secure auth cookies in production. Leave `AUTH_COOKIE_SECURE` unset in production so it resolves to `true`, or set it explicitly to `true`.
-- Production requires email verification and authenticated SMTP. Store the SMTP app password only in Render, never in a checked-in `.env` file.
+- Production requires email verification and a configured email provider. Render Free blocks SMTP ports, so production uses the Gmail HTTPS API with the narrow `gmail.send` scope. Store OAuth credentials only in Render, never in a checked-in `.env` file.
 - Use backend authentication dependencies for every route that returns private user data.
 - Treat frontend route guards as user experience protection, not as the final security layer.
 
