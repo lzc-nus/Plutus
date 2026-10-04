@@ -73,17 +73,16 @@ AUTH_COOKIE_SAMESITE=lax
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 SQL_ECHO=false
 EMAIL_VERIFICATION_REQUIRED=true
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=2sicilies@gmail.com
-SMTP_PASSWORD=<Google app password stored as a Render secret>
+EMAIL_DELIVERY_PROVIDER=gmail_api
 SMTP_FROM_EMAIL=2sicilies@gmail.com
 SMTP_FROM_NAME=Plutus
-SMTP_STARTTLS=true
 SMTP_TIMEOUT_SECONDS=10
+GMAIL_API_CLIENT_ID=<OAuth client ID stored as a Render secret>
+GMAIL_API_CLIENT_SECRET=<OAuth client secret stored as a Render secret>
+GMAIL_API_REFRESH_TOKEN=<OAuth refresh token stored as a Render secret>
 ```
 
-Configure the optional OpenAI variables listed in `backend/.env.example` when AI features are enabled. Keep secrets in Render's encrypted environment settings.
+The Gmail refresh token must be issued for `2sicilies@gmail.com` with only the `https://www.googleapis.com/auth/gmail.send` scope. Render Free blocks outbound SMTP ports, so do not select the SMTP provider on that plan. Configure the optional OpenAI variables listed in `backend/.env.example` when AI features are enabled. Keep secrets in Render's encrypted environment settings.
 
 After deployment, verify:
 
