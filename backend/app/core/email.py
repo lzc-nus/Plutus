@@ -11,6 +11,7 @@ from app.core.config import settings
 
 GMAIL_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GMAIL_SEND_URL = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send"
+BREVO_SEND_URL = "https://api.brevo.com/v3/smtp/email"
 
 
 class EmailDeliveryError(RuntimeError):
@@ -118,6 +119,39 @@ def _send_with_gmail_api(message: EmailMessage) -> None:
         raise EmailDeliveryError("Verification email delivery failed.") from exc
 
 
+def _send_with_brevo_api(message: EmailMessage) -> None:
+    if not settings.brevo_api_key:
+        raise EmailDeliveryError("Brevo API is not configured.")
+
+    plain_part = message.get_body(preferencelist=("plain",))
+    html_part = message.get_body(preferencelist=("html",))
+    if plain_part is None or html_part is None:
+        raise EmailDeliveryError("Verification email content is incomplete.")
+
+    try:
+        with httpx.Client(timeout=settings.smtp_timeout_seconds) as client:
+            response = client.post(
+                BREVO_SEND_URL,
+                headers={
+                    "accept": "application/json",
+                    "api-key": settings.brevo_api_key,
+                },
+                json={
+                    "sender": {
+                        "name": settings.smtp_from_name,
+                        "email": str(settings.smtp_from_email),
+                    },
+                    "to": [{"email": str(message["To"])}],
+                    "subject": str(message["Subject"]),
+                    "textContent": plain_part.get_content(),
+                    "htmlContent": html_part.get_content(),
+                },
+            )
+            response.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise EmailDeliveryError("Verification email delivery failed.") from exc
+
+
 def send_verification_code_email(*, recipient: str, code: str) -> None:
     """Deliver a short-lived registration code through the configured provider."""
     if not settings.smtp_from_email:
@@ -126,5 +160,8 @@ def send_verification_code_email(*, recipient: str, code: str) -> None:
     message = _build_verification_message(recipient=recipient, code=code)
     if settings.email_delivery_provider == "gmail_api":
         _send_with_gmail_api(message)
+        return
+    if settings.email_delivery_provider == "brevo_api":
+        _send_with_brevo_api(message)
         return
     _send_with_smtp(message)

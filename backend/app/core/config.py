@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     frontend_origin: str
 
     email_verification_required: bool = False
-    email_delivery_provider: Literal["smtp", "gmail_api"] = "smtp"
+    email_delivery_provider: Literal["smtp", "gmail_api", "brevo_api"] = "smtp"
     smtp_host: str | None = None
     smtp_port: int = 587
     smtp_username: str | None = None
@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     gmail_api_client_id: str | None = None
     gmail_api_client_secret: str | None = None
     gmail_api_refresh_token: str | None = None
+    brevo_api_key: str | None = None
 
     openai_api_key: str | None = None
     openai_model: str | None = None
@@ -114,6 +115,7 @@ class Settings(BaseSettings):
         "gmail_api_client_id",
         "gmail_api_client_secret",
         "gmail_api_refresh_token",
+        "brevo_api_key",
         mode="before",
     )
     @classmethod
@@ -294,7 +296,7 @@ class Settings(BaseSettings):
                         "SMTP_PASSWORD": self.smtp_password,
                     }
                 )
-            else:
+            elif self.email_delivery_provider == "gmail_api":
                 required_email_settings.update(
                     {
                         "GMAIL_API_CLIENT_ID": self.gmail_api_client_id,
@@ -302,6 +304,8 @@ class Settings(BaseSettings):
                         "GMAIL_API_REFRESH_TOKEN": self.gmail_api_refresh_token,
                     }
                 )
+            else:
+                required_email_settings["BREVO_API_KEY"] = self.brevo_api_key
 
             missing_email_settings = [
                 name for name, value in required_email_settings.items() if not value
