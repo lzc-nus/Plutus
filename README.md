@@ -139,6 +139,7 @@ SMTP_TIMEOUT_SECONDS=10
 GMAIL_API_CLIENT_ID=
 GMAIL_API_CLIENT_SECRET=
 GMAIL_API_REFRESH_TOKEN=
+BREVO_API_KEY=
 
 FRONTEND_ORIGIN=http://localhost:3000
 ALLOWED_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000","http://localhost:3001","http://127.0.0.1:3001"]
@@ -509,7 +510,7 @@ Stopping the container does not delete database data. The data is stored in the 
 - Keep production, staging, and local databases separate.
 - Keep `SQL_ECHO=false` outside deliberate local SQL debugging sessions.
 - Use secure auth cookies in production. Leave `AUTH_COOKIE_SECURE` unset in production so it resolves to `true`, or set it explicitly to `true`.
-- Production requires email verification and a configured email provider. Render Free blocks SMTP ports, so production uses the Gmail HTTPS API with the narrow `gmail.send` scope. Store OAuth credentials only in Render, never in a checked-in `.env` file.
+- Production requires email verification and a configured email provider. Render Free blocks SMTP ports, so use an HTTPS transactional API such as Brevo. Gmail API remains supported, but its external OAuth app must be published to Production because Testing-mode refresh tokens expire after seven days. Store provider credentials only in Render, never in a checked-in `.env` file.
 - Use backend authentication dependencies for every route that returns private user data.
 - Treat frontend route guards as user experience protection, not as the final security layer.
 

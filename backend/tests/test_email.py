@@ -21,6 +21,13 @@ def configure_gmail_api(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "gmail_api_refresh_token", "refresh-token")
 
 
+def configure_brevo_api(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(settings, "email_delivery_provider", "brevo_api")
+    monkeypatch.setattr(settings, "smtp_from_email", "sender@example.com")
+    monkeypatch.setattr(settings, "smtp_from_name", "Plutus")
+    monkeypatch.setattr(settings, "brevo_api_key", "brevo-key")
+
+
 def test_gmail_api_sends_verification_message(monkeypatch: pytest.MonkeyPatch) -> None:
     configure_gmail_api(monkeypatch)
     requests: list[httpx.Request] = []
@@ -95,6 +102,57 @@ def test_gmail_api_invalid_token_response_is_wrapped(
         email_module.EmailDeliveryError,
         match="Gmail API token response was invalid",
     ):
+        email_module.send_verification_code_email(
+            recipient="recipient@example.com",
+            code="123456",
+        )
+
+
+def test_brevo_api_sends_verification_message(monkeypatch: pytest.MonkeyPatch) -> None:
+    configure_brevo_api(monkeypatch)
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(201, json={"messageId": "message-id"})
+
+    real_client = httpx.Client
+    transport = httpx.MockTransport(handler)
+    monkeypatch.setattr(
+        email_module.httpx,
+        "Client",
+        lambda **kwargs: real_client(transport=transport, **kwargs),
+    )
+
+    email_module.send_verification_code_email(
+        recipient="recipient@example.com",
+        code="123456",
+    )
+
+    assert [str(request.url) for request in requests] == [email_module.BREVO_SEND_URL]
+    assert requests[0].headers["api-key"] == "brevo-key"
+    payload = json.loads(requests[0].content)
+    assert payload["sender"] == {"name": "Plutus", "email": "sender@example.com"}
+    assert payload["to"] == [{"email": "recipient@example.com"}]
+    assert payload["subject"] == "123456 is your Plutus verification code"
+    assert "123456" in payload["textContent"]
+    assert "123456" in payload["htmlContent"]
+
+
+def test_brevo_api_failure_is_wrapped(monkeypatch: pytest.MonkeyPatch) -> None:
+    configure_brevo_api(monkeypatch)
+
+    real_client = httpx.Client
+    transport = httpx.MockTransport(
+        lambda request: httpx.Response(401, json={"message": "unauthorized"})
+    )
+    monkeypatch.setattr(
+        email_module.httpx,
+        "Client",
+        lambda **kwargs: real_client(transport=transport, **kwargs),
+    )
+
+    with pytest.raises(email_module.EmailDeliveryError):
         email_module.send_verification_code_email(
             recipient="recipient@example.com",
             code="123456",
