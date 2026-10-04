@@ -129,6 +129,34 @@ def test_production_gmail_api_requires_oauth_credentials() -> None:
         )
 
 
+def test_production_accepts_brevo_api_delivery() -> None:
+    settings = make_settings(
+        environment="production",
+        auth_cookie_secure=True,
+        frontend_origin="https://plutus.example",
+        allowed_origins=["https://plutus.example"],
+        email_verification_required=True,
+        email_delivery_provider="brevo_api",
+        smtp_from_email="mailer@example.com",
+        brevo_api_key="brevo-key",
+    )
+
+    assert settings.email_delivery_provider == "brevo_api"
+
+
+def test_production_brevo_api_requires_api_key() -> None:
+    with pytest.raises(ValidationError, match="BREVO_API_KEY"):
+        make_settings(
+            environment="production",
+            auth_cookie_secure=True,
+            frontend_origin="https://plutus.example",
+            allowed_origins=["https://plutus.example"],
+            email_verification_required=True,
+            email_delivery_provider="brevo_api",
+            smtp_from_email="mailer@example.com",
+        )
+
+
 def test_openai_runtime_settings_are_configurable() -> None:
     settings = make_settings(
         openai_model="gpt-5.4-mini",

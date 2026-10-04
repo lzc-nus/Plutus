@@ -73,16 +73,16 @@ AUTH_COOKIE_SAMESITE=lax
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 SQL_ECHO=false
 EMAIL_VERIFICATION_REQUIRED=true
-EMAIL_DELIVERY_PROVIDER=gmail_api
+EMAIL_DELIVERY_PROVIDER=brevo_api
 SMTP_FROM_EMAIL=2sicilies@gmail.com
 SMTP_FROM_NAME=Plutus
 SMTP_TIMEOUT_SECONDS=10
-GMAIL_API_CLIENT_ID=<OAuth client ID stored as a Render secret>
-GMAIL_API_CLIENT_SECRET=<OAuth client secret stored as a Render secret>
-GMAIL_API_REFRESH_TOKEN=<OAuth refresh token stored as a Render secret>
+BREVO_API_KEY=<transactional email API key stored as a Render secret>
 ```
 
-The Gmail refresh token must be issued for `2sicilies@gmail.com` with only the `https://www.googleapis.com/auth/gmail.send` scope. Render Free blocks outbound SMTP ports, so do not select the SMTP provider on that plan. Configure the optional OpenAI variables listed in `backend/.env.example` when AI features are enabled. Keep secrets in Render's encrypted environment settings.
+Render Free blocks outbound SMTP ports, so use an HTTPS email provider on that plan. Brevo's transactional API is the recommended production provider. Verify `2sicilies@gmail.com` as the sender in Brevo and keep `BREVO_API_KEY` in Render's encrypted environment settings.
+
+Gmail API delivery remains available by setting `EMAIL_DELIVERY_PROVIDER=gmail_api` and configuring `GMAIL_API_CLIENT_ID`, `GMAIL_API_CLIENT_SECRET`, and `GMAIL_API_REFRESH_TOKEN`. The token must belong to the sender and use only the `https://www.googleapis.com/auth/gmail.send` scope. An external Google OAuth app must be published to Production before issuing the refresh token; Testing-mode grants expire after seven days. Configure the optional OpenAI variables listed in `backend/.env.example` when AI features are enabled.
 
 After deployment, verify:
 

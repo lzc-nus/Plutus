@@ -41,7 +41,8 @@ Email verification codes are six digits, expire after 10 minutes, allow five
 failed attempts, and are stored only as keyed digests. Resending is limited to
 once per minute and invalidates the previous code.
 
-Production mail on Render Free uses Gmail's HTTPS API because SMTP ports are
-blocked. Grant only the `gmail.send` OAuth scope, keep the client secret and
-refresh token in Render, and revoke the OAuth grant if either credential is
-exposed.
+Production mail on Render Free uses an HTTPS API because SMTP ports are blocked.
+Prefer a dedicated transactional provider and keep its API key in Render. Gmail
+API delivery must use only the `gmail.send` scope and a Production-published
+OAuth app; Testing-mode refresh tokens expire after seven days. Revoke and
+rotate any email credential that is exposed.
