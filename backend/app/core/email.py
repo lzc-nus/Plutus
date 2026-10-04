@@ -1,28 +1,23 @@
 from __future__ import annotations
 
+import base64
 from email.message import EmailMessage
 import smtplib
 import ssl
 
+import httpx
+
 from app.core.config import settings
+
+GMAIL_TOKEN_URL = "https://oauth2.googleapis.com/token"
+GMAIL_SEND_URL = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send"
 
 
 class EmailDeliveryError(RuntimeError):
-    """Raised when the configured SMTP service cannot deliver a message."""
+    """Raised when the configured email provider cannot deliver a message."""
 
 
-def send_verification_code_email(*, recipient: str, code: str) -> None:
-    """Deliver a short-lived registration code through authenticated SMTP."""
-    if not all(
-        (
-            settings.smtp_host,
-            settings.smtp_username,
-            settings.smtp_password,
-            settings.smtp_from_email,
-        )
-    ):
-        raise EmailDeliveryError("SMTP is not configured.")
-
+def _build_verification_message(*, recipient: str, code: str) -> EmailMessage:
     message = EmailMessage()
     message["Subject"] = f"{code} is your Plutus verification code"
     message["From"] = f"{settings.smtp_from_name} <{settings.smtp_from_email}>"
@@ -58,6 +53,12 @@ def send_verification_code_email(*, recipient: str, code: str) -> None:
         """,
         subtype="html",
     )
+    return message
+
+
+def _send_with_smtp(message: EmailMessage) -> None:
+    if not all((settings.smtp_host, settings.smtp_username, settings.smtp_password)):
+        raise EmailDeliveryError("SMTP is not configured.")
 
     try:
         with smtplib.SMTP(
@@ -73,3 +74,57 @@ def send_verification_code_email(*, recipient: str, code: str) -> None:
             smtp.send_message(message)
     except (OSError, smtplib.SMTPException) as exc:
         raise EmailDeliveryError("Verification email delivery failed.") from exc
+
+
+def _send_with_gmail_api(message: EmailMessage) -> None:
+    if not all(
+        (
+            settings.gmail_api_client_id,
+            settings.gmail_api_client_secret,
+            settings.gmail_api_refresh_token,
+        )
+    ):
+        raise EmailDeliveryError("Gmail API is not configured.")
+
+    try:
+        with httpx.Client(timeout=settings.smtp_timeout_seconds) as client:
+            token_response = client.post(
+                GMAIL_TOKEN_URL,
+                data={
+                    "client_id": settings.gmail_api_client_id,
+                    "client_secret": settings.gmail_api_client_secret,
+                    "refresh_token": settings.gmail_api_refresh_token,
+                    "grant_type": "refresh_token",
+                },
+            )
+            token_response.raise_for_status()
+            try:
+                token_payload = token_response.json()
+            except ValueError as exc:
+                raise EmailDeliveryError("Gmail API token response was invalid.") from exc
+
+            access_token = token_payload.get("access_token")
+            if not isinstance(access_token, str) or not access_token:
+                raise EmailDeliveryError("Gmail API token response was invalid.")
+
+            raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("ascii")
+            send_response = client.post(
+                GMAIL_SEND_URL,
+                headers={"Authorization": f"Bearer {access_token}"},
+                json={"raw": raw_message},
+            )
+            send_response.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise EmailDeliveryError("Verification email delivery failed.") from exc
+
+
+def send_verification_code_email(*, recipient: str, code: str) -> None:
+    """Deliver a short-lived registration code through the configured provider."""
+    if not settings.smtp_from_email:
+        raise EmailDeliveryError("The sender email is not configured.")
+
+    message = _build_verification_message(recipient=recipient, code=code)
+    if settings.email_delivery_provider == "gmail_api":
+        _send_with_gmail_api(message)
+        return
+    _send_with_smtp(message)

@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     frontend_origin: str
 
     email_verification_required: bool = False
+    email_delivery_provider: Literal["smtp", "gmail_api"] = "smtp"
     smtp_host: str | None = None
     smtp_port: int = 587
     smtp_username: str | None = None
@@ -44,6 +45,9 @@ class Settings(BaseSettings):
     smtp_from_name: str = "Plutus"
     smtp_starttls: bool = True
     smtp_timeout_seconds: float = 10.0
+    gmail_api_client_id: str | None = None
+    gmail_api_client_secret: str | None = None
+    gmail_api_refresh_token: str | None = None
 
     openai_api_key: str | None = None
     openai_model: str | None = None
@@ -107,6 +111,9 @@ class Settings(BaseSettings):
         "smtp_username",
         "smtp_password",
         "smtp_from_name",
+        "gmail_api_client_id",
+        "gmail_api_client_secret",
+        "gmail_api_refresh_token",
         mode="before",
     )
     @classmethod
@@ -213,7 +220,9 @@ class Settings(BaseSettings):
             if not normalized_host:
                 continue
             if "://" in normalized_host or "/" in normalized_host:
-                raise ValueError("ALLOWED_HOSTS entries must be hostnames without a scheme or path.")
+                raise ValueError(
+                    "ALLOWED_HOSTS entries must be hostnames without a scheme or path."
+                )
             if normalized_host not in seen:
                 normalized.append(normalized_host)
                 seen.add(normalized_host)
@@ -274,17 +283,31 @@ class Settings(BaseSettings):
             if not self.email_verification_required:
                 raise ValueError("Production requires email verification.")
 
-            required_smtp_settings = {
-                "SMTP_HOST": self.smtp_host,
-                "SMTP_USERNAME": self.smtp_username,
-                "SMTP_PASSWORD": self.smtp_password,
+            required_email_settings = {
                 "SMTP_FROM_EMAIL": self.smtp_from_email,
             }
-            missing_smtp_settings = [
-                name for name, value in required_smtp_settings.items() if not value
+            if self.email_delivery_provider == "smtp":
+                required_email_settings.update(
+                    {
+                        "SMTP_HOST": self.smtp_host,
+                        "SMTP_USERNAME": self.smtp_username,
+                        "SMTP_PASSWORD": self.smtp_password,
+                    }
+                )
+            else:
+                required_email_settings.update(
+                    {
+                        "GMAIL_API_CLIENT_ID": self.gmail_api_client_id,
+                        "GMAIL_API_CLIENT_SECRET": self.gmail_api_client_secret,
+                        "GMAIL_API_REFRESH_TOKEN": self.gmail_api_refresh_token,
+                    }
+                )
+
+            missing_email_settings = [
+                name for name, value in required_email_settings.items() if not value
             ]
-            if missing_smtp_settings:
-                missing = ", ".join(missing_smtp_settings)
+            if missing_email_settings:
+                missing = ", ".join(missing_email_settings)
                 raise ValueError(f"Production email verification requires: {missing}.")
 
         return self

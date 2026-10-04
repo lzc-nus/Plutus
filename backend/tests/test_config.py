@@ -99,6 +99,36 @@ def test_production_email_verification_requires_smtp() -> None:
         )
 
 
+def test_production_accepts_gmail_api_delivery() -> None:
+    settings = make_settings(
+        environment="production",
+        auth_cookie_secure=True,
+        frontend_origin="https://plutus.example",
+        allowed_origins=["https://plutus.example"],
+        email_verification_required=True,
+        email_delivery_provider="gmail_api",
+        smtp_from_email="mailer@example.com",
+        gmail_api_client_id="client-id",
+        gmail_api_client_secret="client-secret",
+        gmail_api_refresh_token="refresh-token",
+    )
+
+    assert settings.email_delivery_provider == "gmail_api"
+
+
+def test_production_gmail_api_requires_oauth_credentials() -> None:
+    with pytest.raises(ValidationError, match="GMAIL_API_CLIENT_ID"):
+        make_settings(
+            environment="production",
+            auth_cookie_secure=True,
+            frontend_origin="https://plutus.example",
+            allowed_origins=["https://plutus.example"],
+            email_verification_required=True,
+            email_delivery_provider="gmail_api",
+            smtp_from_email="mailer@example.com",
+        )
+
+
 def test_openai_runtime_settings_are_configurable() -> None:
     settings = make_settings(
         openai_model="gpt-5.4-mini",
