@@ -52,6 +52,7 @@ function getSettingsDefaults(user: UserRead | null): SettingsFormInput {
     display_name: user?.display_name ?? "",
     bio: user?.bio ?? "",
     avatar_url: user?.avatar_url ?? "",
+    current_password: "",
   };
 }
 
@@ -66,15 +67,25 @@ function formatDateTime(value: string | null | undefined) {
   }).format(new Date(value));
 }
 
-function buildSettingsPayload(values: SettingsFormInput): UserSettingsUpdate {
-  return {
+function buildSettingsPayload(
+  values: SettingsFormInput,
+  currentEmail: string,
+): UserSettingsUpdate {
+  const email = values.email.trim().toLowerCase();
+  const payload: UserSettingsUpdate = {
     username: values.username.trim(),
-    email: values.email.trim().toLowerCase(),
+    email,
     base_currency: values.base_currency.trim().toUpperCase(),
     display_name: emptyToNull(values.display_name),
     bio: emptyToNull(values.bio),
     avatar_url: emptyToNull(values.avatar_url),
   };
+
+  if (email !== currentEmail.toLowerCase()) {
+    payload.current_password = values.current_password;
+  }
+
+  return payload;
 }
 
 function Panel({
@@ -288,6 +299,7 @@ function DeleteAccountModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function SettingsPage() {
+  const router = useRouter();
   const { user, loading, setUser } = useAuth();
 
   const [settingsState, setSettingsState] = useState<SubmitState>("idle");
@@ -343,12 +355,24 @@ export default function SettingsPage() {
   );
 
   async function saveSettings(values: SettingsFormInput) {
+    if (!user) {
+      return;
+    }
+
+    const emailChanged = values.email.trim().toLowerCase() !== user.email.toLowerCase();
+    if (emailChanged && !values.current_password) {
+      settingsForm.setError("current_password", {
+        message: "Enter your current password to change your email.",
+      });
+      return;
+    }
+
     setSettingsState("saving");
     setSettingsError("Unable to save settings.");
 
     try {
       const result = await updateSettings(
-        buildSettingsPayload(values)
+        buildSettingsPayload(values, user.email)
       );
 
       if (result.error || !result.data) {
@@ -363,6 +387,16 @@ export default function SettingsPage() {
       }
 
       setUser(result.data);
+
+      if (!result.data.is_verified) {
+        window.sessionStorage.setItem(
+          "plutus-verification-email",
+          result.data.email,
+        );
+        router.push("/verify-email");
+        return;
+      }
+
       settingsForm.reset(
         getSettingsDefaults(result.data)
       );
@@ -464,6 +498,30 @@ export default function SettingsPage() {
                 />
               </label>
             </div>
+
+            {settingsForm.watch("email").trim().toLowerCase() !==
+            user.email.toLowerCase() ? (
+              <label className="grid gap-2">
+                <span className="text-sm font-bold text-[#50483f]">
+                  Current Password
+                </span>
+
+                <input
+                  {...settingsForm.register("current_password")}
+                  aria-invalid={Boolean(settingsErrors.current_password)}
+                  autoComplete="current-password"
+                  type="password"
+                  placeholder="Required to change your email"
+                  className="h-11 rounded-md border border-[#d2c5b4] bg-white px-3 text-base font-semibold text-[#1d211c] outline-none transition placeholder:text-[#aaa197] focus:border-[#8d7038] focus:ring-4 focus:ring-[#d8bd75]/24"
+                />
+
+                <p className="text-xs leading-5 text-[#756c61]">
+                  Changing your email signs you out until the new address is verified.
+                </p>
+
+                <FieldError message={settingsErrors.current_password?.message} />
+              </label>
+            ) : null}
 
             <div className="grid gap-4 md:grid-cols-[minmax(0,16rem)_1fr]">
               <label className="grid gap-2">

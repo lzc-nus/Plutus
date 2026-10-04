@@ -37,12 +37,18 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const { error } = await registerAccount(parsed.data);
+      const { data, error } = await registerAccount(parsed.data);
 
       if (error) {
         setFormError(
           getApiErrorMessage(error, "Unable to create account.")
         ); 
+        return;
+      }
+
+      if (data?.verification_required) {
+        window.sessionStorage.setItem("plutus-verification-email", parsed.data.email);
+        router.push("/verify-email");
         return;
       }
 

@@ -23,3 +23,11 @@ class InvalidCredentialsError(AuthError):
 
 class InactiveUserError(AuthError):
     """Raised when an inactive user attempts to authenticate."""
+
+
+class UnverifiedEmailError(AuthError):
+    """Raised when valid credentials belong to an unverified account."""
+
+
+class InvalidVerificationCodeError(AuthError):
+    """Raised when a verification code is invalid, expired, or exhausted."""

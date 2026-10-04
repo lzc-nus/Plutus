@@ -49,6 +49,11 @@ def get_current_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account is inactive.",
         )
+    if not user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Verify your email before continuing.",
+        )
 
     return user
 
@@ -80,7 +85,7 @@ def get_optional_current_user(
         return None
 
     user = get_user_by_id(db, user_id)
-    if not user or not user.is_active:
+    if not user or not user.is_active or not user.is_verified:
         return None
 
     return user

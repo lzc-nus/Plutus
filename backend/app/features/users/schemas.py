@@ -87,6 +87,7 @@ class UserSettingsUpdate(SQLModel):
     display_name: str | None = Field(default=None, max_length=100)
     bio: str | None = Field(default=None, max_length=300)
     avatar_url: str | None = Field(default=None, max_length=500)
+    current_password: str | None = Field(default=None, min_length=1)
 
     @field_validator("username", mode="before")
     @classmethod
